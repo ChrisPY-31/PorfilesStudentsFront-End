@@ -3,15 +3,21 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import { Route, Routes } from 'react-router-dom'
+import { Home } from './Components/Home'
+import InformationStudent from './Components/InformationStudent'
+import Students from './Components/Students'
+import Proyects from './Components/Proyects'
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>
-     <Routes>
-      <Route path="/" element={<h1>Home</h1>} />
-     </Routes>
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route path='/Students' element={<Students />} />
+        <Route path={`/Student/:id`} element={<InformationStudent />} />
+        <Route path='/StudentProyect' element={<Proyects />} />
+      </Routes>
     </>
   )
 }
