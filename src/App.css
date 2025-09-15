@@ -1,0 +1,5 @@
+.imagen__home {
+    background-image: url("./assets/fondo_landing_page.png");
+    background-size:  cover;
+    background-position: bottom;
+}
