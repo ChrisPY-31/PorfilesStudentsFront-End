@@ -4,7 +4,7 @@ const Students = () => {
   return (
     <section>
       <div className="w-[80%] mx-auto my-10">
-        <h2 className="text-4xl font-semibold">Students</h2>
+        <h2 className="text-4xl font-semibold">Estudiantes</h2>
         <p>Filta los estudiantes de tu interes</p>
 
         {/* Aqui van los filtros */}
@@ -15,8 +15,8 @@ const Students = () => {
               <IoIosSearch className="absolute left-2 top-4 cursor-pointer " />
               <input className="shadow-sm outline-none rounded-md py-1 px-7 my-2 w-1/2" type="text" placeholder="Buscar estudiante" />
             </div>
-            <div>
-              <select name="carrera" id="">
+            <div className="my-3">
+              <select name="carrera" id="" className="outline-none shadow-sm rounded-md py-1 px-3">
                 <option value="Carrera">Carrera</option>
                 <option value="Software">Software</option>
                 <option value="Computacion">Computacion</option>
@@ -31,8 +31,8 @@ const Students = () => {
         <h3 className="text-2xl font-semibold">Estudiantes</h3>
         <div >
           {estudiantes.map(estudiante => {
-            return <div key={estudiante.id} className="flex gap-4 my-2">
-              <img className="size-10" src={estudiante.image} alt={estudiante.name} />
+            return <div key={estudiante.id} className="flex gap-5 my-3">
+              <img className="size-10 rounded-full cursor-pointer"s src={estudiante.image} alt={estudiante.name} />
               <div>
                 <h4 className="font-semibold">{estudiante.name}</h4>
                 <p className="font-light">{estudiante.carrera}</p>

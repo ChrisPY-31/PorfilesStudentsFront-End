@@ -5,7 +5,7 @@ import { IoMdNotificationsOutline, IoIosSearch } from "react-icons/io";
 
 const Navigate = () => {
 
-  const [autenticate, setAutenticate] = useState(false)
+  const [autenticate, setAutenticate] = useState(true)
 
   const navigate = useNavigate();
 
