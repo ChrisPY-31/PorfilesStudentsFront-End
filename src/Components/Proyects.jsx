@@ -5,7 +5,7 @@ import { proyectos } from '../Estudiantes'
 const Proyects = () => {
 
   const [getProyectos, setGetProyectos] = useState([proyectos])
-  console.log(Date.parse(getProyectos[0].fechaInicio))
+  //console.log(Date.parse(getProyectos[0].fechaInicio))
   return (
     <div className='w-[80%] mx-auto'>
       {proyectos.map((proyecto) => (
