@@ -27,6 +27,8 @@ const Navigate = () => {
                 <li><Link to={"/Comunity"}>Comunidad</Link></li>
                 <li><Link to={"/Students"}>Estudiantes</Link></li>
                 <li><Link to={"/Projects"}>Proyectos</Link></li>
+                <li><Link to={"/Alumnnos"}>Alumnos</Link></li>
+
               </ul>
             )
               : null
