@@ -7,7 +7,7 @@ import ProfileMenu from "./PorfileMenu";
 
 const Navigate = () => {
 
-  const [autenticate, setAutenticate] = useState(true)
+  const [autenticate, setAutenticate] = useState(false)
   const [menuNotification, setMenuNotification] = useState(false)
   const [menuProfile, setMenuProfile] = useState(false)
 
