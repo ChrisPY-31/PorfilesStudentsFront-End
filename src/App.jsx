@@ -1,23 +1,23 @@
 import './App.css'
-import { Route, Routes } from 'react-router-dom'
-import { useLocation } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import { Home } from './Components/Home'
 import Students from './Components/Students'
 import Navigate from './Components/Navigate'
 import Comunity from './Components/Comunity'
 import SignIn from './Components/SignIn'
-import { SignUp } from './Components/SignUp'
+import SignUp from './Components/SignUp'
 import { PersonMenu } from './Components/PersonMenu'
 import Proyects from './Components/Proyects'
 import Manager from './Components/Manager'
 
 function App() {
+  const location = useLocation();
   
   return (
     <>
-      {location.pathname != '/Manager' && <Navigate/>} 
+      {location.pathname !== '/Manager' && location.pathname !== '/Sign-In' && location.pathname !== '/Sign-Up' && <Navigate/>} 
       
-        <Routes>
+      <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/Students' element={<Students />} />
         <Route path='/Comunity' element={<Comunity />} />
@@ -25,8 +25,7 @@ function App() {
         <Route path='/Person' element={<PersonMenu />} />
         <Route path='/Sign-In' element={<SignIn/>} />
         <Route path='/Sign-Up' element={<SignUp/>} />
-
-        <Route path='/Manager' element = {<Manager/>}/>
+        <Route path='/Manager' element={<Manager/>}/>
       </Routes>
     </>
   )
