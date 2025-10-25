@@ -7,7 +7,7 @@ const ManagerCreateUser = () => {
 
   const navigate = useNavigate();
 
-  // Validaciones
+  // Validaciones 
   const registerSchema = Yup.object().shape({
     nombre: Yup.string()
       .min(2, 'El nombre debe tener al menos 2 caracteres')
@@ -260,7 +260,7 @@ const ManagerCreateUser = () => {
                 </div>
               </Form>
             )}
-          </Formik>
+          </Formik> 
         </div>
       </div>
     </div>

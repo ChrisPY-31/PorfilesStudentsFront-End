@@ -1,31 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
-  //validaciones
   const registerSchema = Yup.object().shape({
-    empresa: Yup.string()
-      .min(2, 'El nombre de la empresa debe tener al menos 2 caracteres')
-      .required('*Campo obligatorio'),
+    usuario: Yup.string()
+      .min(3, 'El nombre del usuario debe tener al menos 3 caracteres'),
     puesto: Yup.string()
-      .min(2, 'El puesto debe tener al menos 2 caracteres')
-      .required('*Campo obligatorio'),
-    nombreEmpresa: Yup.string()
-      .min(2, 'El nombre de la empresa debe tener al menos 2 caracteres')
-      .required('El nombre de la empresa es requerido'),
+    .required('*Campo obligatorio'),
     email: Yup.string()
-      .email('Email inválido')
-      .required('*Campo obligatorio'),
+      .email('Email inválido'),
     password: Yup.string()
       .min(6, 'La contraseña debe tener al menos 6 caracteres')
-      .required('*Campo obligatorio'),
-    confirmPassword: Yup.string()
-      .oneOf([Yup.ref('password'), null], 'Las contraseñas deben coincidir')
-      .required('Debes confirmar tu contraseña')
+      .matches(/[0-9]/, 'La contraseña debe contener al menos 1 número')
+      .matches(/[!@#$%^&*(),.?":{}|<>]/, 'La contraseña debe contener al menos 1 carácter especial')
   });
 
   const handleSubmit = (values, { setSubmitting }) => {
@@ -38,47 +30,87 @@ const SignUp = () => {
     }, 1000);
   };
 
-  return (
+  const PasswordRequirements = ({ password }) => {
+    const hasMinLength = password.length >= 6;
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
+    const requirements = [
+      {
+        text: 'Mínimo 6 caracteres',
+        isValid: hasMinLength
+      },
+      {
+        text: 'Al menos 1 número',
+        isValid: hasNumber
+      },
+      {
+        text: 'Al menos 1 carácter especial',
+        isValid: hasSpecialChar
+      }
+    ];
 
-      <div className="mt-2 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-2 px-4 shadow sm:rounded-lg sm:px-10 ">
-              <div className="min-h-screen bg-gray-50 flex flex-col pt-6 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-1 text-center text-3xl font-extrabold text-gray-900">
-          Registra tu cuenta
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Completa tus datos para crear una cuenta 
-        </p>
+    return (
+      <div className="mt-2">
+        <ul className="space-y-1">
+          {requirements.map((req, index) => (
+            <li key={index} className="flex items-center text-xs">
+              <div className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center mr-2 ${
+                req.isValid ? 'bg-green-500' : 'bg-gray-300' 
+              }`}>
+                {req.isValid && (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+              <span className={req.isValid ? 'text-green-600 font-medium' : 'text-gray-500'}>
+                {req.text}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
+    );
+  };
+
+  return (
+    <div className="bg-gray-50 h-[90vh] overflow-hidden py-8 sm:px-6 lg:px-8"> 
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-6 px-6 shadow sm:rounded-lg sm:px-8">
+          <div className="sm:mx-auto sm:w-full sm:max-w-md">
+            <h2 className="text-center text-3xl font-extrabold text-gray-900">
+              Registra tu cuenta
+            </h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Completa tus datos para crear una cuenta 
+            </p>
+          </div>
           <Formik
             initialValues={{
-              empresa: '',
+              usuario: '',
               puesto: '',
-              nombreEmpresa: '',
               email: '',
-              password: '',
-              confirmPassword: ''
+              password: ''
             }}
             validationSchema={registerSchema}
             onSubmit={handleSubmit}
           >
-            {({ isSubmitting, errors, touched }) => (
-              <Form className="space-y-6">
+            {({ isSubmitting, errors, touched, values }) => (
+              <Form className="space-y-4 mt-4">
                 <div>
-                  <label htmlFor="empresa" className="block text-sm font-medium text-gray-700 mt-8">
-                    Empresa:
+                  <label htmlFor="usuario" className="block text-sm font-medium text-gray-700">
+                    Usuario:
                   </label>
                   <Field
                     type="text"
-                    name="empresa"
-                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                      errors.empresa && touched.empresa ? 'border-red-300' : 'border-gray-300'
+                    name="usuario"
+                    className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
+                      errors.usuario && touched.usuario ? 'border-red-300' : 'border-gray-300'
                     }`}
-                    placeholder="Nombre de tu empresa"
+                    placeholder="Nombre de usuario"
                   />
-                  <ErrorMessage name="empresa" component="div" className="mt-1 text-sm text-red-600" />
+                  <ErrorMessage name="usuario" component="div" className="mt-1 text-sm text-red-600" />
                 </div>
 
                 <div>
@@ -88,40 +120,25 @@ const SignUp = () => {
                   <Field
                     type="text"
                     name="puesto"
-                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
+                    className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
                       errors.puesto && touched.puesto ? 'border-red-300' : 'border-gray-300'
                     }`}
-                    placeholder="Tu puesto en la empresa"
+                    placeholder="Puesto en la empresa"
                   />
                   <ErrorMessage name="puesto" component="div" className="mt-1 text-sm text-red-600" />
                 </div>
 
                 <div>
-                  <label htmlFor="nombreEmpresa" className="block text-sm font-medium text-gray-700">
-                    Nombre de la Empresa:
-                  </label>
-                  <Field
-                    type="text"
-                    name="nombreEmpresa"
-                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                      errors.nombreEmpresa && touched.nombreEmpresa ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Razón social de la empresa"
-                  />
-                  <ErrorMessage name="nombreEmpresa" component="div" className="mt-1 text-sm text-red-600" />
-                </div>
-
-                <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Correo electronico:
+                    Correo electrónico:
                   </label>
                   <Field
                     type="email"
                     name="email"
-                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
+                    className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
                       errors.email && touched.email ? 'border-red-300' : 'border-gray-300'
                     }`}
-                    placeholder="tucorreo@email.com"
+                    placeholder="correo@uaemex.mx"
                   />
                   <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
                 </div>
@@ -130,37 +147,44 @@ const SignUp = () => {
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                     Contraseña:
                   </label>
-                  <Field
-                    type="password"
-                    name="password"
-                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                      errors.password && touched.password ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="********"
-                  />
+                  <div className="relative">
+                    <Field
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      className={`mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
+                        errors.password && touched.password ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                      placeholder="******"
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center mt-1"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878l-3.165-3.165m4.242 4.242l-3.166 3.165" />
+                        </svg>
+                      ) : (
+                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   <ErrorMessage name="password" component="div" className="mt-1 text-sm text-red-600" />
-                </div>
-
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                    Confirmar contraseña:
-                  </label>
-                  <Field
-                    type="password"
-                    name="confirmPassword"
-                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                      errors.confirmPassword && touched.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="********"
-                  />
-                  <ErrorMessage name="confirmPassword" component="div" className="mt-1 text-sm text-red-600" />
+                  
+                  <div className="min-h-[80px]">
+                    <PasswordRequirements password={values.password} />
+                  </div>
                 </div>
 
                 <div>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-200"
                   >
                     {isSubmitting ? 'Registrando...' : 'Registrarse'}
                   </button>
@@ -172,7 +196,7 @@ const SignUp = () => {
                     <button
                       type="button"
                       onClick={() => navigate('/Sign-In')}
-                      className="font-medium text-green-600 hover:text-green-500 focus:outline-none"
+                      className="font-medium text-green-600 hover:text-green-500 focus:outline-none cursor-pointer transition-colors duration-200"
                     >
                       Inicia sesión aquí
                     </button>
@@ -187,4 +211,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp; 
+export default SignUp;
