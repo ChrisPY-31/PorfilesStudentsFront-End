@@ -29,12 +29,15 @@ export const Home = () => {
         <section>
           <h2 className="text-2xl font-bold">Empresas</h2>
           <div className="overflow-hidden ">
-            <div className="flex whitespace-nowrap h-[150px] items-center gap-x-7">
+            <div className="absolute h-[150px] bg-gradient-to-r from-[#FFF] from-50% z-20 w-[100px] "></div>
+            <div className="absolute h-[150px] bg-gradient-to-l from-[#FFF] from-60% w-[100px] right-30 z-20"></div>
+            <div className="flex whitespace-nowrap h-[150px] items-center gap-x-7 animate-scroll">
               {empresasTecnologia.concat(empresasTecnologia).map((empresa, index) => (
                 <BusinessCard empresa={empresa} key={index} />
               ))}
             </div>
           </div>
+
           <p className="text-3xl text-center font-semibold">
             <span className="bg-gradient-to-r from-teal-300 to-green-600 bg-clip-text text-transparent">Mas de 200 </span>empresas usan UniConnect para la formación de sus equipos
           </p>
