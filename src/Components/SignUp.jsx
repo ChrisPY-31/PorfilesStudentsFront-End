@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
+import { IoEyeOutline } from "react-icons/io5";
+import { FaRegEyeSlash } from 'react-icons/fa';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -11,7 +13,7 @@ const SignUp = () => {
     usuario: Yup.string()
       .min(3, 'El nombre del usuario debe tener al menos 3 caracteres'),
     puesto: Yup.string()
-    .required('*Campo obligatorio'),
+      .required('*Campo obligatorio'),
     email: Yup.string()
       .email('Email inválido'),
     password: Yup.string()
@@ -22,7 +24,7 @@ const SignUp = () => {
 
   const handleSubmit = (values, { setSubmitting }) => {
     console.log('Datos de registro:', values);
-    
+
     setTimeout(() => {
       alert('Registro exitoso');
       navigate('/');
@@ -55,9 +57,8 @@ const SignUp = () => {
         <ul className="space-y-1">
           {requirements.map((req, index) => (
             <li key={index} className="flex items-center text-xs">
-              <div className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center mr-2 ${
-                req.isValid ? 'bg-green-500' : 'bg-gray-300' 
-              }`}>
+              <div className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center mr-2 ${req.isValid ? 'bg-green-500' : 'bg-gray-300'
+                }`}>
                 {req.isValid && (
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
@@ -75,7 +76,7 @@ const SignUp = () => {
   };
 
   return (
-    <div className="bg-gray-50 h-[90vh] overflow-hidden py-8 sm:px-6 lg:px-8"> 
+    <div className="bg-gray-50 h-[90vh] overflow-hidden py-8 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-6 px-6 shadow sm:rounded-lg sm:px-8">
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -83,7 +84,7 @@ const SignUp = () => {
               Registra tu cuenta
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              Completa tus datos para crear una cuenta 
+              Completa tus datos para crear una cuenta
             </p>
           </div>
           <Formik
@@ -105,9 +106,8 @@ const SignUp = () => {
                   <Field
                     type="text"
                     name="usuario"
-                    className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                      errors.usuario && touched.usuario ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${errors.usuario && touched.usuario ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder="Nombre de usuario"
                   />
                   <ErrorMessage name="usuario" component="div" className="mt-1 text-sm text-red-600" />
@@ -120,9 +120,8 @@ const SignUp = () => {
                   <Field
                     type="text"
                     name="puesto"
-                    className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                      errors.puesto && touched.puesto ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${errors.puesto && touched.puesto ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder="Puesto en la empresa"
                   />
                   <ErrorMessage name="puesto" component="div" className="mt-1 text-sm text-red-600" />
@@ -135,9 +134,8 @@ const SignUp = () => {
                   <Field
                     type="email"
                     name="email"
-                    className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                      errors.email && touched.email ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${errors.email && touched.email ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder="correo@uaemex.mx"
                   />
                   <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
@@ -151,9 +149,8 @@ const SignUp = () => {
                     <Field
                       type={showPassword ? "text" : "password"}
                       name="password"
-                      className={`mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        errors.password && touched.password ? 'border-red-300' : 'border-gray-300'
-                      }`}
+                      className={`mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${errors.password && touched.password ? 'border-red-300' : 'border-gray-300'
+                        }`}
                       placeholder="******"
                     />
                     <button
@@ -162,19 +159,15 @@ const SignUp = () => {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878l-3.165-3.165m4.242 4.242l-3.166 3.165" />
-                        </svg>
+                        <FaRegEyeSlash className="h-5 w-5 text-gray-400"/>
                       ) : (
-                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
+
+                        <IoEyeOutline className="h-5 w-5 text-gray-400"/>
                       )}
                     </button>
                   </div>
                   <ErrorMessage name="password" component="div" className="mt-1 text-sm text-red-600" />
-                  
+
                   <div className="min-h-[80px]">
                     <PasswordRequirements password={values.password} />
                   </div>

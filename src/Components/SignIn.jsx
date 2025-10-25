@@ -33,7 +33,7 @@ const SignIn = () => {
             </h2>
           </div>
           <Formik
-            initialValues={{ email: "", password: "" }}
+            initialValues={{ usuario: "", password: "" }}
             validationSchema={loginSchema}
             onSubmit={handleSubmit}
           >
@@ -44,17 +44,17 @@ const SignIn = () => {
                     htmlFor="email"
                     className="block text-sm font-medium text-gray-700 mt-5"
                   >
-                    Correo electronico:
+                    Usuario
                   </label>
                   <Field
-                    type="email"
-                    name="email"
+                    type="text"
+                    name="usuario"
                     className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                      errors.email && touched.email
+                      errors.usuario && touched.usuario
                         ? "border-red-300"
                         : "border-gray-300"
                     }`}
-                    placeholder="correo@uaemex.mx"
+                    placeholder="2300013"
                   />
                   <ErrorMessage
                     name="email"
