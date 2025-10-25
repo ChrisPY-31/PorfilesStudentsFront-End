@@ -13,10 +13,11 @@ import Manager from './Components/Manager'
 function App() {
   const location = useLocation();
   
-  return (
+  return (  
     <>
-      {location.pathname !== '/Manager' && location.pathname !== '/Sign-In' && location.pathname !== '/Sign-Up' && <Navigate/>} 
-      
+      {/* {location.pathname !== '/Manager' && location.pathname !== '/Sign-In' && location.pathname !== '/Sign-Up' && <Navigate/>}  */}
+      {location.pathname != '/Manager' && <Navigate/>} 
+
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/Students' element={<Students />} />
