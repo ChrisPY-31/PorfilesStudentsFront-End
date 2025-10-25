@@ -1,6 +1,22 @@
 import { IoIosSearch } from "react-icons/io";
 import { estudiantes } from "../Estudiantes"
+import { useEffect } from "react";
+import axios from "axios";
 const Students = () => {
+
+  useEffect(() => {
+    const getStudents = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/v1/students')
+        console.log(response);
+      } catch (error) {
+        console.error('Error fetching persons:', error);
+      }
+    }
+    getStudents();
+  }, [])
+
+
   return (
     <section>
       <div className="w-[80%] mx-auto my-10">
@@ -32,7 +48,7 @@ const Students = () => {
         <div >
           {estudiantes.map(estudiante => {
             return <div key={estudiante.id} className="flex gap-5 my-3">
-              <img className="size-10 rounded-full cursor-pointer"s src={estudiante.image} alt={estudiante.name} />
+              <img className="size-10 rounded-full cursor-pointer" s src={estudiante.image} alt={estudiante.name} />
               <div>
                 <h4 className="font-semibold">{estudiante.name}</h4>
                 <p className="font-light">{estudiante.carrera}</p>

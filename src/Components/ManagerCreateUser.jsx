@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 
 const ManagerCreateUser = () => {
+
   const navigate = useNavigate();
 
   // Validaciones
