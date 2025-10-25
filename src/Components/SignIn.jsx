@@ -6,12 +6,10 @@ import { useNavigate } from "react-router-dom";
 const SignIn = () => {
   const navigate = useNavigate();
 
-  //Validaciones
   const loginSchema = Yup.object().shape({
     email: Yup.string()
-      .email("Email inválido")
-      .required("*Campo obligatorio"),
-    password: Yup.string().required("*Campo obligatorio"),
+      .email("Email inválido"),
+    password: Yup.string().required(""),
   });
 
   const handleSubmit = (values, { setSubmitting }) => {
@@ -19,24 +17,20 @@ const SignIn = () => {
 
     // API de login
     setTimeout(() => {
-      // login exitoso
       alert("Login exitoso");
-      navigate("/"); // Redirige al home
+      navigate("/"); 
       setSubmitting(false);
     }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="bg-gray-50 flex flex-col justify-start py-10 sm:px-6 lg:px-8">
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <div className="sm:mx-auto sm:w-full sm:max-w-md ">
             <h2 className="mt-1 text-center text-3xl font-extrabold text-gray-700">
               Iniciar sesión
             </h2>
-            {/* <p className="mt-2 text-center text-sm text-gray-600"> 
-          Para estudiantes, docentes y administradores
-        </p>   */}
           </div>
           <Formik
             initialValues={{ email: "", password: "" }}
@@ -60,7 +54,7 @@ const SignIn = () => {
                         ? "border-red-300"
                         : "border-gray-300"
                     }`}
-                    placeholder="tucorreo@email.com"
+                    placeholder="correo@uaemex.mx"
                   />
                   <ErrorMessage
                     name="email"
