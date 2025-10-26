@@ -111,10 +111,10 @@ const ManagerCreateUser = () => {
               validateOnBlur={false}
             >
               {({ values, setFieldValue }) => (
-                <Form className="space-y-3">
+                <Form className="space-y-2">
                   <div className="grid grid-cols-2 gap-5 justify-center">
                     <div className="flex flex-col items-end">
-                      <div className="relative w-4/5 h-16">
+                      <div className="relative w-4/5 h-12">
                         <Field
                           type="text"
                           name="nombre"
@@ -126,7 +126,7 @@ const ManagerCreateUser = () => {
                           placeholder=" "
                         />
                         <label
-                          className="absolute top-4 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
+                          className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
                                          peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
                                          peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
                         >
@@ -141,7 +141,7 @@ const ManagerCreateUser = () => {
                     </div>
 
                     <div className="flex flex-col items-start">
-                      <div className="relative w-4/5 h-16">
+                      <div className="relative w-4/5 h-12 mb-1.5">
                         <Field
                           type="text"
                           name="apellidoPaterno"
@@ -153,7 +153,7 @@ const ManagerCreateUser = () => {
                           placeholder=" "
                         />
                         <label
-                          className="absolute top-4 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
+                          className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
                                          peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
                                          peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
                         >
@@ -168,9 +168,9 @@ const ManagerCreateUser = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center space-y-6">
+                  <div className="flex flex-col items-center space-y-4">
                     <div className="flex flex-col items-center w-full">
-                      <div className="relative w-4/5 h-16">
+                      <div className="relative w-4/5 h-12">
                         <Field
                           type="text"
                           name="numeroCuenta"
@@ -182,7 +182,7 @@ const ManagerCreateUser = () => {
                           placeholder=" "
                         />
                         <label
-                          className="absolute top-4 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
+                          className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
                                          peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
                                          peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
                         >
@@ -197,7 +197,7 @@ const ManagerCreateUser = () => {
                     </div>
 
                     <div className="flex flex-col items-center w-full">
-                      <div className="relative w-4/5 h-16">
+                      <div className="relative w-4/5 h-12 mb-1.5">
                         <Field
                           type="email"
                           name="correoInstitucional"
@@ -209,7 +209,7 @@ const ManagerCreateUser = () => {
                           placeholder=" "
                         />
                         <label
-                          className="absolute top-4 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
+                          className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
                                          peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
                                          peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
                         >
@@ -225,7 +225,7 @@ const ManagerCreateUser = () => {
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="relative w-4/5 h-16">
+                    <div className="relative w-4/5 h-12">
                       <Field
                         type={showPassword ? "text" : "password"}
                         name="password"
@@ -237,7 +237,7 @@ const ManagerCreateUser = () => {
                         placeholder=" "
                       />
                       <label
-                        className="absolute top-4 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
+                        className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
                                        peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
                                        peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
                       >
