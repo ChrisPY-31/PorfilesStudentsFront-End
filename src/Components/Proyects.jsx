@@ -2,10 +2,9 @@ import React, { useState } from 'react'
 import { proyectos } from '../Estudiantes'
 
 
-const Proyects = () => {
+const Proyects = ({ proyectos }) => {
+  console.log(proyectos)
 
-  const [getProyectos, setGetProyectos] = useState([proyectos])
-  //console.log(Date.parse(getProyectos[0].fechaInicio))
   return (
     <div className='w-[80%] mx-auto'>
       {proyectos.map((proyecto) => (
@@ -14,7 +13,7 @@ const Proyects = () => {
             <h3 className='text-2xl font-bold'>{proyecto.nombre}</h3>
             <p>{proyecto.descripcion}</p>
             <div className='flex gap-2'>
-              <p>{proyecto.fechaInicio}</p> { "  - "}
+              <p>{proyecto.fechaInicio}</p> {"  - "}
               <p>{proyecto.fechaFin}</p>
             </div>
 
@@ -30,14 +29,20 @@ const Proyects = () => {
             </div>
 
             <div>
-              <h4>Colaboradores</h4>
-              <div className='flex gap-5'>
-                {
-                  proyecto.Colaboradores?.map(colaborador => (
-                    <img className='size-10 rounded-full' src={colaborador.imagen} alt={colaborador.nombre} key={colaborador.id} />
-                  ))
-                }
-              </div>
+              {
+                proyecto.Colaboradores ? (
+                  <div>
+                    <h4>Colaboradores</h4>
+                    <div className='flex gap-5'>
+                      {
+                        proyecto.Colaboradores?.map(colaborador => (
+                          <img className='size-10 rounded-full' src={colaborador.imagen} alt={colaborador.nombre} key={colaborador.id} />
+                        ))
+                      }
+                    </div>
+                  </div>) : ""
+              }
+
             </div>
 
             <div className='flex gap-5'>
@@ -52,7 +57,8 @@ const Proyects = () => {
             </div>
           </div>
           <div className='w-1/4'>
-            <img className='h-full object-cover w-full rounded-xl' src={proyecto.imagen} alt="" />
+            <img className='h-full object-contain w-full rounded-xl' 
+            src={`${proyecto.imagen ? proyecto.imagen : 'https://porfolio-christian.vercel.app/assets/Oro-C1fVqxTA.jpeg'}`} alt="" />
           </div>
         </div>
       ))}

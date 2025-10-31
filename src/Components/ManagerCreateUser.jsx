@@ -3,13 +3,29 @@ import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
+import { useCreateUserMutation } from "../services/autenticateUser";
+import { toast, Toaster } from "sonner";
 
 const ManagerCreateUser = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [showStudentFields, setShowStudentFields] = useState(false);
+  const [createUser , { isLoading , isSuccess, error }] = useCreateUserMutation();
 
+  if(isSuccess){
+    toast.success("Usuario creado correctamente");
+    return
+  }
+  if(error){
+    console.log(error)
+    toast.error("Error al crear el usuario" + error?.data?.message || '');
+    return
+  }
+  if(isLoading){
+    toast.loading("Cargando...")
+    return
+  }
   const generatePassword = () => {
     const length = 12;
     const charset =
@@ -57,6 +73,27 @@ const ManagerCreateUser = () => {
       await registerSchema.validate(values, { abortEarly: false });
       setFormErrors({});
       setSubmitting(false);
+      
+     const createNewUser ={
+        username: values.numeroCuenta,
+        password: values.password,
+        email: values.correoInstitucional,
+        roleRequest:{
+          roleListName:[
+            values.tipoUsuario === "estudiante" ? "STUDENT" : "TEACHER"
+          ]
+        } 
+     }
+     createUser(createNewUser);
+      values.nombre = "";
+      values.apellidoPaterno = "";
+      values.numeroCuenta = "";
+      values.correoInstitucional = "";
+      values.password = "";
+      values.tipoUsuario = "";
+      values.carrera = "";
+      values.semestre = "";
+
     } catch (err) {
       const errorMap = {};
       if (err && Array.isArray(err.inner) && err.inner.length) {
@@ -86,6 +123,7 @@ const ManagerCreateUser = () => {
 
   return (
     <div className=" w-full bg-gradient-to-br bg-gray-50 flex items-center justify-center p-4">
+      <Toaster position="top-right" autoClose={5000} hideProgressBar={false} />
       <div className="w-full max-w-2xl">
         <div className="bg-white rounded-3xl shadow-2xl border border-gray-100">
           <div className="p-7">
