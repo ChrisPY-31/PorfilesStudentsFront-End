@@ -1,58 +1,75 @@
 import React, { useState } from 'react'
 import { estudianteById } from '../Estudiantes'
+import Person from './Person';
+import { SlPencil } from 'react-icons/sl';
+import Contactos from './Contactos';
+import Educations from './Educations';
 
-const PorfileUser = () => {
+const PorfileUser = ({ user }) => {
 
-    const [usuario, setUsuario] = useState(estudianteById);
+    const { nombre,
+        apellido,
+        imagen,
+        curriculum,
+        especialidad,
+        semestre,
+        ubicacion,
+        carrera,
+        descripcion,
+        redContactos,
+        educaciones
+    } = user;
+
+    console.log(user)
 
     return (
-        <div className='w-[80%] mx-auto shadow-2xl rounded-xl p-10'>
-            {usuario.map((user) => (
-                <div key={user.id} className=''>
-                    <div className='flex gap-5 items-center'>
-                        <img className='size-32 bg-cover rounded-full' src={user.image} alt="" />
-                        <div>
-                            <p className='text-2xl'>{user.name} {user.lastName}</p>
-                            <p>{user.carrera}</p>
-                            <p>{user.especialidad}</p>
+        <div className='w-[60%] mx-auto '>
+            <Person
+                nombre={nombre}
+                apellido={apellido}
+                imagen={imagen}
+                curriculum={curriculum}
+                especialidad={especialidad}
+                semestre={semestre}
+                ubicacion={ubicacion}
+                carrera={carrera?.carrera}
+            />
+
+            <div className='flex gap-3'>
+                <div className='w-3/4'>
+                    <div className='relative shadow-2xl rounded-xl mt-4 p-4 min-h-[125px] '>
+                        <div className='flex justify-between items-center'>
+                            <h3 className='text-xl'>Acerca de: </h3>
+                            <SlPencil className='size-5  cursor-pointer' />
                         </div>
-                        <div>
-                            {user.Contactos.map((contacto, index) => (
-                                <div key={index}>
-                                    <a href={contacto.link} target="_blank" rel="noopener noreferrer">
-                                        <img className='size-6' src={contacto.icon} alt={contacto.name} />
-                                        <p>{contacto.tipo}</p>
-                                        <p>{contacto.valor}</p>
-                                    </a>
-                                </div>
-                            ))}
-                        </div>
+                        <p>{descripcion}</p>
                     </div>
-                    <div>
-
-                    </div>
-
-                    <div>
-                        <h3 className='text-2xl font-bold'>Sobre mi</h3>
-                        <p>{user.description}</p>
-                        <span>{user.aptitudes.slice(0, 3).join(', ')}</span>
-                    </div>
-                    <div>
-                        <h3 className='text-2xl font-bold'>Educacion</h3>
-                        {user.Educacion.map((edu, index) => (
-                            <div key={index}>
-                                <p>{edu.institucion}</p>
-                                <p>{edu.grado} en {edu.campoEstudio}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div>
-                        
-                    </div>
-
+                    <Educations educaciones={educaciones}/>
                 </div>
-            ))}
+
+                <div className='w-1/4'>
+                    <div className='relative shadow-2xl rounded-xl mt-4 p-4 min-h-[100px] '>
+                        <div className='flex justify-between items-center'>
+                            <h3 className='text-xl'>Habilidades </h3>
+                            <SlPencil className='size-5  cursor-pointer' />
+                        </div>
+                        <ul>
+                            <li>React</li>
+                            <li>Redux</li>
+                            <li>Tailwind</li>
+                            <li>React</li>
+                        </ul>
+                    </div>
+
+                    <div className='relative shadow-2xl rounded-xl mt-4 p-4 min-h-[100px] '>
+                        <div className='flex justify-between items-center'>
+                            <h3 className='text-xl'>Contactos </h3>
+                            <SlPencil className='size-5  cursor-pointer' />
+                        </div>
+                        <Contactos contactos={redContactos} />
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }

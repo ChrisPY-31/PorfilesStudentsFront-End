@@ -1,21 +1,26 @@
 import { IoIosSearch } from "react-icons/io";
-import { estudiantes } from "../Estudiantes"
+import { useGetAllUsersQuery } from "../services/UserSlice";
 import { useEffect } from "react";
 import axios from "axios";
+import { estudiantes } from "../Estudiantes";
+import { useUserAccount } from "../Hooks/useUserAccount";
+import { toast } from "sonner";
+import StudentCard from "./StudentCard";
+import { useAppSelector } from "../Hooks/store";
+
 const Students = () => {
 
-  useEffect(() => {
-    const getStudents = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/v1/students')
-        console.log(response);
-      } catch (error) {
-        console.error('Error fetching persons:', error);
-      }
-    }
-    getStudents();
-  }, [])
+  const { data, error, isLoading } = useGetAllUsersQuery();
+  const { getAllStudents } = useUserAccount();
+  const { students } = useAppSelector(state => state.users)
 
+
+  if (isLoading) return toast.loading;
+
+  if (error) return toast.error("Error del servido intentelo mas tarde");
+  if (data) {
+    getAllStudents(data.content)
+  }
 
   return (
     <section>
@@ -46,17 +51,17 @@ const Students = () => {
 
         <h3 className="text-2xl font-semibold">Estudiantes</h3>
         <div >
-          {estudiantes.map(estudiante => {
-            return <div key={estudiante.id} className="flex gap-5 my-3">
-              <img className="size-10 rounded-full cursor-pointer" s src={estudiante.image} alt={estudiante.name} />
-              <div>
-                <h4 className="font-semibold">{estudiante.name}</h4>
-                <p className="font-light">{estudiante.carrera}</p>
-              </div>
-            </div>
+          {students.map(student => {
+            return <StudentCard
+              key={student.id}
+              id={student.id}
+              nombre={student.nombre}
+              apellido={student.apellido}
+              carrera={student.carrera?.carrera}
+              imagen={student.imagen}
+            />
           })}
         </div>
-
       </div>
     </section>
   )

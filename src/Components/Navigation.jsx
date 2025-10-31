@@ -4,10 +4,10 @@ import { Link } from "react-router-dom"
 import { IoMdNotificationsOutline, IoIosSearch } from "react-icons/io";
 import NotificationMenu from "./NotificationMenu";
 import ProfileMenu from "./PorfileMenu";
+import { toast } from "sonner";
 
-const Navigate = () => {
+const Navigation = ({autenticate}) => {
 
-  const [autenticate, setAutenticate] = useState(true)
   const [menuNotification, setMenuNotification] = useState(false)
   const [menuProfile, setMenuProfile] = useState(false)
 
@@ -17,16 +17,16 @@ const Navigate = () => {
     <header className=" border-b-2 border-gray-200 ">
       <nav className="flex justify-between items-center h-[80px] w-[90%] mx-auto">
         <div className="flex gap-10" >
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")} >
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => autenticate ? navigate("/Inicio"): navigate("/")}>
             <img className="w-5" src="https://cdn-icons-png.flaticon.com/128/2231/2231649.png" alt="" />
             <h1 className="font-bold text-2xl">UniConnect</h1>
           </div>
           {
             autenticate ? (
               <ul className="flex gap-5 items-center cursor-pointer">
-                <li><Link to={"/Comunity"}>Comunidad</Link></li>
+                <li><Link to={"/Inicio"}>Inicio</Link></li>
                 <li><Link to={"/Students"}>Estudiantes</Link></li>
-                <li><Link to={"/Projects"}>Proyectos</Link></li>
+                <li><Link onClick={()=> toast.message("funcionalida no habilitada")}>Empleos</Link></li>
               </ul>
             )
               : null
@@ -59,7 +59,7 @@ const Navigate = () => {
               menuNotification && <NotificationMenu/>
               }
 
-              {menuProfile && <ProfileMenu/>
+              {menuProfile && <ProfileMenu setMenuProfile={setMenuProfile}/>
               }
             </div>
             : (
@@ -77,4 +77,4 @@ const Navigate = () => {
   )
 }
 
-export default Navigate
+export default Navigation

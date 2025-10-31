@@ -1,40 +1,57 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
+import { useLoginUserMutation } from "../services/autenticateUser";
+import { toast, Toaster } from "sonner";
 
-const SignIn = () => {
+
+const SignIn = ({ setAutenticate }) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [loginUser, { isLoading, isSuccess, error, data }] = useLoginUserMutation();
+  useEffect(() => {
+    if (error) {
+      toast.error("Error al iniciar sesión: " + error?.data?.message || '');
+      return
+    }
+
+    else if (isSuccess) {
+      localStorage.setItem("token", data.jwt);
+      toast.success("Inicio de sesión exitoso");
+      setTimeout(() => {
+        setAutenticate(data.jwt)
+        navigate("/Inicio");
+      }, 1000);
+      return
+    }
+  }, [isSuccess, error]);
+
 
   const loginSchema = Yup.object().shape({
     usuario: Yup.string().required("El usuario es requerido"),
     password: Yup.string().required("La contraseña es requerida"),
   });
 
-  const handleSubmit = (values, { setSubmitting }) => {
-    loginSchema
-      .validate(values, { abortEarly: false })
-      .then(() => {
-        setFormErrors({});
-        console.log("Datos de login:", values);
-        // API de login
-        setTimeout(() => {
-          alert("Login exitoso");
-          navigate("/");
-          setSubmitting(false);
-        }, 1000);
-      })
-      .catch((errors) => {
-        const errorMap = {};
-        errors.inner.forEach((error) => {
-          errorMap[error.path] = error.message;
-        });
-        setFormErrors(errorMap);
-        setSubmitting(false);
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      await loginSchema.validate(values, { abortEarly: false });
+      setFormErrors({});
+      const username = values.usuario;
+      const password = values.password;
+      await loginUser({ username, password });
+      values.usuario = "";
+      values.password = "";
+    } catch (errors) {
+      const errorMap = {};
+      errors.inner.forEach((error) => {
+        errorMap[error.path] = error.message;
       });
+      setFormErrors(errorMap);
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -66,11 +83,10 @@ const SignIn = () => {
                   <Field
                     type="text"
                     name="usuario"
-                    className={`block w-full px-4 py-3 text-base border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${
-                      formErrors.usuario
-                        ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
-                    }`}
+                    className={`block w-full px-4 py-3 text-base border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${formErrors.usuario
+                      ? "border-red-400 bg-red-50"
+                      : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                      }`}
                     placeholder="2321133"
                   />
                   {formErrors.usuario && (
@@ -91,11 +107,10 @@ const SignIn = () => {
                     <Field
                       type={showPassword ? "text" : "password"}
                       name="password"
-                      className={`block w-full px-4 py-3 text-base pr-12 border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${
-                        formErrors.password
-                          ? "border-red-400 bg-red-50"
-                          : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
-                      }`}
+                      className={`block w-full px-4 py-3 text-base pr-12 border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${formErrors.password
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                        }`}
                       placeholder="******"
                     />
                     <button
