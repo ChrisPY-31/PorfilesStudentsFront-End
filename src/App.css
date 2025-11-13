@@ -15,5 +15,31 @@
 
 .animate-scroll {
   display: flex;
-  animation: scroll 10s linear infinite;
+  animation: scroll 15s linear infinite;
 }
+
+.no-scroll {
+  overflow: hidden;
+  height: 100vh;
+}
+
+
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #FFF;
+    border-bottom-color: #FF3D00;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+    } 

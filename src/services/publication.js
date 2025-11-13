@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 import { API_KEY } from "../api/api";
 
@@ -13,10 +13,26 @@ export const publicationApi = createApi({
         providesTags: ["publications"],
       }),
     }),
+    createPublication: builder.mutation({
+      query: ({formData , token}) => ({
+        url: "/publication",
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags:["publications"]
+    }),
+    fileUpload: builder.mutation({
+      query: ({image , id}) => ({
+        url: `filePublication/${id}`,
+        method: "POST",
+        params: {image: image},
+      }),
+    }),
   }),
 });
 
-export const { useGetPublicationsQuery } = publicationApi;
-
-
-
+export const { useGetPublicationsQuery, useCreatePublicationMutation, useFileUploadMutation } =
+  publicationApi;

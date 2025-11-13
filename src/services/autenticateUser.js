@@ -7,11 +7,33 @@ export const usersApiSlice = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: `${apiServer}` }),
   tagTypes: ["Users"],
   endpoints: (builder) => ({
+    getloginAdmin: builder.query({
+      query: (token) => ({
+        url: "api/v1/manager",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      // Agrega transformResponse para debuggear
+      transformResponse: (response, meta) => {
+        console.log("Respuesta completa del backend:", response);
+        console.log("Meta info:", meta);
+        return response;
+      },
+      transformErrorResponse: (response, meta) => {
+        console.log("Error completo:", response);
+        console.log("Meta error:", meta);
+        return response;
+      },
+    }),
     createUser: builder.mutation({
-      query: (newUser) => ({
+      query: ({ user, person }) => ({
         url: `auth/sign-up`,
         method: "POST",
-        body: newUser,
+        body: {
+          user,
+          person,
+        },
       }),
     }),
     loginUser: builder.mutation({
@@ -31,4 +53,8 @@ export const usersApiSlice = createApi({
 
 // Export hooks for usage in functional components, which are
 // auto-generated based on the defined endpoints
-export const { useCreateUserMutation, useLoginUserMutation } = usersApiSlice;
+export const {
+  useCreateUserMutation,
+  useLoginUserMutation,
+  useGetloginAdminQuery,
+} = usersApiSlice;

@@ -4,17 +4,21 @@ import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
 import { useLoginUserMutation } from "../services/autenticateUser";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
+import { useUserAccount } from "../Hooks/useUserAccount";
+import { useGetAccountUserByUsernameQuery } from "../services/UserSlice";
 
 
 const SignIn = ({ setAutenticate }) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
-  const [loginUser, { isLoading, isSuccess, error, data }] = useLoginUserMutation();
+  const [loginUser, { isSuccess, error, data }] = useLoginUserMutation();
+
+
   useEffect(() => {
     if (error) {
-      toast.error("Error al iniciar sesión: " + error?.data?.message || '');
+      toast.error("Error al iniciar sesión: " + error?.data?.message && 'Usuarios o Contraseña incorrectos');
       return
     }
 
@@ -22,8 +26,9 @@ const SignIn = ({ setAutenticate }) => {
       localStorage.setItem("token", data.jwt);
       toast.success("Inicio de sesión exitoso");
       setTimeout(() => {
-        setAutenticate(data.jwt)
+        localStorage.setItem("username", data?.username);
         navigate("/Inicio");
+        setAutenticate(data.jwt)
       }, 1000);
       return
     }
