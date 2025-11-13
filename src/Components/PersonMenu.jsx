@@ -1,27 +1,25 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+
 import Proyects from './Proyects';
 import Recommendations from './Recommendations';
 import PorfileUser from './PorfileUser';
 import { useAppSelector } from '../Hooks/store';
 import { useGetUserByIdQuery } from '../services/UserSlice';
-import { useUserAccount } from '../Hooks/useUserAccount';
 
 export const PersonMenu = () => {
 
     const [menu, setMenu] = useState(1);
-    const { userId, userToken, user } = useAppSelector(state => state.users)
-    const { data, isLoading, error } = useGetUserByIdQuery({ id: userId, token: userToken });
-    const { getUser } = useUserAccount();
+    const token = localStorage.getItem("token");
+    const { idStudent } = useAppSelector(state => state.students)
+    const { isLoading, error, data } = useGetUserByIdQuery({ id: idStudent, token })
+    const [user, setUser] = useState({});
 
-
-    if (data) {
-        getUser(data.object)
-    }
-
-
-    if (isLoading) return console.log("cargando")
-    if (error) return console.log("errorrrr chavalin")
+    useEffect(() => {
+        if (data) {
+            console.log(data)
+            setUser(data.object);
+        }
+    }, [data, isLoading])
 
     return (
         <div className='mt-10 min-h-[100vh]'>
@@ -31,9 +29,12 @@ export const PersonMenu = () => {
                 <h3 className='cursor-pointer' onClick={() => setMenu(3)}>Recomendaciones</h3>
             </div>
             <div className='mt-10'>
-                {menu === 1 && <PorfileUser user={user} />}
-                {menu === 2 && <Proyects proyectos={user.proyectos} />}
-                {menu === 3 && <Recommendations recomendaciones={user.recomendaciones} />}
+                {Object.keys(user).length > 0 && <div>
+                    {menu === 1 && <PorfileUser user={user} />}
+                    {menu === 2 && <Proyects proyectos={user.proyectos} />}
+                    {menu === 3 && <Recommendations recomendaciones={user.recomendaciones} />}
+                </div>
+                }
             </div>
         </div>
     )

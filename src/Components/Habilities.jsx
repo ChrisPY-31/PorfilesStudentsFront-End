@@ -1,8 +1,12 @@
 import React from 'react'
 
-const Habilities = () => {
+const Habilities = ({ id, nombre, nivel }) => {
   return (
-    <div>Habilities</div>
+    <div>
+      <ul>
+        <li className='text-[14px]'>{nombre}</li>
+      </ul>
+    </div>
   )
 }
 

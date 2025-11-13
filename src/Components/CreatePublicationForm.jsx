@@ -9,7 +9,7 @@ const CreatePublicationForm = ({nombre , apellido ,imagenPersona , especialidad 
             <div className='flex gap-2'>
                 <img
                     className='size-12 rounded-full'
-                    src={`${imagenPersona ? "https://avatars.githubusercontent.com/u/1561955?v=4" : "https://avatars.githubusercontent.com/u/1561955?v=4"}`} alt="" />
+                    src={`${imagenPersona ? imagenPersona : "https://avatars.githubusercontent.com/u/1561955?v=4"}`} alt="" />
                 <div>
                     <h3>{`${nombre} ${apellido}`}</h3>
                     <p>{especialidad}</p>
@@ -20,7 +20,7 @@ const CreatePublicationForm = ({nombre , apellido ,imagenPersona , especialidad 
             </div>
             <div>
                 { imagenPublicacion ?
-                <img src={`${imagenPublicacion ? "https://getbuzzmonitor.com/wp-content/uploads/screen-shot-2018-10-17-at-8.39_.11-pm_.png" : ""}`} alt="imagen_persona" />:null
+                <img src={`${imagenPublicacion ? imagenPublicacion : ""}`} alt="imagen_persona" />:null
                 }
             </div>
 

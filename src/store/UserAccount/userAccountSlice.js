@@ -1,25 +1,24 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  students: [],
+  tipo: "",
   userId: 0,
   user: {},
-  userToken: "",
+  userToken: localStorage.getItem("token") || "",
+  username: localStorage.getItem("username") || "",
 };
 
 export const userAccountSlice = createSlice({
-  name: "userAccount",
+  name: "users",
   initialState,
   reducers: {
-    getStudents: (state, action) => {
-      state.students = action.payload;
-    },
-
     getUserId: (state, action) => {
       state.userId = action.payload;
     },
 
     getUserDetails: (state, action) => {
+      state.tipo = action.payload.tipo;
+      state.userId = action.payload.id;
       state.user = action.payload;
     },
     getUserToken: (state, action) => {
@@ -29,7 +28,7 @@ export const userAccountSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { getUserDetails, getUserToken, getStudents , getUserId} =
+export const { getUserToken, getUserId, getMyUserAccount, getUserDetails } =
   userAccountSlice.actions;
 
 export default userAccountSlice.reducer;

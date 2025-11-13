@@ -1,25 +1,54 @@
-import { getStudents, getUserDetails, getUserId, getUserToken } from "../store/UserAccount/userSlice";
+import {
+  getUserDetails,
+  getUserToken,
+} from "../store/UserAccount/userAccountSlice";
+import { getIdStudent, getStudents } from "../store/UserAccount/studentSlice";
+
 import { useAppDispatch } from "./store";
+import axios from "axios";
+import { API_KEY } from "../api/api";
 
 export const useUserAccount = () => {
+  const dispatch = useAppDispatch();
 
-    const dispatch = useAppDispatch();
+  const getAllStudents = (students) => {
+    dispatch(getStudents(students));
+  };
 
-    const getAllStudents = (students) =>{
-        dispatch(getStudents(students))
-    }
+  const getIdUser = (idUser) => {
+    dispatch(getIdStudent(idUser));
+  };
 
-    const getIdUser = (idUser) =>{
-        dispatch(getUserId(idUser))
-    }   
+  const getUser = (user) => {
+    dispatch(getUserDetails(user));
+  };
 
-    const getUser = (user) =>{
-        dispatch(getUserDetails(user));
-    }
+  const tokenUser = (token) => {
+    dispatch(getUserToken(token));
+  };
 
-    const tokenUser = (token) =>{
-        dispatch(getUserToken(token));
-    }
+  const getUserByUsername = async (username, token) => {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    username = username.toString();
+    const users = await axios.get(`${API_KEY}/userAccount/${username}`, config);
 
-    return { getUser , tokenUser , getAllStudents , getIdUser}
-}
+    dispatch(getUserDetails(users.data.object));
+  };
+
+  const getMyUserAccount = (myUserAccount) => {
+    dispatch(getMyUserAccount(myUserAccount));
+  };
+
+  return {
+    getUser,
+    tokenUser,
+    getAllStudents,
+    getIdUser,
+    getUserByUsername,
+    getMyUserAccount,
+  };
+};

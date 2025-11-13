@@ -8,12 +8,23 @@ import ManagerUsers from "./ManagerUsers";
 import ManagerDashboard from "./ManagerDashboard";
 import ManagerCreateUser from "./ManagerCreateUser";
 import ManagerUpdateUser from "./ManagerUpdateUser";
+import { toast } from "sonner";
 
 const Manager = () => {
   const [autenticate, setAutenticate] = useState(false);
-  const [managerMenu, setManagerMenu] = useState(1); 
+  const [managerMenu, setManagerMenu] = useState(1);
 
   const navigate = useNavigate();
+
+  const handleCerrar = () => {
+    toast.message("Cerrando sesión...", { duration: 500 })
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    setTimeout(() => {
+
+      navigate("/");
+    }, 1000)
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -60,14 +71,14 @@ const Manager = () => {
           <ul className="space-y-2">
             <li
               className="cursor-pointer hover:bg-green-100 p-2 rounded flex "
-              //onClick={() => navigate("/managerProfile")}
+            //onClick={() => navigate("/managerProfile")}
             >
               <FaUser className="mr-2 mt-1 text-xl" />
               Perfil
             </li>
-            <li
+            <li onClick={handleCerrar}
               className="cursor-pointer hover:bg-green-100 p-2 rounded flex"
-              //onClick={() => navigate("/salir")}
+            //onClick={() => navigate("/salir")}
             >
               <MdLogout className="mr-2 mt-1 text-xl" />
               Cerrar sesión
@@ -76,10 +87,10 @@ const Manager = () => {
         </div>
       </div>
 
-        {managerMenu === 1 && null}
-        {managerMenu === 2 && <ManagerDashboard />}
-        {managerMenu === 3 && <ManagerCreateUser/>}
-        {managerMenu === 4 && <ManagerUpdateUser/>}
+      {managerMenu === 1 && null}
+      {managerMenu === 2 && <ManagerDashboard />}
+      {managerMenu === 3 && <ManagerCreateUser />}
+      {managerMenu === 4 && <ManagerUpdateUser />}
     </div>
   );
 };

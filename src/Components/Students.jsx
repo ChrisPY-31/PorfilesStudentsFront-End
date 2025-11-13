@@ -1,8 +1,5 @@
 import { IoIosSearch } from "react-icons/io";
 import { useGetAllUsersQuery } from "../services/UserSlice";
-import { useEffect } from "react";
-import axios from "axios";
-import { estudiantes } from "../Estudiantes";
 import { useUserAccount } from "../Hooks/useUserAccount";
 import { toast } from "sonner";
 import StudentCard from "./StudentCard";
@@ -12,8 +9,7 @@ const Students = () => {
 
   const { data, error, isLoading } = useGetAllUsersQuery();
   const { getAllStudents } = useUserAccount();
-  const { students } = useAppSelector(state => state.users)
-
+  const { students } = useAppSelector(state => state.students)
 
   if (isLoading) return toast.loading;
 

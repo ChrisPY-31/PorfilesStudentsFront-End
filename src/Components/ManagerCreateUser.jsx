@@ -1,31 +1,38 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
 import { useCreateUserMutation } from "../services/autenticateUser";
 import { toast, Toaster } from "sonner";
+import { useAppSelector } from "../Hooks/store";
 
 const ManagerCreateUser = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [showStudentFields, setShowStudentFields] = useState(false);
-  const [createUser , { isLoading , isSuccess, error }] = useCreateUserMutation();
+  const [createUser, { isLoading, isSuccess, error }] = useCreateUserMutation();
 
-  if(isSuccess){
-    toast.success("Usuario creado correctamente");
-    return
-  }
-  if(error){
-    console.log(error)
-    toast.error("Error al crear el usuario" + error?.data?.message || '');
-    return
-  }
-  if(isLoading){
-    toast.loading("Cargando...")
-    return
-  }
+  useEffect(() => {
+
+    if (isSuccess) {
+      toast.success("Usuario creado correctamente");
+      return
+    }
+
+    if (error) {
+      console.error(error)
+      if (error.status === 'FETCH_ERROR') {
+        toast.error("Error del servidor. Por favor, intenta de nuevo más tarde.");
+        return;
+      }
+      toast.error(`Error : ${error?.data?.mensaje === "El correo ya esta en uso." ? error?.data?.mensaje : " Numero de cuenta ya esta en uso"}` || '');
+      return
+    }
+  }, [error, isSuccess]);
+
+
   const generatePassword = () => {
     const length = 12;
     const charset =
@@ -73,18 +80,27 @@ const ManagerCreateUser = () => {
       await registerSchema.validate(values, { abortEarly: false });
       setFormErrors({});
       setSubmitting(false);
-      
-     const createNewUser ={
+
+      let tipoUserRol = values.tipoUsuario === "estudiante" ? "STUDENT" : "TEACHER"
+
+      const user = {
         username: values.numeroCuenta,
         password: values.password,
         email: values.correoInstitucional,
-        roleRequest:{
-          roleListName:[
-            values.tipoUsuario === "estudiante" ? "STUDENT" : "TEACHER"
+        roleRequest: {
+          roleListName: [
+            tipoUserRol
           ]
-        } 
-     }
-     createUser(createNewUser);
+        }
+      }
+
+      const person = {
+        nombre: values.nombre,
+        apellido: values.apellidoPaterno
+      }
+       await createUser({ user, person });
+
+
       values.nombre = "";
       values.apellidoPaterno = "";
       values.numeroCuenta = "";
@@ -156,11 +172,10 @@ const ManagerCreateUser = () => {
                         <Field
                           type="text"
                           name="nombre"
-                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${
-                            formErrors.nombre
-                              ? "border-red-400 bg-red-50"
-                              : "focus:border-2 focus:border-green-500"
-                          }`}
+                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.nombre
+                            ? "border-red-400 bg-red-50"
+                            : "focus:border-2 focus:border-green-500"
+                            }`}
                           placeholder=" "
                         />
                         <label
@@ -183,11 +198,10 @@ const ManagerCreateUser = () => {
                         <Field
                           type="text"
                           name="apellidoPaterno"
-                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${
-                            formErrors.apellidoPaterno
-                              ? "border-red-400 bg-red-50"
-                              : "focus:border-2 focus:border-green-500"
-                          }`}
+                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.apellidoPaterno
+                            ? "border-red-400 bg-red-50"
+                            : "focus:border-2 focus:border-green-500"
+                            }`}
                           placeholder=" "
                         />
                         <label
@@ -212,11 +226,10 @@ const ManagerCreateUser = () => {
                         <Field
                           type="text"
                           name="numeroCuenta"
-                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${
-                            formErrors.numeroCuenta
-                              ? "border-red-400 bg-red-50"
-                              : "focus:border-2 focus:border-green-500"
-                          }`}
+                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.numeroCuenta
+                            ? "border-red-400 bg-red-50"
+                            : "focus:border-2 focus:border-green-500"
+                            }`}
                           placeholder=" "
                         />
                         <label
@@ -239,11 +252,10 @@ const ManagerCreateUser = () => {
                         <Field
                           type="email"
                           name="correoInstitucional"
-                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${
-                            formErrors.correoInstitucional
-                              ? "border-red-400 bg-red-50"
-                              : "focus:border-2 focus:border-green-500"
-                          }`}
+                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.correoInstitucional
+                            ? "border-red-400 bg-red-50"
+                            : "focus:border-2 focus:border-green-500"
+                            }`}
                           placeholder=" "
                         />
                         <label
@@ -267,11 +279,10 @@ const ManagerCreateUser = () => {
                       <Field
                         type={showPassword ? "text" : "password"}
                         name="password"
-                        className={`peer w-full h-full border border-gray-300 rounded-xl px-5 pr-12 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${
-                          formErrors.password
-                            ? "border-red-400 bg-red-50"
-                            : "focus:border-2 focus:border-green-500"
-                        }`}
+                        className={`peer w-full h-full border border-gray-300 rounded-xl px-5 pr-12 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.password
+                          ? "border-red-400 bg-red-50"
+                          : "focus:border-2 focus:border-green-500"
+                          }`}
                         placeholder=" "
                       />
                       <label
@@ -372,11 +383,10 @@ const ManagerCreateUser = () => {
                           <Field
                             as="select"
                             name="carrera"
-                            className={`block w-full px-4 py-3 text-base border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 cursor-pointer ${
-                              formErrors.carrera
-                                ? "border-red-400 bg-red-50"
-                                : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
-                            }`}
+                            className={`block w-full px-4 py-3 text-base border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 cursor-pointer ${formErrors.carrera
+                              ? "border-red-400 bg-red-50"
+                              : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                              }`}
                           >
                             <option value="">Seleccionar carrera</option>
                             <option value="ingenieriaSW">
@@ -406,11 +416,10 @@ const ManagerCreateUser = () => {
                           <Field
                             as="select"
                             name="semestre"
-                            className={`block w-full px-4 py-3 text-base border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 cursor-pointer ${
-                              formErrors.semestre
-                                ? "border-red-400 bg-red-50"
-                                : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
-                            }`}
+                            className={`block w-full px-4 py-3 text-base border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 cursor-pointer ${formErrors.semestre
+                              ? "border-red-400 bg-red-50"
+                              : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                              }`}
                           >
                             <option value="">Seleccionar semestre</option>
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((sem) => (
@@ -425,6 +434,7 @@ const ManagerCreateUser = () => {
                             </div>
                           )}
                         </div>
+                        
                       </div>
                     </div>
                   )}
@@ -435,8 +445,10 @@ const ManagerCreateUser = () => {
                       className="w-4/5 py-4 px-6 border border-transparent rounded-xl shadow-lg text-lg font-semibold text-white bg-gradient-to-r
                        from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2
                         focus:ring-green-500 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                    
                     >
-                      Registrar
+                      {isLoading ? 'Cargando...' : 'Registrar'}
+                      
                     </button>
                   </div>
                 </Form>

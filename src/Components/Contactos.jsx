@@ -1,8 +1,21 @@
 import React from 'react'
+import ContactsCard from './ContactsCard'
 
-const Contactos = () => {
+const Contactos = ({ contactos, isEditable }) => {
   return (
-    <div>Contactos</div>
+    <div>
+      {isEditable && <button>Editar Contactos</button>}
+
+      {
+        contactos?.map((contact) => {
+          return <ContactsCard
+          key={contact.contactos.idContacto}
+          url = {contact.url}
+          socialMedia = {contact.contactos.red}
+          />
+        })
+      }
+    </div>
   )
 }
 
