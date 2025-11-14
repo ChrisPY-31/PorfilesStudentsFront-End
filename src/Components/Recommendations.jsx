@@ -13,7 +13,7 @@ const Recommendations = ({ recomendaciones, myAccount, tipo, user }) => {
   return (
     <div className='w-[60%] mx-auto '>
       <h2 className='text-center text-3xl'>Recomendaciones de Docentes</h2>
-      {myAccount && <div className='flex gap-2 mt-2'>
+      {(myAccount && tipo === "teacher")  && <div className='flex gap-2 mt-2'>
         <p>Deseas agregar una Recomendacion</p>
         <FaPlus className='cursor-pointer'
           onClick={()=>setMenuCreateRecomendation(true)}

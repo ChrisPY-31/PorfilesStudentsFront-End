@@ -1,5 +1,6 @@
 import {
   getUserDetails,
+  getUserName,
   getUserToken,
 } from "../store/UserAccount/userAccountSlice";
 import { getIdStudent, getStudents } from "../store/UserAccount/studentSlice";
@@ -43,6 +44,10 @@ export const useUserAccount = () => {
     dispatch(getMyUserAccount(myUserAccount));
   };
 
+  const getUserNameRol = (username) =>{
+    dispatch(getUserName(username))
+  }
+
   return {
     getUser,
     tokenUser,
@@ -50,5 +55,6 @@ export const useUserAccount = () => {
     getIdUser,
     getUserByUsername,
     getMyUserAccount,
+    getUserNameRol
   };
 };

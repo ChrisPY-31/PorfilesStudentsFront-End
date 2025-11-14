@@ -22,7 +22,7 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
     const [contacts, setContacts] = useState(initialContacts);
     const [editingContact, setEditingContact] = useState(null);
     const { getUserByUsername } = useUserAccount();
-    const { userId ,username ,userToken } = useAppSelector(state => state.users)
+    const { userId, username, userToken } = useAppSelector(state => state.users)
     const [newSocialLink, setNewSocialLink] = useState([])
     const [createSocialLink, { isSuccess, error }] = useCreateSocialLinkMutation()
 
@@ -37,6 +37,8 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
     useEffect(() => {
         if (isSuccess) {
             toast.success("Contactos se agregaron correctamente ")
+            getUserByUsername(username, userToken);
+
             setTimeout(() => {
                 onCancel()
             }, [1000])
@@ -156,10 +158,10 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
     };
 
     const handleFinalSubmit = async () => {
+        console.log("entro aqui")
         const token = localStorage.getItem("token")
         await createSocialLink({ newSocialLink, token });
-        getUserByUsername(username, userToken);
-
+        console.log("salio aqui")
     };
 
 

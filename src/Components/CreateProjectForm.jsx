@@ -43,6 +43,7 @@ const CreateProjectForm = ({ onClose, updateProject, setUpdateProject }) => {
     if (isSuccess) {
       toast.success("el proyecto se creo con exito")
       getUserByUsername(username, userToken);
+      getUserByUsername(username, userToken);
       document.body.className = ""
       setTimeout(() => {
         onClose();
@@ -59,6 +60,7 @@ const CreateProjectForm = ({ onClose, updateProject, setUpdateProject }) => {
   useEffect(() => {
     if (success) {
       toast.success("Proyecto actualizado con exito")
+      getUserByUsername(username, userToken);
       setTimeout(() => {
         onClose();
       }, [1000])
@@ -101,7 +103,6 @@ const CreateProjectForm = ({ onClose, updateProject, setUpdateProject }) => {
         // ESPERAR la actualización del proyecto
 
         await updateProjectStudent({ token, updatedProject })
-        getUserByUsername(username, token);
 
 
         const idProyecto = updateProject.idProject;
@@ -128,7 +129,7 @@ const CreateProjectForm = ({ onClose, updateProject, setUpdateProject }) => {
             const result = await loadedPhotoProject({ idProyecto, formData, token });
             if (result?.data) {
               toast.success("Foto actualizada con éxito");
-              getUserByUsername(username, token);
+              // getUserByUsername(username, token);
             } else {
               toast.warning("No se recibió respuesta clara del servidor, pero puede que se haya actualizado.");
             }
@@ -527,7 +528,7 @@ const CreateProjectForm = ({ onClose, updateProject, setUpdateProject }) => {
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-3 px-6 border border-transparent rounded-lg shadow-md text-base font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 px-6 border border-transparent rounded-lg shadow-md text-base font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         {isSubmitting ? "Creando..." : "Crear Proyecto"}
                       </button>

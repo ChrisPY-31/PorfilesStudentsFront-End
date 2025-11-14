@@ -18,7 +18,7 @@ const ProyectsCard = ({ nombre, descripcion, imagen, fechaInicio, fechaFin, gith
                 <h3 className='text-2xl font-bold'>{nombre}</h3>
                 <p>{descripcion}</p>
                 <div className='flex gap-2'>
-                    <p>{formatearFecha(fechaInicio)}</p> 
+                    <p>{formatearFecha(fechaInicio)}</p>
                 </div>
 
                 <div>
@@ -50,8 +50,10 @@ const ProyectsCard = ({ nombre, descripcion, imagen, fechaInicio, fechaFin, gith
             </div>
             {imagen &&
                 <div className='w-1/4'>
-                    <img className='h-full object-contain w-full rounded-xl'
-                        src={`${imagen && imagen}`} alt="" />
+                    <a href={`${deploy}`} target='_blank'>
+                        <img className='h-full object-contain w-full rounded-xl'
+                            src={`${imagen && imagen}`} alt="" />
+                    </a>
                 </div>
             }
         </div>

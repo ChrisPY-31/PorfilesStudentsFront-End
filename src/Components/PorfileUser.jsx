@@ -40,7 +40,6 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
         educaciones
     } = user;
 
-    console.log(menuContact)
 
     return (
         <div className='w-[60%] mx-auto '>
@@ -57,6 +56,7 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
                 setUpdateAccount={setUpdateAccount}
                 contactos={redContactos}
                 openMenuContact={() => setMenuContact(true)}
+                user={user}
             />
 
 

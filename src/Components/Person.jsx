@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { SlPencil } from 'react-icons/sl'
 
-const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, ubicacion, carrera, myAccount, setUpdateAccount, contactos, openMenuContact }) => {
+const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, ubicacion, carrera, myAccount, setUpdateAccount, contactos, openMenuContact, user }) => {
+
 
   let renderWeb = contactos?.filter(contacto => {
     return contacto.contactos.red === "WEB"

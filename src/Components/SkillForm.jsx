@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import {
@@ -15,12 +15,15 @@ import {
 import { useAppSelector } from "../Hooks/store";
 import { useCreateSkillsMutation } from "../services/UserSlice";
 import { toast } from "sonner";
+import { useUserAccount } from "../Hooks/useUserAccount";
 
 const SkillForm = ({ onSubmit, onCancel }) => {
     const [selectedCategory, setSelectedCategory] = useState("");
     const [skillsList, setSkillsList] = useState([]); // NUEVO ARRAY
-    const { userId } = useAppSelector(state => state.users);
-    const [createSkillMutation, { isSuccess, error , data }] = useCreateSkillsMutation();
+    const { userId, username, userToken } = useAppSelector(state => state.users);
+    const [createSkillMutation, { isSuccess, error, data }] = useCreateSkillsMutation();
+    const { getUserByUsername } = useUserAccount();
+
 
     const skillCategories = {
         frontend: [
@@ -89,7 +92,7 @@ const SkillForm = ({ onSubmit, onCancel }) => {
     // ✅ Enviar todo el array
     const handleFinalSubmit = () => {
         if (skillsList.length === 0) {
-            alert("Agrega al menos una habilidad primero");
+            toast.message("Agrega al menos una habilidad primero");
             return;
         }
         if (onSubmit) onSubmit(skillsList);
@@ -112,14 +115,21 @@ const SkillForm = ({ onSubmit, onCancel }) => {
         { value: "Avanzado", label: "Avanzado", description: "Dominio experto" }
     ];
 
-    if(isSuccess){
-        toast.success("Habilidades agregadas correctamente")
-        return;
-    }
-    if(error){
-        toast.error("Error" + error)
-        console.log(data)
-    }
+    useEffect(() => {
+
+        if (isSuccess) {
+            toast.success("Habilidades agregadas correctamente")
+            getUserByUsername(username, userToken);
+            setTimeout(() => {
+                onCancel()
+            }, 1000)
+            return;
+        }
+        if (error) {
+            toast.error("Error intentelo mas tarde")
+        }
+    }, [isSuccess, error])
+
 
     return (
         <div className="absolute inset-0 z-50 flex justify-center items-center">
@@ -336,7 +346,7 @@ const SkillForm = ({ onSubmit, onCancel }) => {
                                         <button
                                             type="button"
                                             onClick={handleFinalSubmit}
-                                            className="flex items-center justify-center px-8 py-3 rounded-xl shadow-lg text-base font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                                            className="flex items-center justify-center px-8 py-3 rounded-xl shadow-lg text-base font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 cursor-pointer"
                                         >
                                             Guardar todas las habilidades
                                         </button>

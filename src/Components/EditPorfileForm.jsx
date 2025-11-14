@@ -37,8 +37,8 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
     useEffect(() => {
         if (isSuccess) {
             toast.success("Perfil actualizado con exito")
+            getUserByUsername(username, userToken);
             setTimeout(() => {
-
                 onClose()
             }, [1500])
         }
@@ -83,10 +83,8 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                     userId
                 }).unwrap();
 
-                getUserByUsername(username, userToken);
 
                 if (archivoSeleccionado) {
-                    console.log("entro")
                     const formData = new FormData();
                     formData.append("image", archivoSeleccionado);
                     formData.append("tipo", tipo);
@@ -99,12 +97,16 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                         }).unwrap();
                         toast.success("Foto actualizada con éxito");
                         getUserByUsername(username, userToken);
+                        return
                     } catch (photoError) {
                         toast.error("Error al actualizar la foto, pero los datos se guardaron");
                     }
+
                 } else if (!archivoSeleccionado) {
-                    return;
+                    return
                 }
+                // getUserByUsername(username, userToken);
+
             }
 
             if (tipo === "teacher") {
@@ -115,7 +117,7 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                     apellido: values.apellidoPaterno,
                     descripcion: values.descripcion,
                     fechaNacimiento: values.fechaNacimiento,
-                    imagen: "",
+                    imagen: user.imagen,
                     especialidad: values.especialidad,
                     curriculum: values.linkCV,
                     tipo: tipo,
@@ -130,14 +132,13 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                     userId
                 }).unwrap();
 
-                getUserByUsername(username, userToken);
-
+                console.log(archivoSeleccionado)
                 if (archivoSeleccionado) {
-                    console.log("entro")
+                    console.log("entro aqui la peticon")
                     const formData = new FormData();
                     formData.append("image", archivoSeleccionado);
                     formData.append("tipo", tipo);
-                    console.log(archivoSeleccionado)
+                    // console.log(archivoSeleccionado)
                     try {
                         await updateMyPhoto({
                             userId,
@@ -146,10 +147,12 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                         }).unwrap();
                         toast.success("Foto actualizada con éxito");
                         getUserByUsername(username, userToken);
+                        return
                     } catch (photoError) {
                         toast.error("Error al actualizar la foto, pero los datos se guardaron");
                     }
                 } else if (!archivoSeleccionado) {
+                    console.log("no entro a la peticion")
                     return;
                 }
 
@@ -204,7 +207,7 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
             semestre: `${user?.semestre ? user.semestre : ""}`,
             linkCV: `${user?.curriculum ? user.curriculum : ''}`,
             especialidad: `${user.especialidad ? user.especialidad : ""}`,
-            ubicacion: `${user?.ubicacion?.ciudad}`,
+            ubicacion: `${user?.ubicacion?.ciudad ? user?.ubicacion?.ciudad : ""}`,
             estatus: "",
             descripcion: `${user?.descripcion ? user.descripcion : ""}`,
         },

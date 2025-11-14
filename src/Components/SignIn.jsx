@@ -14,6 +14,8 @@ const SignIn = ({ setAutenticate }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [loginUser, { isSuccess, error, data }] = useLoginUserMutation();
+  const { getUserNameRol } = useUserAccount();
+
 
 
   useEffect(() => {
@@ -25,8 +27,9 @@ const SignIn = ({ setAutenticate }) => {
     else if (isSuccess) {
       localStorage.setItem("token", data.jwt);
       toast.success("Inicio de sesión exitoso");
+      localStorage.setItem("username", data?.username);
+      getUserNameRol(localStorage.getItem("username"))
       setTimeout(() => {
-        localStorage.setItem("username", data?.username);
         navigate("/Inicio");
         setAutenticate(data.jwt)
       }, 1000);
