@@ -12,7 +12,7 @@ const Proyects = ({ proyectos, myAccount, tipo }) => {
     <div className='w-[80%] mx-auto'>
       <h2 className='text-center text-3xl'>Proyectos</h2>
       <div>
-        {myAccount &&
+        {(myAccount && proyectos?.length > 0)  &&
           <h4 className='flex items-center gap-2 '>Deseas agregar proyectos
             <FaPlus className='cursor-pointer'
               onClick={() => {

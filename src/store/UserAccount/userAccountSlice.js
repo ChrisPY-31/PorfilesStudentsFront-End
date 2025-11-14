@@ -24,11 +24,19 @@ export const userAccountSlice = createSlice({
     getUserToken: (state, action) => {
       state.userToken = action.payload;
     },
+    getUserName: (state, action) => {
+      state.username = action.payload;
+    },
   },
 });
 
 // Action creators are generated for each case reducer function
-export const { getUserToken, getUserId, getMyUserAccount, getUserDetails } =
-  userAccountSlice.actions;
+export const {
+  getUserToken,
+  getUserId,
+  getMyUserAccount,
+  getUserDetails,
+  getUserName,
+} = userAccountSlice.actions;
 
 export default userAccountSlice.reducer;

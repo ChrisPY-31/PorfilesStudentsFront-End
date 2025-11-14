@@ -6,6 +6,7 @@ import { useGetAccountUserByUsernameQuery } from "../services/UserSlice";
 import { useAppSelector } from "../Hooks/store";
 import { useUserAccount } from "../Hooks/useUserAccount";
 import CreatePost from "./CreatePost";
+import { toast } from "sonner";
 const Comunity = () => {
 
   const [publications, setPublications] = useState([])
@@ -20,11 +21,9 @@ const Comunity = () => {
       setPublications(data)
     }
   }, [data])
-
-
-  if (isLoading) return console.log("cargando")
-  if (error) return console.log("errorrrr chavalin")
-
+  
+  if (isLoading) return;
+  if (error) return;
   return (
     <div className="w-[70%] mx-auto mt-4 ">
       <div className="flex justify-around gap-4 ">

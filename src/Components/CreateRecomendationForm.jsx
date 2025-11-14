@@ -14,7 +14,7 @@ const CreateRecommendationForm = ({ onClose, user }) => {
   const [selectedEstudiante, setSelectedEstudiante] = useState(null);
   const [estudiantes, setEstudiantes] = useState(students)
   const [createRecomendation, { isSuccess }] = useCreateRecomedationMutation();
-  const {username} = useAppSelector(state => state.users)
+  const { username } = useAppSelector(state => state.users)
   const token = localStorage.getItem("token")
   const { getUserByUsername } = useUserAccount();
 
@@ -22,10 +22,10 @@ const CreateRecommendationForm = ({ onClose, user }) => {
   useEffect(() => {
     if (isSuccess) {
       toast.success("se creo la recomendacion")
-      getUserByUsername(username , token)
       setTimeout(() => {
         onClose()
       }, 1000)
+      return
     }
 
   }, [isSuccess])
@@ -55,6 +55,7 @@ const CreateRecommendationForm = ({ onClose, user }) => {
       };
 
       await createRecomendation({ recomendationData, token })
+      getUserByUsername(username, token)
 
 
       setTimeout(() => setSuccessMessage(""), 3000);

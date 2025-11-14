@@ -38,6 +38,26 @@ const SignUp = () => {
         setFormErrors({});
         console.log("Datos de registro:", values);
 
+        const user = {
+          username: values.usuario,
+          password: values.password,
+          email: values.email,
+          roleRequest: {
+            roleListName: [
+              "RECRUITER"
+            ]
+          }
+        }
+
+        console.log(user)
+
+        // const person = {
+        //   nombre: values.nombre,
+        //   apellido: values.apellido,
+        //   posicion : values.puesta
+        // }
+
+
         setTimeout(() => {
           alert("Registro exitoso");
           navigate("/");
@@ -80,9 +100,8 @@ const SignUp = () => {
           {requirements.map((req, index) => (
             <li key={index} className="flex items-center text-xs">
               <div
-                className={`flex-shrink-0 w-3 h-3 rounded-full flex items-center justify-center mr-2 ${
-                  req.isValid ? "bg-green-500" : "bg-gray-300"
-                }`}
+                className={`flex-shrink-0 w-3 h-3 rounded-full flex items-center justify-center mr-2 ${req.isValid ? "bg-green-500" : "bg-gray-300"
+                  }`}
               >
                 {req.isValid && (
                   <svg
@@ -148,11 +167,10 @@ const SignUp = () => {
                   <Field
                     type="text"
                     name="usuario"
-                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${
-                      formErrors.usuario
+                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.usuario
                         ? "border-red-400 bg-red-50"
                         : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
-                    }`}
+                      }`}
                     placeholder="Nombre de usuario"
                   />
                   {formErrors.usuario && (
@@ -172,11 +190,10 @@ const SignUp = () => {
                   <Field
                     type="text"
                     name="puesto"
-                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${
-                      formErrors.puesto
+                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.puesto
                         ? "border-red-400 bg-red-50"
                         : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
-                    }`}
+                      }`}
                     placeholder="Puesto en la empresa"
                   />
                   {formErrors.puesto && (
@@ -196,11 +213,10 @@ const SignUp = () => {
                   <Field
                     type="email"
                     name="email"
-                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${
-                      formErrors.email
+                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.email
                         ? "border-red-400 bg-red-50"
                         : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
-                    }`}
+                      }`}
                     placeholder="usuario@dominio.com"
                   />
                   {formErrors.email && (
@@ -221,11 +237,10 @@ const SignUp = () => {
                     <Field
                       type={showPassword ? "text" : "password"}
                       name="password"
-                      className={`block w-full px-3 py-2 text-sm pr-10 border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${
-                        formErrors.password
+                      className={`block w-full px-3 py-2 text-sm pr-10 border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.password
                           ? "border-red-400 bg-red-50"
                           : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
-                      }`}
+                        }`}
                       placeholder="******"
                     />
                     <button
@@ -285,7 +300,7 @@ const SignUp = () => {
                     onClick={() => navigate("/Sign-In")}
                     className=" mt-1 text-sm font-medium text-green-600 hover:text-green-500 cursor-pointer no-underline hover:underline decoration-2 underline-offset-4 transition-all"
                   >
-                    Iniciar Sesión 
+                    Iniciar Sesión
                   </button>
                 </div>
               </Form>

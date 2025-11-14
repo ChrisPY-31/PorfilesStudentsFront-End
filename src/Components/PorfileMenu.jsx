@@ -8,13 +8,15 @@ import { IoArrowBackCircleOutline } from 'react-icons/io5';
 import { toast } from 'sonner';
 import { useAppSelector } from '../Hooks/store';
 import { useGetloginAdminQuery } from '../services/autenticateUser';
+import { userAccountSlice } from '../store/UserAccount/userAccountSlice';
+import { useUserAccount } from '../Hooks/useUserAccount';
 const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
 
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
     const { data, error, isLoading } = useGetloginAdminQuery(token);
-    const { user , tipo } = useAppSelector(state => state.users)
-    const { userId } = useAppSelector(state => state.users)
+    const { user, tipo , userId } = useAppSelector(state => state.users)
+    const { getUserNameRol } = useUserAccount();
 
     const handleClick = () => {
         setMenuProfile(false);
@@ -26,6 +28,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
             localStorage.removeItem("token");
             localStorage.removeItem("idPerson");
             localStorage.removeItem("username");
+            getUserNameRol("")
         }, 1500)
     }
 
@@ -60,16 +63,20 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
             <div className='border-2 border-green-800 h-full rounded-sm '>
                 <h2 className='font-semibold text-xl mb-2'>UniConnect</h2>
                 <div className='p-3 text-center'>
-                    {tipo === "student" && <span>Estudiante</span> }
+                    {tipo === "student" && <span>Estudiante</span>}
                     {tipo === "teacher" && <span>Docente</span>}
                     {tipo === "recruiter" && <span>Reclutador</span>}
-                                    <div className='flex justify-around items-center my-2'>
+                    <div className='flex justify-around items-center my-2'>
                         <div>
-                            <img className='size-16 rounded-full mx-auto' src={`${user.imagen ? user.imagen :'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true' }`} alt="foto de perfil" />
+                            <img className='size-16 rounded-full mx-auto' src={`${user.imagen ? user.imagen : 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true'}`} alt="foto de perfil" />
                         </div>
                         <div>
                             <p className='font-semibold'>{`${user.nombre} ${user.apellido}`}</p>
-                            <p className='text-sm text-gray-600'>correo@correo.com</p>
+                            {
+                                user.carrera?.carrera &&
+                                <p>Ingeniero(a) en {user.carrera.carrera}</p>
+                            }
+                            {/* <p className='text-sm text-gray-600'>correo@correo.com</p> */}
                         </div>
                     </div>
                 </div>
@@ -78,7 +85,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                     <Link className='hover:bg-emerald-500/7 p-2'><FiFolder className='inline text-green-800' /> Mis proyectos</Link>
                     <Link className='hover:bg-emerald-500/7 p-2'><FiUsers className='inline text-green-800' /> Colaboraciones</Link>
                     <Link className='hover:bg-emerald-400/7 p-2'><FiLock className='inline text-green-800' />
-                        <button onClick={()=>handleAdmin()}>
+                        <button onClick={() => handleAdmin()}>
 
                             Administrador
                         </button>
