@@ -85,7 +85,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                     <Link className='hover:bg-emerald-500/7 p-2'><FiFolder className='inline text-green-800' /> Mis proyectos</Link>
                     <Link className='hover:bg-emerald-500/7 p-2'><FiUsers className='inline text-green-800' /> Colaboraciones</Link>
                     <Link className='hover:bg-emerald-400/7 p-2'><FiLock className='inline text-green-800' />
-                        <button onClick={() => handleAdmin()}>
+                        <button className='cursor-pointer' onClick={() => handleAdmin()}>
 
                             Administrador
                         </button>

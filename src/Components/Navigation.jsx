@@ -65,9 +65,9 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
             </div>
             : (
               <div className="flex gap-5 items-center">
-                <button><Link to={"/Sign-In"} className="bg-blue-500 py-1 px-2 text-white rounded-[3px] font-bold"> Inicia Session</Link></button>
+                <button><Link to={"/Sign-In"} className="py-1 px-2 bg-blue-700 text-white rounded-[3px] font-bold hover:bg-white hover:text-blue-700 hover:border-b-2 hover:border-blue-700 transition-colors duration-200"> Inicia Sesion</Link></button>
                 <button>
-                  <Link to={"/Sign-Up"} className="bg-blue-500 py-1 px-2 text-white rounded-[3px] font-bold"> Registrate</Link>
+                  <Link to={"/Sign-Up"} className="py-1 px-2 bg-blue-700 text-white rounded-[3px] font-bold hover:bg-white hover:text-blue-700 hover:border-b-2 hover:border-blue-700 transition-colors duration-200"> Registrate</Link>
                 </button>
               </div>
             )
