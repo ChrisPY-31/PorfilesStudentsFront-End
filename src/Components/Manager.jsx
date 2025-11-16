@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 const Manager = () => {
   const [autenticate, setAutenticate] = useState(false);
-  const [managerMenu, setManagerMenu] = useState(1);
+  const [managerMenu, setManagerMenu] = useState(2);
 
   const navigate = useNavigate();
 
@@ -26,16 +26,20 @@ const Manager = () => {
     }, 1000)
   }
 
+  const OpcionInicio = () => {
+    navigate("/");
+  }
+
   return (
     <div className="flex min-h-screen">
-      {/* NAVEGACIÓN LATERAL */}
+      
       <div className="w-64 shadow-xl text-black p-5 flex flex-col justify-between fix border-gray-100 border-2">
         <div>
           <h2 className="text-xl font-bold mb-4">Administrador</h2>
-          <ul className="space-y-3" /*espacio entre opciones*/>
+          <ul className="space-y-3" >
             <li
               className="cursor-pointer hover:bg-green-100 p-2 rounded flex"
-              onClick={() => setManagerMenu(1)}
+              onClick={OpcionInicio}
             >
               <IoIosHome className="mr-2 mt-1 text-xl" />
               Inicio
@@ -64,9 +68,9 @@ const Manager = () => {
           </ul>
         </div>
 
-        {/* Contenido inferior (Perfil y Cerrar sesión) */}
+
         <div
-          className="mt-auto" /*margin superior pasando el contenido al resto de la seccion (al final)*/
+          className="mt-auto" 
         >
           <ul className="space-y-2">
             <li

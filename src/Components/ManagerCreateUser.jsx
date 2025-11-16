@@ -2,7 +2,17 @@ import React, { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
+import { 
+  IoEyeOutline, 
+  IoEyeOffOutline, 
+  IoPersonAddOutline,
+  IoSchoolOutline,
+  IoBusinessOutline,
+  IoCalendarOutline,
+  IoIdCardOutline,
+  IoMailOutline,
+  IoKeyOutline
+} from "react-icons/io5";
 import { useCreateUserMutation } from "../services/autenticateUser";
 import { toast, Toaster } from "sonner";
 import { useAppSelector } from "../Hooks/store";
@@ -144,9 +154,14 @@ const ManagerCreateUser = () => {
         <div className="bg-white rounded-3xl shadow-2xl border border-gray-100">
           <div className="p-7">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">
-                Registro de estudiantes y docentes
-              </h2>
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className="p-3 rounded-full">
+                  <IoPersonAddOutline className="h-8 w-8 text-green-600" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900">
+                  Registro de estudiantes y docentes
+                </h2>
+              </div>
             </div>
 
             <Formik
@@ -172,16 +187,17 @@ const ManagerCreateUser = () => {
                         <Field
                           type="text"
                           name="nombre"
-                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.nombre
+                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 pl-12 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.nombre
                             ? "border-red-400 bg-red-50"
                             : "focus:border-2 focus:border-green-500"
                             }`}
                           placeholder=" "
                         />
+                        <IoPersonAddOutline className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-20" />
                         <label
-                          className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
-                                         peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
-                                         peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
+                          className="absolute top-3 left-12 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
+                                         peer-focus:top-[-0.5rem] peer-focus:left-10 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
+                                         peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-10 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
                         >
                           Nombre
                         </label>
@@ -198,16 +214,17 @@ const ManagerCreateUser = () => {
                         <Field
                           type="text"
                           name="apellidoPaterno"
-                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.apellidoPaterno
+                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 pl-12 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.apellidoPaterno
                             ? "border-red-400 bg-red-50"
                             : "focus:border-2 focus:border-green-500"
                             }`}
                           placeholder=" "
                         />
+                        <IoPersonAddOutline className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-20" />
                         <label
-                          className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
-                                         peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
-                                         peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
+                          className="absolute top-3 left-12 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
+                                         peer-focus:top-[-0.5rem] peer-focus:left-10 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
+                                         peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-10 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
                         >
                           Apellido paterno
                         </label>
@@ -226,16 +243,17 @@ const ManagerCreateUser = () => {
                         <Field
                           type="text"
                           name="numeroCuenta"
-                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.numeroCuenta
+                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 pl-12 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.numeroCuenta
                             ? "border-red-400 bg-red-50"
                             : "focus:border-2 focus:border-green-500"
                             }`}
                           placeholder=" "
                         />
+                        <IoIdCardOutline className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-20" />
                         <label
-                          className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
-                                         peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
-                                         peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
+                          className="absolute top-3 left-12 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
+                                         peer-focus:top-[-0.5rem] peer-focus:left-10 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
+                                         peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-10 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
                         >
                           Número de cuenta
                         </label>
@@ -252,16 +270,17 @@ const ManagerCreateUser = () => {
                         <Field
                           type="email"
                           name="correoInstitucional"
-                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.correoInstitucional
+                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 pl-12 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.correoInstitucional
                             ? "border-red-400 bg-red-50"
                             : "focus:border-2 focus:border-green-500"
                             }`}
                           placeholder=" "
                         />
+                        <IoMailOutline className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-20" />
                         <label
-                          className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
-                                         peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
-                                         peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
+                          className="absolute top-3 left-12 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
+                                         peer-focus:top-[-0.5rem] peer-focus:left-10 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
+                                         peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-10 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
                         >
                           Correo institucional
                         </label>
@@ -279,16 +298,17 @@ const ManagerCreateUser = () => {
                       <Field
                         type={showPassword ? "text" : "password"}
                         name="password"
-                        className={`peer w-full h-full border border-gray-300 rounded-xl px-5 pr-12 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.password
+                        className={`peer w-full h-full border border-gray-300 rounded-xl px-5 pl-12 pr-12 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent ${formErrors.password
                           ? "border-red-400 bg-red-50"
                           : "focus:border-2 focus:border-green-500"
                           }`}
                         placeholder=" "
                       />
+                      <IoKeyOutline className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-20" />
                       <label
-                        className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
-                                       peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
-                                       peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
+                        className="absolute top-3 left-12 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
+                                       peer-focus:top-[-0.5rem] peer-focus:left-10 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
+                                       peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-10 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
                       >
                         Contraseña
                       </label>
@@ -318,6 +338,7 @@ const ManagerCreateUser = () => {
                           className="py-1 px-3 border-b-2 border-green-500 text-green-600 rounded-none font-semibold hover:bg-green-50 
                           focus:outline-none transition-all duration-300 text-xs bg-transparent cursor-pointer"
                         >
+                          <IoKeyOutline className="inline h-3 w-3 mr-1" />
                           Generar contraseña
                         </button>
                       </div>
@@ -325,7 +346,7 @@ const ManagerCreateUser = () => {
                   </div>
 
                   <div className="flex justify-center">
-                    <div className="bg-green-50 p-6 rounded-2xl border border-green-200 w-4/5 ">
+                    <div className="bg-green-50 p-6 rounded-2xl border border-green-300 w-4/5 ">
                       <label className="block text-16px font-semibold text-gray-700 mb-4 text-center">
                         Rol del usuario:
                       </label>
@@ -343,7 +364,8 @@ const ManagerCreateUser = () => {
                               )
                             }
                           />
-                          <span className="ml-3 text-gray-700 font-medium group-hover:text-green-600 transition-colors">
+                          <span className="ml-3 text-gray-700 font-medium group-hover:text-green-600 transition-colors flex items-center gap-1">
+                            <IoSchoolOutline className="h-4 w-4" />
                             Estudiante
                           </span>
                         </label>
@@ -357,7 +379,8 @@ const ManagerCreateUser = () => {
                               handleTipoUsuarioChange("docente", setFieldValue)
                             }
                           />
-                          <span className="ml-3 text-gray-700 font-medium group-hover:text-green-600 transition-colors">
+                          <span className="ml-3 text-gray-700 font-medium group-hover:text-green-600 transition-colors flex items-center gap-1">
+                            <IoBusinessOutline className="h-4 w-4" />
                             Docente
                           </span>
                         </label>
@@ -372,12 +395,13 @@ const ManagerCreateUser = () => {
 
                   {showStudentFields && (
                     <div className="flex justify-center">
-                      <div className="flex gap-5 bg-green-50 p-4 rounded-2xl border border-green-200 transition-all duration-300 w-4/5">
+                      <div className="flex gap-5 p-4 rounded-2xl border border-green-300 transition-all duration-300 w-4/5">
                         <div className="flex flex-col items-center w-1/2">
                           <label
                             htmlFor="carrera"
-                            className="block text-sm font-semibold text-gray-700 mb-2 w-full text-left"
+                            className="text-sm font-semibold text-gray-700 mb-2 w-full text-left flex items-center gap-1"
                           >
+                            <IoBusinessOutline className="h-4 w-4" />
                             Carrera:
                           </label>
                           <Field
@@ -409,8 +433,9 @@ const ManagerCreateUser = () => {
                         <div className="flex flex-col items-center w-1/2">
                           <label
                             htmlFor="semestre"
-                            className="block text-sm font-semibold text-gray-700 mb-2 w-full text-left"
+                            className="text-sm font-semibold text-gray-700 mb-2 w-full text-left flex items-center gap-1"
                           >
+                            <IoCalendarOutline className="h-4 w-4" />
                             Semestre:
                           </label>
                           <Field

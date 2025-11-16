@@ -14,6 +14,7 @@ import { Toaster } from 'sonner'
 import { useUserAccount } from './Hooks/useUserAccount'
 import FormAdministrador from './Components/FormAdministrador'
 import MyPorfile from './Components/MyPorfile'
+import ManagerDashboard from './Components/ManagerDashboard'
 
 function App() {
   const location = useLocation();

@@ -2,18 +2,32 @@ import React, { useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
+import { 
+  IoEyeOutline, 
+  IoEyeOffOutline, 
+  IoRefreshOutline, 
+  IoPersonOutline,
+  IoMailOutline,
+  IoLockClosedOutline,
+  IoPersonAddOutline
+} from "react-icons/io5";
 
 const SignUp = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [usuarioLengthError, setUsuarioLengthError] = useState(false);
 
   const registerSchema = Yup.object().shape({
+    nombre: Yup.string()
+      .required("El nombre es requerido")
+      .min(2, "El nombre debe tener al menos 2 caracteres"),
+    apellido: Yup.string()
+      .required("El apellido es requerido")
+      .min(2, "El apellido debe tener al menos 2 caracteres"),
     usuario: Yup.string()
       .required("El usuario es requerido")
-      .min(3, "El nombre del usuario debe tener al menos 3 caracteres"),
-    puesto: Yup.string().required("El puesto es requerido"),
+      .max(10, "El usuario no puede tener más de 10 caracteres"),
     email: Yup.string()
       .required("El email es requerido")
       .email("Email inválido")
@@ -31,11 +45,40 @@ const SignUp = () => {
       ),
   });
 
+  const generateUsername = (nombre, apellido, setFieldValue) => {
+    const randomNum = Math.floor(Math.random() * 90) + 10;
+    const baseUsername = `${nombre.toLowerCase().charAt(0)}${apellido.toLowerCase()}`;
+    let finalUsername = baseUsername + randomNum;
+    
+    if (finalUsername.length > 10) {
+      finalUsername = finalUsername.substring(0, 10);
+    }
+    
+    setFieldValue("usuario", finalUsername);
+    setUsuarioLengthError(false);
+    
+    if (formErrors.usuario) {
+      setFormErrors(prev => ({ ...prev, usuario: "" }));
+    }
+  };
+
+  const handleUsuarioChange = (e, setFieldValue) => {
+    const value = e.target.value;
+    setFieldValue("usuario", value);
+    
+    if (value.length > 10) {
+      setUsuarioLengthError(true);
+    } else {
+      setUsuarioLengthError(false);
+    }
+  };
+
   const handleSubmit = (values, { setSubmitting }) => {
     registerSchema
       .validate(values, { abortEarly: false })
       .then(() => {
         setFormErrors({});
+        setUsuarioLengthError(false);
         console.log("Datos de registro:", values);
 
         const user = {
@@ -50,13 +93,6 @@ const SignUp = () => {
         }
 
         console.log(user)
-
-        // const person = {
-        //   nombre: values.nombre,
-        //   apellido: values.apellido,
-        //   posicion : values.puesta
-        // }
-
 
         setTimeout(() => {
           alert("Registro exitoso");
@@ -138,67 +174,115 @@ const SignUp = () => {
       <div className="w-full max-w-md mx-4">
         <div className="bg-white py-6 px-6 shadow-2xl rounded-2xl border border-gray-100">
           <div className="text-center mb-6">
-            <h2 className="text-center text-2xl font-bold text-gray-900">
-              Registra tu cuenta
-            </h2>
-            <p className="mt-1 text-gray-600 text-sm">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <IoPersonAddOutline className="h-6 w-6 text-green-600" />
+              <h2 className="text-2xl font-bold text-gray-900">
+                Registra tu cuenta
+              </h2>
+            </div>
+            <p className="text-gray-600 text-sm">
               Completa tus datos para crear una cuenta
             </p>
           </div>
 
           <Formik
             initialValues={{
+              nombre: "",
+              apellido: "",
               usuario: "",
-              puesto: "",
               email: "",
               password: "",
             }}
             onSubmit={handleSubmit}
           >
-            {({ isSubmitting, values }) => (
+            {({ isSubmitting, values, setFieldValue }) => (
               <Form className="space-y-4">
                 <div>
                   <label
-                    htmlFor="usuario"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="nombre"
+                    className="flex items-center text-sm font-medium text-gray-700 mb-1"
                   >
-                    Usuario:
+                    <IoPersonOutline className="h-4 w-4 text-green-500 mr-2" />
+                    Nombre:
                   </label>
                   <Field
                     type="text"
-                    name="usuario"
-                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.usuario
+                    name="nombre"
+                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.nombre
                         ? "border-red-400 bg-red-50"
                         : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
                       }`}
-                    placeholder="Nombre de usuario"
+                    placeholder="Nombre"
                   />
-                  {formErrors.usuario && (
+                  {formErrors.nombre && (
                     <div className="mt-1 text-xs text-red-600 font-medium">
-                      {formErrors.usuario}
+                      {formErrors.nombre}
                     </div>
                   )}
                 </div>
 
                 <div>
                   <label
-                    htmlFor="puesto"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="apellido"
+                    className="flex items-center text-sm font-medium text-gray-700 mb-1"
                   >
-                    Puesto:
+                    <IoPersonOutline className="h-4 w-4 text-green-500 mr-2" />
+                    Apellido:
                   </label>
                   <Field
                     type="text"
-                    name="puesto"
-                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.puesto
+                    name="apellido"
+                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.apellido
                         ? "border-red-400 bg-red-50"
                         : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
                       }`}
-                    placeholder="Puesto en la empresa"
+                    placeholder="Apellido"
                   />
-                  {formErrors.puesto && (
+                  {formErrors.apellido && (
                     <div className="mt-1 text-xs text-red-600 font-medium">
-                      {formErrors.puesto}
+                      {formErrors.apellido}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label
+                      htmlFor="usuario"
+                      className="flex items-center text-sm font-medium text-gray-700"
+                    >
+                      <IoPersonOutline className="h-4 w-4 text-green-500 mr-2" />
+                      Usuario:
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => generateUsername(values.nombre, values.apellido, setFieldValue)}
+                      disabled={!values.nombre || !values.apellido}
+                      className="flex items-center gap-1 px-3 py-1 border-2 border-gray-300 text-green-600 text-xs rounded-lg hover:bg-green-50 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <IoRefreshOutline className="h-3 w-3" />
+                      Generar
+                    </button>
+                  </div>
+                  <Field
+                    type="text"
+                    name="usuario"
+                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.usuario || usuarioLengthError
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
+                      }`}
+                    placeholder="Genera tu usuario"
+                    maxLength="10"
+                    onChange={(e) => handleUsuarioChange(e, setFieldValue)}
+                  />
+                  {formErrors.usuario && (
+                    <div className="mt-1 text-xs text-red-600 font-medium">
+                      {formErrors.usuario}
+                    </div>
+                  )}
+                  {usuarioLengthError && (
+                    <div className="mt-1 text-xs text-red-600 font-medium">
+                      El usuario no puede tener más de 10 caracteres
                     </div>
                   )}
                 </div>
@@ -206,8 +290,9 @@ const SignUp = () => {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    className="flex items-center text-sm font-medium text-gray-700 mb-1"
                   >
+                    <IoMailOutline className="h-4 w-4 text-blue-500 mr-2" />
                     Correo electrónico:
                   </label>
                   <Field
@@ -229,8 +314,9 @@ const SignUp = () => {
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    className="flex items-center text-sm font-medium text-gray-700 mb-1"
                   >
+                    <IoLockClosedOutline className="h-4 w-4 text-red-500 mr-2" />
                     Contraseña:
                   </label>
                   <div className="relative">

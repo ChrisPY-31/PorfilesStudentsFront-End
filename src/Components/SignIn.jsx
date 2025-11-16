@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
+import { IoEyeOutline, IoPersonOutline, IoLockClosedOutline } from "react-icons/io5";
+import { IoIosLogIn } from "react-icons/io";
 import { useLoginUserMutation } from "../services/autenticateUser";
 import { toast } from "sonner";
 import { useUserAccount } from "../Hooks/useUserAccount";
@@ -20,20 +21,21 @@ const SignIn = ({ setAutenticate }) => {
 
   useEffect(() => {
     if (error) {
-      toast.error("Error al iniciar sesión: " + error?.data?.message && 'Usuarios o Contraseña incorrectos');
-      return
-    }
-
-    else if (isSuccess) {
+      toast.error(
+        "Error al iniciar sesión: " + error?.data?.message &&
+          "Usuarios o Contraseña incorrectos"
+      );
+      return;
+    } else if (isSuccess) {
       localStorage.setItem("token", data.jwt);
       toast.success("Inicio de sesión exitoso");
       localStorage.setItem("username", data?.username);
-      getUserNameRol(localStorage.getItem("username"))
+      getUserNameRol(localStorage.getItem("username"));
       setTimeout(() => {
         navigate("/Inicio");
-        setAutenticate(data.jwt)
+        setAutenticate(data.jwt);
       }, 1000);
-      return
+      return;
     }
   }, [isSuccess, error]);
 
@@ -67,9 +69,12 @@ const SignIn = ({ setAutenticate }) => {
       <div className="w-full max-w-md mx-4">
         <div className="bg-white py-8 px-6 shadow-2xl rounded-2xl border border-gray-100">
           <div className="text-center mb-8">
-            <h2 className="text-center text-3xl font-extrabold text-gray-900">
-              Iniciar sesión
-            </h2>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <IoIosLogIn className="h-7 w-7 text-green-600" />
+              <h2 className="text-center text-3xl font-bold text-gray-900">
+                Iniciar sesión
+              </h2>
+            </div>
             <p className="mt-2 text-gray-600 text-sm">
               Ingresa tus credenciales para acceder
             </p>
@@ -84,17 +89,19 @@ const SignIn = ({ setAutenticate }) => {
                 <div>
                   <label
                     htmlFor="usuario"
-                    className="block text-base font-medium text-gray-700 mb-2"
+                    className="text-base font-medium text-gray-700 mb-2 flex"
                   >
+                    <IoPersonOutline className="h-4 w-4 text-green-500 mr-2 mt-1"/>
                     Usuario:
                   </label>
                   <Field
                     type="text"
                     name="usuario"
-                    className={`block w-full px-4 py-3 text-base border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${formErrors.usuario
-                      ? "border-red-400 bg-red-50"
-                      : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
-                      }`}
+                    className={`block w-full px-4 py-3 text-base border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${
+                      formErrors.usuario
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                    }`}
                     placeholder="2321133"
                   />
                   {formErrors.usuario && (
@@ -107,18 +114,20 @@ const SignIn = ({ setAutenticate }) => {
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-base font-medium text-gray-700 mb-2"
+                    className="flex text-base font-medium text-gray-700 mb-2"
                   >
+                    <IoLockClosedOutline className="h-4 w-4 text-red-500 mr-2 mt-1"/>
                     Contraseña:
                   </label>
                   <div className="relative">
                     <Field
                       type={showPassword ? "text" : "password"}
                       name="password"
-                      className={`block w-full px-4 py-3 text-base pr-12 border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${formErrors.password
-                        ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
-                        }`}
+                      className={`block w-full px-4 py-3 text-base pr-12 border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${
+                        formErrors.password
+                          ? "border-red-400 bg-red-50"
+                          : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                      }`}
                       placeholder="******"
                     />
                     <button
