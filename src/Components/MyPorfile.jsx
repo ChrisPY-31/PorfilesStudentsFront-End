@@ -11,7 +11,7 @@ const MyPorfile = () => {
 
 
     return (
-        <div className='mt-10 min-h-[100vh]'>
+        <div className='mt-10 min-h-[100vh] '>
             <div className='w-[80%] mx-auto flex justify-around items-center shadow-md py-2 rounded'>
                 <h2 className='cursor-pointer' onClick={() => setMenu(1)}>Perfil</h2>
                 {user.tipo === 'student' ? <h2 className='cursor-pointer' onClick={() => setMenu(2)}>Proyectos</h2> : null}

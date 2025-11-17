@@ -1,22 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { 
-  IoEyeOutline, 
-  IoEyeOffOutline, 
-  IoRefreshOutline, 
+import {
+  IoEyeOutline,
+  IoEyeOffOutline,
+  IoRefreshOutline,
   IoPersonOutline,
   IoMailOutline,
   IoLockClosedOutline,
   IoPersonAddOutline
 } from "react-icons/io5";
+import { useCreateUserMutation } from "../services/autenticateUser";
+import { toast } from "sonner";
+import { useUserAccount } from "../Hooks/useUserAccount";
 
-const SignUp = () => {
+const SignUp = ({ setAutenticate }) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [usuarioLengthError, setUsuarioLengthError] = useState(false);
+  const [createUser, { isSuccess, isError, error, data ,isLoading}] = useCreateUserMutation()
+  const { getUserNameRol } = useUserAccount();
+
+
+  useEffect(() => {
+    if (isSuccess) {
+      localStorage.setItem("token", data.jwt);
+      toast.success("Cuenta creada con exitoso");
+      localStorage.setItem("username", data?.username);
+      getUserNameRol(localStorage.getItem("username"));
+      setTimeout(() => {
+        navigate("/Inicio");
+        setAutenticate(data.jwt);
+      }, 1000);
+      return
+    } else if (isError) {
+      toast.message(error.data?.mensaje)
+      return
+    }
+    if(isLoading){
+      toast.isLoading("Cargando.....")
+    }
+  }, [isSuccess, isError , isLoading])
 
   const registerSchema = Yup.object().shape({
     nombre: Yup.string()
@@ -49,14 +75,14 @@ const SignUp = () => {
     const randomNum = Math.floor(Math.random() * 90) + 10;
     const baseUsername = `${nombre.toLowerCase().charAt(0)}${apellido.toLowerCase()}`;
     let finalUsername = baseUsername + randomNum;
-    
+
     if (finalUsername.length > 10) {
       finalUsername = finalUsername.substring(0, 10);
     }
-    
+
     setFieldValue("usuario", finalUsername);
     setUsuarioLengthError(false);
-    
+
     if (formErrors.usuario) {
       setFormErrors(prev => ({ ...prev, usuario: "" }));
     }
@@ -65,7 +91,7 @@ const SignUp = () => {
   const handleUsuarioChange = (e, setFieldValue) => {
     const value = e.target.value;
     setFieldValue("usuario", value);
-    
+
     if (value.length > 10) {
       setUsuarioLengthError(true);
     } else {
@@ -79,7 +105,6 @@ const SignUp = () => {
       .then(() => {
         setFormErrors({});
         setUsuarioLengthError(false);
-        console.log("Datos de registro:", values);
 
         const user = {
           username: values.usuario,
@@ -92,13 +117,15 @@ const SignUp = () => {
           }
         }
 
-        console.log(user)
+        const person = {
+          nombre: values.nombre,
+          apellido: values.apellido
+        }
 
-        setTimeout(() => {
-          alert("Registro exitoso");
-          navigate("/");
-          setSubmitting(false);
-        }, 1000);
+        createUser({ user, person })
+
+        setSubmitting(false);
+
       })
       .catch((errors) => {
         const errorMap = {};
@@ -209,8 +236,8 @@ const SignUp = () => {
                     type="text"
                     name="nombre"
                     className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.nombre
-                        ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
+                      ? "border-red-400 bg-red-50"
+                      : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
                       }`}
                     placeholder="Nombre"
                   />
@@ -233,8 +260,8 @@ const SignUp = () => {
                     type="text"
                     name="apellido"
                     className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.apellido
-                        ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
+                      ? "border-red-400 bg-red-50"
+                      : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
                       }`}
                     placeholder="Apellido"
                   />
@@ -268,8 +295,8 @@ const SignUp = () => {
                     type="text"
                     name="usuario"
                     className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.usuario || usuarioLengthError
-                        ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
+                      ? "border-red-400 bg-red-50"
+                      : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
                       }`}
                     placeholder="Genera tu usuario"
                     maxLength="10"
@@ -299,8 +326,8 @@ const SignUp = () => {
                     type="email"
                     name="email"
                     className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.email
-                        ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
+                      ? "border-red-400 bg-red-50"
+                      : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
                       }`}
                     placeholder="usuario@dominio.com"
                   />
@@ -324,8 +351,8 @@ const SignUp = () => {
                       type={showPassword ? "text" : "password"}
                       name="password"
                       className={`block w-full px-3 py-2 text-sm pr-10 border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.password
-                          ? "border-red-400 bg-red-50"
-                          : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
                         }`}
                       placeholder="******"
                     />

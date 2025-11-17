@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { IoEyeOutline, IoPersonOutline, IoLockClosedOutline } from "react-icons/io5";
+import { IoEyeOutline, IoPersonOutline, IoLockClosedOutline, IoEyeOffOutline } from "react-icons/io5";
 import { IoIosLogIn } from "react-icons/io";
 import { useLoginUserMutation } from "../services/autenticateUser";
 import { toast } from "sonner";
