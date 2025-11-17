@@ -57,6 +57,13 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
         setMenuProfile(false);
     }
 
+   const handleRecruitment = () => {
+    setMenuProfile(false); // Cierra el menú al navegar
+    setTimeout(() => {
+        navigate('/StudentRecruitment/');
+    }, 100);
+}
+
 
     return (
         <div className="absolute top-14 left-5 w-[300px] h-min-[400px] p-4 bg-white rounded shadow-lg z-50">
@@ -107,7 +114,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                     </>}
                     {tipo === "recruiter" && <>
                         <Link className='hover:bg-emerald-500/7 p-2'><FiFolder className='inline text-green-800' /> Publicar Empleo</Link>
-                        <Link className='hover:bg-emerald-500/7 p-2'><FiUsers className='inline text-green-800' /> Contratar estudiante</Link>
+                        <Link onClick={handleRecruitment} className='hover:bg-emerald-500/7 p-2'><FiUsers className='inline text-green-800' /> Contratar estudiante</Link>
 
                     </>}
 

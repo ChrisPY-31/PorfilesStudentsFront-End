@@ -15,6 +15,7 @@ import { useUserAccount } from './Hooks/useUserAccount'
 import FormAdministrador from './Components/FormAdministrador'
 import MyPorfile from './Components/MyPorfile'
 import ManagerDashboard from './Components/ManagerDashboard'
+import StudentRecruitmentForm from './Components/StudentRecruitmentForm'
 
 function App() {
   const location = useLocation();
@@ -55,6 +56,7 @@ function App() {
         <Route path='/Sign-Up' element={<SignUp setAutenticate={setAutenticate} />} />
         <Route path='/Manager' element={<Manager />} />
         <Route path='/loginAdministrador' element={<FormAdministrador />} />
+        <Route path="/StudentRecruitment/" element={<StudentRecruitmentForm />} />
 
       </Routes>
       <Toaster position="top-right" autoClose={2000} hideProgressBar={false} />
