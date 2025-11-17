@@ -142,7 +142,7 @@ const handleSubmit = (values, { setSubmitting }) => {
                     className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${
                       formErrors.fechaContratacion
                         ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
+                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200 cursor-pointer"
                     }`}
                     max={formatDateForInput(new Date())}
                   />
@@ -192,7 +192,7 @@ const handleSubmit = (values, { setSubmitting }) => {
                     className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${
                       formErrors.estudiante
                         ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
+                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200 cursor-pointer"
                     }`}
                   >
                     <option value="">Selecciona un estudiante</option>
@@ -245,10 +245,10 @@ const handleSubmit = (values, { setSubmitting }) => {
                   <Field
                     as="select"
                     name="compania.id"
-                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${
+                    className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300${
                       formErrors.compania
                         ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200"
+                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-200 cursor-pointer"
                     }`}
                   >
                     <option value="">Selecciona una compañía</option>
