@@ -38,9 +38,9 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
 
         {
           autenticate ?
-            <div className="flex gap-2 justify-center items-center relative">
-              <input type="text" placeholder="Buscar Estudiante" className="outline-none shadow-sm px-2 rounded" />
-              <IoIosSearch className="absolute right-[29%] top-2 cursor-pointer " />
+            <div className="flex gap-2 justify-center items-center relative ">
+              {/* <input type="text" placeholder="Buscar Estudiante" className="outline-none shadow-sm px-2 rounded" />
+              <IoIosSearch className="absolute right-[29%] top-2 cursor-pointer " /> */}
 
               <IoMdNotificationsOutline
                 onClick={() => {
