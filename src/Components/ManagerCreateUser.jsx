@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { 
-  IoEyeOutline, 
-  IoEyeOffOutline, 
+import {
+  IoEyeOutline,
+  IoEyeOffOutline,
   IoPersonAddOutline,
   IoSchoolOutline,
   IoBusinessOutline,
@@ -16,6 +16,7 @@ import {
 import { useCreateUserMutation } from "../services/autenticateUser";
 import { toast, Toaster } from "sonner";
 import { useAppSelector } from "../Hooks/store";
+import { useGetCompaniesQuery } from "../services/UserSlice";
 
 const ManagerCreateUser = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const ManagerCreateUser = () => {
   const [formErrors, setFormErrors] = useState({});
   const [showStudentFields, setShowStudentFields] = useState(false);
   const [createUser, { isLoading, isSuccess, error }] = useCreateUserMutation();
-
+  
   useEffect(() => {
 
     if (isSuccess) {
@@ -108,7 +109,7 @@ const ManagerCreateUser = () => {
         nombre: values.nombre,
         apellido: values.apellidoPaterno
       }
-       await createUser({ user, person });
+      await createUser({ user, person });
 
 
       values.nombre = "";
@@ -459,7 +460,7 @@ const ManagerCreateUser = () => {
                             </div>
                           )}
                         </div>
-                        
+
                       </div>
                     </div>
                   )}
@@ -470,10 +471,10 @@ const ManagerCreateUser = () => {
                       className="w-4/5 py-4 px-6 border border-transparent rounded-xl shadow-lg text-lg font-semibold text-white bg-gradient-to-r
                        from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2
                         focus:ring-green-500 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                    
+
                     >
                       {isLoading ? 'Cargando...' : 'Registrar'}
-                      
+
                     </button>
                   </div>
                 </Form>

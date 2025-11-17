@@ -9,6 +9,7 @@ import { useUpdateMyAccountMutation, useUpdateMyPhotoMutation } from "../service
 import { useAppSelector } from "../Hooks/store";
 import { useUserAccount } from "../Hooks/useUserAccount";
 import { formatearCarrera } from "../helpers";
+import { useGetCompaniesQuery } from "../services/UserSlice";
 
 
 const EditProfileForm = ({ user, onClose, tipo }) => {
@@ -21,6 +22,11 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
     const { getUserByUsername } = useUserAccount();
     const [updateMyPhoto] = useUpdateMyPhotoMutation();
     const { userId, username, userToken } = useAppSelector(state => state.users)
+    const { data } = useGetCompaniesQuery({ userToken });
+
+
+
+
 
     const validationSchemas = {
         student: Yup.object().shape({}),
@@ -157,6 +163,53 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                 }
 
             }
+
+            if (tipo === "recruiter") {
+                const updatePerson = {
+                    id: userId,
+                    idCompania: parseInt(values.empresa),
+                    idUbicacion: 2,
+                    nombre: values.nombre,
+                    apellido: values.apellidoPaterno,
+                    descripcion: values.descripcion,
+                    fechaNacimiento: values.fechaNacimiento,
+                    imagen: user.imagen,
+                    especialidad: values.especialidad,
+                    curriculum: values.linkCV,
+                    tipo: tipo,
+
+                }
+                // Primero actualizar los datos de la cuenta
+                await updateMyAccount({
+                    updatePerson,
+                    token,
+                    tipo,
+                    userId
+                }).unwrap();
+
+
+                if (archivoSeleccionado) {
+                    const formData = new FormData();
+                    formData.append("image", archivoSeleccionado);
+                    formData.append("tipo", tipo);
+                    console.log(archivoSeleccionado)
+                    try {
+                        await updateMyPhoto({
+                            userId,
+                            formData,
+                            token
+                        }).unwrap();
+                        toast.success("Foto actualizada con éxito");
+                        getUserByUsername(username, userToken);
+                        return
+                    } catch (photoError) {
+                        toast.error("Error al actualizar la foto, pero los datos se guardaron");
+                    }
+
+                } else if (!archivoSeleccionado) {
+                    return
+                }
+            }
             // ... resto de tu lógica para teacher y recruiter
 
             setSubmitting(false);
@@ -223,14 +276,14 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
             descripcion: `${user?.descripcion ? user.descripcion : ""}`,
         },
         recruiter: {
-            nombre: "",
-            apellidoPaterno: "",
-            fechaNacimiento: "",
-            empresa: "",
-            especialidad: "",
-            linkCV: "",
-            ubicacion: "",
-            descripcion: "",
+            nombre: `${user?.nombre && user.nombre}`,
+            apellidoPaterno: `${user?.apellido && user.apellido}`,
+            fechaNacimiento: `${user?.fechaNacimiento && user.fechaNacimiento}`,
+            empresa: `${user.empresa ? user.empresa : ""}`,
+            especialidad: `${user.especialidad ? user.especialidad : ""}`,
+            linkCV: `${user?.curriculum ? user.curriculum : ''}`,
+            ubicacion: `${user?.ubicacion?.ciudad ? user?.ubicacion?.ciudad : ''}`,
+            descripcion: `${user?.descripcion ? user.descripcion : ""}`,
         },
     }[tipoUsuario]);
 
@@ -666,17 +719,18 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                                                     <div className="flex flex-col">
                                                         <div className="relative w-full h-12">
                                                             <Field
-                                                                type="text"
-                                                                name="empresa"
-                                                                placeholder=" "
+                                                                as="select"
                                                                 className={`peer w-full h-full rounded-2xl px-4 outline-none bg-white z-10 shadow-sm border-2 ${formErrors.empresa
                                                                     ? "border-red-400 bg-red-50"
                                                                     : "border-gray-300 focus:border-green-500 focus:ring-0"
                                                                     }`}
-                                                            />
-                                                            <label className="absolute top-2 left-4 px-1 bg-white/95 text-slate-400 text-sm transition-all duration-200 z-0 pointer-events-none peer-focus:-translate-y-3 peer-focus:scale-90 peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600 peer-not-placeholder-shown:-translate-y-3 peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-slate-600">
-                                                                Empresa
-                                                            </label>
+                                                                name="empresa" id="">
+                                                                <option>Seleccione una opcion</option>
+                                                                {
+                                                                    data?.object.map(empresa => {
+                                                                        return <option value={empresa.idCompania}>{empresa.nombre}</option>
+                                                                    })
+                                                                }</Field>
                                                         </div>
                                                         <div className="mt-1 min-h-4 text-sm text-red-600 font-medium">
                                                             {formErrors.empresa || " "}

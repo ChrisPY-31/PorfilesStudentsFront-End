@@ -34,6 +34,15 @@ export const userSlice = createApi({
         },
       }),
     }),
+
+    getCompanies: builder.query({
+      query: ({ userToken }) => ({
+        url: "/company",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      }),
+    }),
     createEducationUser: builder.mutation({
       query: ({ newEducationUser, token }) => ({
         url: `/education`,
@@ -45,16 +54,16 @@ export const userSlice = createApi({
         invalidatesTags: ["userById"],
       }),
     }),
-    updateEducationUser : builder.mutation({
-      query : ({updateEducation , token}) =>({
-        url : `education/${updateEducation.idEducacion}`,
+    updateEducationUser: builder.mutation({
+      query: ({ updateEducation, token }) => ({
+        url: `education/${updateEducation.idEducacion}`,
         method: "PUT",
         body: updateEducation,
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         invalidatesTags: ["userById"],
-      })
+      }),
     }),
     createSocialLink: builder.mutation({
       query: ({ newSocialLink, token }) => ({
@@ -64,28 +73,29 @@ export const userSlice = createApi({
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        providesTags:["userById"]
+        providesTags: ["userById"],
       }),
     }),
-    createSkills : builder.mutation({
-      query: ({skillsList, token}) =>({
-        url : "/language",
-        method :"POST",
+    createSkills: builder.mutation({
+      query: ({ skillsList, token }) => ({
+        url: "/language",
+        method: "POST",
         body: skillsList,
-        headers:{
-          Authorization: `Bearer ${token}`
-        }
-      })
-    })
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
   }),
 });
 
 export const {
   useGetAllUsersQuery,
   useGetUserByIdQuery,
+  useGetCompaniesQuery,
   useGetAccountUserByUsernameQuery,
   useCreateEducationUserMutation,
   useCreateSocialLinkMutation,
   useUpdateEducationUserMutation,
-  useCreateSkillsMutation
+  useCreateSkillsMutation,
 } = userSlice;

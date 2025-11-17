@@ -52,7 +52,7 @@ function App() {
         <Route path={`/Person/:id`} element={autenticate ? <PersonMenu /> : <Navigate to="/" />} />
         <Route path='/MyProfile/:id' element={autenticate ? <MyPorfile /> : <Navigate to="/" />} />
         <Route path='/Sign-In' element={<SignIn setAutenticate={setAutenticate} />} />
-        <Route path='/Sign-Up' element={<SignUp />} />
+        <Route path='/Sign-Up' element={<SignUp setAutenticate={setAutenticate} />} />
         <Route path='/Manager' element={<Manager />} />
         <Route path='/loginAdministrador' element={<FormAdministrador />} />
 

@@ -15,7 +15,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
     const { data, error, isLoading } = useGetloginAdminQuery(token);
-    const { user, tipo , userId } = useAppSelector(state => state.users)
+    const { user, tipo, userId } = useAppSelector(state => state.users)
     const { getUserNameRol } = useUserAccount();
 
     const handleClick = () => {
@@ -60,7 +60,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
 
     return (
         <div className="absolute top-14 left-5 w-[300px] h-min-[400px] p-4 bg-white rounded shadow-lg z-50">
-            <div className='border-2 border-green-800 h-full rounded-sm '>
+            <div className='h-full rounded-sm '>
                 <h2 className='font-semibold text-xl mb-2'>UniConnect</h2>
                 <div className='p-3 text-center'>
                     {tipo === "student" && <span>Estudiante</span>}
@@ -68,28 +68,58 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                     {tipo === "recruiter" && <span>Reclutador</span>}
                     <div className='flex justify-around items-center my-2'>
                         <div>
-                            <img className='size-16 rounded-full mx-auto' src={`${user.imagen ? user.imagen : 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true'}`} alt="foto de perfil" />
+                            {(tipo === "student" || tipo === "recruiter" || tipo === "teacher") ?
+                                <img className='size-16 rounded-full mx-auto' src={`${user.imagen ? user.imagen : 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true'}`} alt="foto de perfil" />
+                                :
+                                <img className='size-16 rounded-full mx-auto' src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWPzckq1VBcfsvTk3ByJnJR-ort0ykcUGROA&s' />
+
+                                }
                         </div>
                         <div>
-                            <p className='font-semibold'>{`${user.nombre} ${user.apellido}`}</p>
-                            {
-                                user.carrera?.carrera &&
-                                <p>Ingeniero(a) en {user.carrera.carrera}</p>
+                            {(tipo === "student" || tipo === "recruiter" || tipo === "teacher") ? <>
+                                <p className='font-semibold'>{`${user.nombre} ${user.apellido}`}</p>
+                                {
+                                    user.carrera?.carrera &&
+                                    <p>Ingeniero(a) en {user.carrera.carrera}</p>
+                                }
+
+                            </>
+                                : <p>Centro universitario tianguistenco</p>
+
                             }
-                            {/* <p className='text-sm text-gray-600'>correo@correo.com</p> */}
+
                         </div>
                     </div>
                 </div>
                 <div className='flex flex-col my-2 '>
-                    <Link onClick={handleMyProfile} className='hover:bg-emerald-500/7 p-2'><FiUser className='inline text-green-800' /> Mi Perfil</Link>
-                    <Link className='hover:bg-emerald-500/7 p-2'><FiFolder className='inline text-green-800' /> Mis proyectos</Link>
-                    <Link className='hover:bg-emerald-500/7 p-2'><FiUsers className='inline text-green-800' /> Colaboraciones</Link>
-                    <Link className='hover:bg-emerald-400/7 p-2'><FiLock className='inline text-green-800' />
-                        <button className='cursor-pointer' onClick={() => handleAdmin()}>
+                    {(tipo === "student" || tipo === "recruiter" || tipo === "teacher") &&
+                        <Link onClick={handleMyProfile} className='hover:bg-emerald-500/7 p-2'><FiUser className='inline text-green-800' /> Mi Perfil</Link>
+                    }
 
-                            Administrador
-                        </button>
-                    </Link>
+                    {tipo === "student" && <>
+                        <Link className='hover:bg-emerald-500/7 p-2'><FiFolder className='inline text-green-800' /> Mis proyectos</Link>
+                        <Link className='hover:bg-emerald-500/7 p-2'><FiUsers className='inline text-green-800' /> Colaboraciones</Link>
+                    </>
+                    }
+                    {tipo === "teacher" && <>
+                        <Link className='hover:bg-emerald-500/7 p-2'><FiFolder className='inline text-green-800' /> Mis Recomendaciones</Link>
+
+                    </>}
+                    {tipo === "recruiter" && <>
+                        <Link className='hover:bg-emerald-500/7 p-2'><FiFolder className='inline text-green-800' /> Publicar Empleo</Link>
+                        <Link className='hover:bg-emerald-500/7 p-2'><FiUsers className='inline text-green-800' /> Contratar estudiante</Link>
+
+                    </>}
+
+                    {(tipo !== "student" && tipo !== "recruiter" && tipo !== "teacher") &&
+                        <Link className='hover:bg-emerald-400/7 p-2'><FiLock className='inline text-green-800' />
+                            <button className='cursor-pointer' onClick={() => handleAdmin()}>
+
+                                Administrador
+                            </button>
+                        </Link>
+                    }
+
                 </div>
                 <div className=''>
                     <Link className='hover:bg-emerald-400/7 block p-2' onClick={handleClick}>
