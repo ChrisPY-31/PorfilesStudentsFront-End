@@ -66,7 +66,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
 
 
     return (
-        <div className="absolute top-14 left-5 w-[300px] h-min-[400px] p-4 bg-white rounded shadow-lg z-50">
+        <div className="absolute top-15 right-0 w-[300px] h-min-[400px] p-4 bg-white rounded shadow-lg z-50">
             <div className='h-full rounded-sm '>
                 <h2 className='font-semibold text-xl mb-2'>UniConnect</h2>
                 <div className='p-3 text-center'>

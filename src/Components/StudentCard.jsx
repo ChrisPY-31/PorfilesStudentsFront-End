@@ -6,7 +6,6 @@ const StudentCard = ({ id, nombre, apellido, carrera, imagen }) => {
   const navigate = useNavigate();
   const { getIdUser } = useUserAccount();
 
-
   const handleClick = (idPerson) => {
     navigate(`/Person/${idPerson}`)
     localStorage.setItem("idPerson", idPerson)

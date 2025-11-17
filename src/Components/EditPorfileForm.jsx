@@ -138,7 +138,6 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                     userId
                 }).unwrap();
 
-                console.log(archivoSeleccionado)
                 if (archivoSeleccionado) {
                     console.log("entro aqui la peticon")
                     const formData = new FormData();
@@ -186,7 +185,6 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                     tipo,
                     userId
                 }).unwrap();
-
 
                 if (archivoSeleccionado) {
                     const formData = new FormData();
@@ -725,7 +723,7 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                                                                     : "border-gray-300 focus:border-green-500 focus:ring-0"
                                                                     }`}
                                                                 name="empresa" id="">
-                                                                <option>Seleccione una opcion</option>
+                                                                <option>Seleccione una empresa</option>
                                                                 {
                                                                     data?.object.map(empresa => {
                                                                         return <option value={empresa.idCompania}>{empresa.nombre}</option>

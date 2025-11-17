@@ -27,7 +27,7 @@ const Manager = () => {
   }
 
   const OpcionInicio = () => {
-    navigate("/");
+    navigate("/Inicio");
   }
 
   return (
