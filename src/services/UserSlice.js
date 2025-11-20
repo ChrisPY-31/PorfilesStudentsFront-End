@@ -12,7 +12,20 @@ export const userSlice = createApi({
         providesTags: ["Users"],
       }),
     }),
+    getTeachers: builder.query({
+      query: () => ({
+        url: "/teachers",
+      }),
+    }),
     tagTypes: ["userById"],
+    getUsersAdmin: builder.query({
+      query: ({ token }) => ({
+        url: "/users",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
     getUserById: builder.query({
       query: ({ id, token }) => ({
         url: `/person/${id}`,
@@ -65,6 +78,15 @@ export const userSlice = createApi({
         invalidatesTags: ["userById"],
       }),
     }),
+    deleteEducationUser: builder.mutation({
+      query: ({ idEducacion, token }) => ({
+        url: `educationUser/${idEducacion}`,
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
     createSocialLink: builder.mutation({
       query: ({ newSocialLink, token }) => ({
         url: "/saveContact",
@@ -86,16 +108,29 @@ export const userSlice = createApi({
         },
       }),
     }),
+    updatePasswordUser: builder.mutation({
+      query: ({ username, newPassword, token }) => ({
+        url: `/${username}/${newPassword}`,
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
   }),
 });
 
 export const {
   useGetAllUsersQuery,
+  useGetTeachersQuery,
+  useGetUsersAdminQuery,
   useGetUserByIdQuery,
   useGetCompaniesQuery,
   useGetAccountUserByUsernameQuery,
   useCreateEducationUserMutation,
   useCreateSocialLinkMutation,
   useUpdateEducationUserMutation,
+  useDeleteEducationUserMutation,
   useCreateSkillsMutation,
+  useUpdatePasswordUserMutation,
 } = userSlice;

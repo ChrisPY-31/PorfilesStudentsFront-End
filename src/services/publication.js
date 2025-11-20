@@ -14,7 +14,7 @@ export const publicationApi = createApi({
       }),
     }),
     createPublication: builder.mutation({
-      query: ({formData , token}) => ({
+      query: ({ formData, token }) => ({
         url: "/publication",
         method: "POST",
         body: formData,
@@ -22,17 +22,31 @@ export const publicationApi = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
-      invalidatesTags:["publications"]
+      invalidatesTags: ["publications"],
     }),
     fileUpload: builder.mutation({
-      query: ({image , id}) => ({
+      query: ({ image, id }) => ({
         url: `filePublication/${id}`,
         method: "POST",
-        params: {image: image},
+        params: { image: image },
+      }),
+    }),
+    interactionPublication: builder.mutation({
+      query: ({ userToken, interaction }) => ({
+        url: `/interactionPublicacion`,
+        method: "POST",
+        body: interaction,
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       }),
     }),
   }),
 });
 
-export const { useGetPublicationsQuery, useCreatePublicationMutation, useFileUploadMutation } =
-  publicationApi;
+export const {
+  useGetPublicationsQuery,
+  useCreatePublicationMutation,
+  useFileUploadMutation,
+  useInteractionPublicationMutation,
+} = publicationApi;

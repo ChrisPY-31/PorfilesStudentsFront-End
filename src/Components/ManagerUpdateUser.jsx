@@ -8,24 +8,29 @@ import {
   IoEyeOffOutline,
   IoCheckmarkCircleOutline,
 } from "react-icons/io5";
-import { useGetAllUsersQuery } from "../services/UserSlice";
+import { useGetAllUsersQuery, useUpdatePasswordUserMutation } from "../services/UserSlice";
+import { toast } from "sonner";
 
 const ManagerUpdateUser = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordGenerated, setPasswordGenerated] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [searchUsername, setSearchUsername] = useState()
-  const { data, isSuccess } = useGetAllUsersQuery();
   const [students, setStudents] = useState([])
-
+  const [updatePasswordUser, { isSuccess , error , }] = useUpdatePasswordUserMutation();
 
   useEffect(() => {
     if (isSuccess) {
-      setStudents(data.content)
+      toast.success("Contraseña actualizada con exito");
+      return
     }
-  }, [isSuccess])
+    if(error){
+      toast.error("Error el usuario no exite intentelo mas tarde")
+    }
 
-  console.log(students)
+  }, [isSuccess , error])
+
+
   const generatePassword = () => {
     const length = 8;
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
@@ -56,9 +61,13 @@ const ManagerUpdateUser = () => {
         return;
       }
 
-      console.log("Datos del formulario:", values);
 
-      alert("Contraseña actualizada correctamente");
+      const username = values.username
+      const newPassword = values.password
+      const token = localStorage.getItem("token")
+
+      await updatePasswordUser({ username, newPassword, token });
+
       setSubmitting(false);
       onCancel();
     } catch (err) {
@@ -111,9 +120,7 @@ const ManagerUpdateUser = () => {
                     </label>
                     <Field
                       name='username'
-                      value={searchUsername}
                       type="text"
-                      onChange={(e) => setSearchUsername(e.target.value)}
                       className={`block w-full px-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none transition-all duration-300 ${formErrors.username
                         ? "border-red-400 bg-red-50"
                         : "border-gray-300 hover:border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200"
@@ -126,24 +133,6 @@ const ManagerUpdateUser = () => {
                       </div>
                     )}
                   </div>
-                  <div>
-                    {
-                     searchUsername?.length > 0 ? 
-                      filtered.map(student => (
-                        <div className="flex gap-3 my-4"
-                        >
-                          <img className="size-10 rounded-full cursor-pointer" src={`${student.imagen ? student.imagen : "https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true"}`} alt="" />
-                          <div>
-                            <h4 className="text-sm font-medium ">{`${student.nombre} ${student.apellido}`}</h4>
-                            <p className="truncate text-sm text-gray-500 dark:text-gray-400">{student.carrera?.carrera}</p>
-                          </div>
-                        </div>
-                      ))
-                      :
-                      <div></div>
-                    }
-                  </div>
-
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="flex items-center text-sm font-medium text-gray-700">

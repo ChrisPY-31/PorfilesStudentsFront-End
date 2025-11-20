@@ -23,7 +23,6 @@ const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
     const [updateEducationUser, { isSuccess: success }] = useUpdateEducationUserMutation();
     const { userId, username, userToken } = useAppSelector(state => state.users);
     const [enProgreso, setEnProgreso] = useState(false);
-    const location = useLocation();
     const { getUserByUsername } = useUserAccount();
 
     useEffect(() => {
@@ -45,8 +44,6 @@ const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
         }
 
     }, [isSuccess, success])
-
-
 
 
     const educationTypes = [
@@ -136,6 +133,7 @@ const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
             setSubmitting(false);
         }
     };
+
 
     return (
         <div className="absolute inset-0 z-50 flex justify-center items-center">
@@ -326,8 +324,12 @@ const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
                                             </div>
                                         </div>
                                     </div>
+                                    <div>
+                                        
+                                    </div>
 
                                     <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
+
                                         <button
                                             type="button"
                                             onClick={() => {

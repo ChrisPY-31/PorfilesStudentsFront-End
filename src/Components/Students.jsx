@@ -4,12 +4,13 @@ import { useUserAccount } from "../Hooks/useUserAccount";
 import { toast } from "sonner";
 import StudentCard from "./StudentCard";
 import { useAppSelector } from "../Hooks/store";
+import { useState } from "react";
 
 const Students = () => {
-
   const { data, error, isLoading } = useGetAllUsersQuery();
   const { getAllStudents } = useUserAccount();
   const { students } = useAppSelector(state => state.students)
+  const [searchUsername, setSearchUsername] = useState('')
 
   if (isLoading) return toast.loading;
 
@@ -17,6 +18,11 @@ const Students = () => {
   if (data) {
     getAllStudents(data.content)
   }
+
+
+  // students.filter(student => student.nombre.tolowerCase().includes(filterStudents.toLocaleLowerCase))
+
+  const filtered = students?.filter(student => student.nombre.toLowerCase().includes(searchUsername))
 
   return (
     <section>
@@ -30,7 +36,7 @@ const Students = () => {
           <div>
             <div className="relative">
               <IoIosSearch className="absolute left-2 top-4 cursor-pointer " />
-              <input className="shadow-sm outline-none rounded-md py-1 px-7 my-2 w-1/2" type="text" placeholder="Buscar estudiante" />
+              <input className="shadow-sm outline-none rounded-md py-1 px-7 my-2 w-1/2" type="text" placeholder="Buscar estudiante" onChange={(e) => setSearchUsername(e.target.value)} />
             </div>
             <div className="my-3">
               <select name="carrera" id="" className="outline-none shadow-sm rounded-md py-1 px-3">
@@ -47,16 +53,18 @@ const Students = () => {
 
         <h3 className="text-2xl font-semibold">Estudiantes</h3>
         <div >
-          {students.map(student => {
-            return <StudentCard
-              key={student.id}
-              id={student.id}
-              nombre={student.nombre}
-              apellido={student.apellido}
-              carrera={student.carrera?.carrera}
-              imagen={student.imagen}
-            />
-          })}
+          {
+            filtered.map(student => {
+              return <StudentCard
+                key={student.id}
+                id={student.id}
+                nombre={student.nombre}
+                apellido={student.apellido}
+                carrera={student.carrera?.carrera}
+                imagen={student.imagen}
+              />
+            })
+          }
         </div>
       </div>
     </section>

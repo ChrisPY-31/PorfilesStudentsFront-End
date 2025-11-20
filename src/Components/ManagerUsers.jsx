@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaLock, FaUnlock } from 'react-icons/fa';
+import { useGetUsersAdminQuery } from '../services/UserSlice';
 
 const ManagerUsers = () => {
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Sofia Rodriguez', role: 'Estudiante', status: 'Activo' },
-    { id: 2, name: 'Mateo Vargas', role: 'Estudiante', status: 'Activo' },
-    { id: 3, name: 'Isabella Torres', role: 'Estudiante', status: 'Inactivo' },
-    { id: 4, name: 'Carlos Mendoza', role: 'Estudiante', status: 'Activo' },
-    { id: 5, name: 'Valentina Cruz', role: 'Estudiante', status: 'Inactivo' },
-  ]);
 
+  
+  const [users, setUsers] = useState([]);
+  
+  const token = localStorage.getItem("token")
+  // const {data} = useGetUsersAdminQuery({token});
   const toggleUserStatus = (userId) => {
     setUsers(users.map(user => 
       user.id === userId 
@@ -17,6 +16,14 @@ const ManagerUsers = () => {
         : user
     ));
   };
+
+  // console.log(data)
+  // useEffect(()=>{
+  //   if(data){
+  //     console.log(data)
+  //     // setUsers(data.content)
+  //   }
+  // },[data])
 
   return (
     <div className="bg-gray-50">
@@ -43,14 +50,14 @@ const ManagerUsers = () => {
                 <div className="col-span-5 px-3 py-2">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      {user.name.split(' ').map(n => n[0]).join('')}
+                      {user.nombre.split(' ').map(n => n[0]).join('')}
                     </div>
-                    <span className="font-medium text-gray-800">{user.name}</span>
+                    <span className="font-medium text-gray-800">{user.nombre} {user.apellido}</span>
                   </div>
                 </div>
 
                 <div className="col-span-3 px-3 py-2">
-                  <span className="text-gray-600">{user.role}</span>
+                  <span className="text-gray-600">Estudiante</span>
                 </div>
 
                 <div className="col-span-2 px-3 py-2">

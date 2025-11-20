@@ -24,7 +24,7 @@ const ManagerCreateUser = () => {
   const [formErrors, setFormErrors] = useState({});
   const [showStudentFields, setShowStudentFields] = useState(false);
   const [createUser, { isLoading, isSuccess, error }] = useCreateUserMutation();
-  
+
   useEffect(() => {
 
     if (isSuccess) {
@@ -33,7 +33,7 @@ const ManagerCreateUser = () => {
     }
 
     if (error) {
-      console.error(error)
+      console.log(error)
       if (error.status === 'FETCH_ERROR') {
         toast.error("Error del servidor. Por favor, intenta de nuevo más tarde.");
         return;
@@ -41,7 +41,7 @@ const ManagerCreateUser = () => {
       toast.error(`Error : ${error?.data?.mensaje === "El correo ya esta en uso." ? error?.data?.mensaje : " Numero de cuenta ya esta en uso"}` || '');
       return
     }
-  }, [error, isSuccess]);
+  }, [error, isSuccess ]);
 
 
   const generatePassword = () => {
@@ -110,6 +110,7 @@ const ManagerCreateUser = () => {
         apellido: values.apellidoPaterno
       }
       await createUser({ user, person });
+      console.log("se envio")
 
 
       values.nombre = "";

@@ -5,7 +5,7 @@ import CreateRecommendationForm from './CreateRecomendationForm';
 import { formatearFecha } from '../helpers';
 import { FaPlus } from 'react-icons/fa';
 
-const Recommendations = ({ recomendaciones, myAccount, tipo, user }) => {
+const  Recommendations = ({ recomendaciones, myAccount, tipo, user }) => {
 
   const [menuCreateRecomendation, setMenuCreateRecomendation] = useState();
 

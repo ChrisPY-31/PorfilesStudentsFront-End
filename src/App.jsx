@@ -14,7 +14,6 @@ import { Toaster } from 'sonner'
 import { useUserAccount } from './Hooks/useUserAccount'
 import FormAdministrador from './Components/FormAdministrador'
 import MyPorfile from './Components/MyPorfile'
-import ManagerDashboard from './Components/ManagerDashboard'
 import StudentRecruitmentForm from './Components/StudentRecruitmentForm'
 
 function App() {
@@ -35,31 +34,32 @@ function App() {
     if (username && tokenUserId) {
       getUserByUsername(username, tokenUserId);
     } else {
-      console.log("Username o token no disponible todavía");
+      return;
     }
-  }, [username, tokenUserId , location]);
+  }, [username, tokenUserId, location]);
 
 
   return (
     <>
-      {/* {location.pathname !== '/Manager' && location.pathname !== '/Sign-In' && location.pathname !== '/Sign-Up' && <Navigate/>}  */}
-      {location.pathname != '/Manager' && <Navigation autenticate={autenticate} setMyPorfile={setMyPorfile} />}
 
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='/Inicio' element={autenticate ? < Comunity /> : <Navigate to="/" />} />
-        <Route path='/Students' element={autenticate ? <Students /> : <Navigate to="/" />} />
-        <Route path='/Projects' element={autenticate ? <Proyects /> : <Navigate to="/" />} />
-        <Route path={`/Person/:id`} element={autenticate ? <PersonMenu /> : <Navigate to="/" />} />
-        <Route path='/MyProfile/:id' element={autenticate ? <MyPorfile /> : <Navigate to="/" />} />
-        <Route path='/Sign-In' element={<SignIn setAutenticate={setAutenticate} />} />
-        <Route path='/Sign-Up' element={<SignUp setAutenticate={setAutenticate} />} />
-        <Route path='/Manager' element={<Manager />} />
-        <Route path='/loginAdministrador' element={<FormAdministrador />} />
-        <Route path="/StudentRecruitment/" element={<StudentRecruitmentForm />} />
+        {/* {location.pathname !== '/Manager' && location.pathname !== '/Sign-In' && location.pathname !== '/Sign-Up' && <Navigate/>}  */}
+        {location.pathname != '/Manager' && <Navigation autenticate={autenticate} setMyPorfile={setMyPorfile} />}
 
-      </Routes>
-      <Toaster position="top-right" autoClose={2000} hideProgressBar={false} />
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/Inicio' element={autenticate ? < Comunity /> : <Navigate to="/" />} />
+          <Route path='/Students' element={autenticate ? <Students /> : <Navigate to="/" />} />
+          <Route path='/Projects' element={autenticate ? <Proyects /> : <Navigate to="/" />} />
+          <Route path={`/Person/:id`} element={autenticate ? <PersonMenu /> : <Navigate to="/" />} />
+          <Route path='/MyProfile/:id' element={autenticate ? <MyPorfile /> : <Navigate to="/" />} />
+          <Route path='/Sign-In' element={<SignIn setAutenticate={setAutenticate} />} />
+          <Route path='/Sign-Up' element={<SignUp setAutenticate={setAutenticate} />} />
+          <Route path='/Manager' element={<Manager />} />
+          <Route path='/loginAdministrador' element={<FormAdministrador />} />
+          <Route path="/StudentRecruitment/" element={<StudentRecruitmentForm />} />
+
+        </Routes>
+        <Toaster position="top-right" autoClose={2000} hideProgressBar={false} />
 
     </>
   )

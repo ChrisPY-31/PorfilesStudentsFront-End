@@ -3,7 +3,6 @@ import { SlPencil } from 'react-icons/sl'
 
 const RecomendacionCard = ({ comentario, fecha, nombreMaestro, apellidoMaestro, imagen, estudiante, tipo }) => {
 
-  console.log(imagen)
 
   return (
     <div className=' p-6 flex gap-5 relative my-4 border border-gray-300 rounded-xl'>
