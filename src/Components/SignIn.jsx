@@ -7,7 +7,6 @@ import { IoIosLogIn } from "react-icons/io";
 import { useLoginUserMutation } from "../services/autenticateUser";
 import { toast } from "sonner";
 import { useUserAccount } from "../Hooks/useUserAccount";
-import { useGetAccountUserByUsernameQuery } from "../services/UserSlice";
 
 
 const SignIn = ({ setAutenticate }) => {
@@ -18,12 +17,11 @@ const SignIn = ({ setAutenticate }) => {
   const { getUserNameRol } = useUserAccount();
 
 
-
   useEffect(() => {
     if (error) {
       toast.error(
         "Error al iniciar sesión: " + error?.data?.message &&
-          "Usuarios o Contraseña incorrectos"
+        "Correo y contraseña invalidos o usuario bloqueado"
       );
       return;
     } else if (isSuccess) {
@@ -91,17 +89,16 @@ const SignIn = ({ setAutenticate }) => {
                     htmlFor="usuario"
                     className="text-base font-medium text-gray-700 mb-2 flex"
                   >
-                    <IoPersonOutline className="h-4 w-4 text-green-500 mr-2 mt-1"/>
+                    <IoPersonOutline className="h-4 w-4 text-green-500 mr-2 mt-1" />
                     Usuario:
                   </label>
                   <Field
                     type="text"
                     name="usuario"
-                    className={`block w-full px-4 py-3 text-base border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${
-                      formErrors.usuario
-                        ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
-                    }`}
+                    className={`block w-full px-4 py-3 text-base border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${formErrors.usuario
+                      ? "border-red-400 bg-red-50"
+                      : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                      }`}
                     placeholder="2321133"
                   />
                   {formErrors.usuario && (
@@ -116,18 +113,17 @@ const SignIn = ({ setAutenticate }) => {
                     htmlFor="password"
                     className="flex text-base font-medium text-gray-700 mb-2"
                   >
-                    <IoLockClosedOutline className="h-4 w-4 text-red-500 mr-2 mt-1"/>
+                    <IoLockClosedOutline className="h-4 w-4 text-red-500 mr-2 mt-1" />
                     Contraseña:
                   </label>
                   <div className="relative">
                     <Field
                       type={showPassword ? "text" : "password"}
                       name="password"
-                      className={`block w-full px-4 py-3 text-base pr-12 border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${
-                        formErrors.password
-                          ? "border-red-400 bg-red-50"
-                          : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
-                      }`}
+                      className={`block w-full px-4 py-3 text-base pr-12 border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${formErrors.password
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                        }`}
                       placeholder="******"
                     />
                     <button

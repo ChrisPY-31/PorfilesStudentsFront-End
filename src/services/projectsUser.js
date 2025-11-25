@@ -25,6 +25,15 @@ export const projectUserApi = createApi({
         },
       }),
     }),
+    deleteProjectStudent: builder.mutation({
+      query: ({ userToken, idProject }) => ({
+        url: `projects/${idProject}`,
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      }),
+    }),
 
     createTechnology: builder.mutation({
       query: ({ token, tecnologias }) => ({
@@ -49,7 +58,7 @@ export const projectUserApi = createApi({
     }),
 
     loadedPhotoProject: builder.mutation({
-      query: ({ idProyecto, formData, token  }) => ({
+      query: ({ idProyecto, formData, token }) => ({
         url: `/fileProjects/${idProyecto}`,
         method: "PATCH",
         body: formData,
@@ -64,6 +73,7 @@ export const projectUserApi = createApi({
 export const {
   useCreateProjectMutation,
   useUpdateProjectStudentMutation,
+  useDeleteProjectStudentMutation,
   useCreateTechnologyMutation,
   useUpdateTechnologyMutation,
   useLoadedPhotoProjectMutation,

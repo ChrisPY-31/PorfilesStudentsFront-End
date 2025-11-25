@@ -48,6 +48,15 @@ export const usersApiSlice = createApi({
         message: response.data?.message,
       }),
     }),
+    userBlocked: builder.mutation({
+      query: ({ userToken, userId }) => ({
+        url: `/api/v1/user-blocked/${userId}`,
+        method:"POST",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      }),
+    }),
   }),
 });
 
@@ -57,4 +66,5 @@ export const {
   useCreateUserMutation,
   useLoginUserMutation,
   useGetloginAdminQuery,
+  useUserBlockedMutation,
 } = usersApiSlice;

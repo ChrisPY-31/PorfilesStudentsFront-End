@@ -79,11 +79,11 @@ export const userSlice = createApi({
       }),
     }),
     deleteEducationUser: builder.mutation({
-      query: ({ idEducacion, token }) => ({
-        url: `educationUser/${idEducacion}`,
+      query: ({ idEducacion, userToken }) => ({
+        url: `/education/${idEducacion}`,
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${userToken}`,
         },
       }),
     }),

@@ -9,6 +9,8 @@ const Educations = ({ id, institucion, grado, fechaInicio, fechaFin, descripcion
     let nuevaFecha = formatearFecha(fechaInicio)
 
     const handleClick = () => {
+        document.body.className = "overflow-hidden"
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         onEdit()
         openMenu()
     }
@@ -24,9 +26,8 @@ const Educations = ({ id, institucion, grado, fechaInicio, fechaFin, descripcion
 
 
     return (
-        <div className='px-4 min-h-[125px] flex relative'>
+        <div className='px-4 min-h-[125px] flex relative '>
             {myAccount && <SlPencil
-
                 onClick={() => handleClick()}
                 className='size-5  cursor-pointer absolute right-2 top-3 ' />}
             <div className='flex items-center gap-4 my-2'>
