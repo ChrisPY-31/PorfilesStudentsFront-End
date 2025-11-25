@@ -5,13 +5,15 @@ import { formatearFecha } from '../helpers'
 const ProyectsCard = ({ nombre, descripcion, imagen, fechaInicio, fechaFin, github, deploy, menciones, tecnologias, myAccount, openMenu, onEdit }) => {
 
     const handleClick = () => {
+        document.body.className = "overflow-hidden"
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         openMenu()
         onEdit()
     }
 
     return (
-        <div className='flex justify-between gap-3 border border-gray-300 my-10 p-4 h-[325px] max-h-max rounded-xl'>
-            {myAccount && <SlPencil className='size-5  cursor-pointer absolute right-44'
+        <div className='flex justify-between gap-3 border border-gray-300 my-10 p-4 h-[325px] max-h-max rounded-xl w-[80%] mx-auto relative'>
+            {myAccount && <SlPencil className='size-5  cursor-pointer absolute right-4'
                 onClick={handleClick}
             />}
             <div className='w-3/4 flex flex-col justify-around'>
@@ -51,7 +53,7 @@ const ProyectsCard = ({ nombre, descripcion, imagen, fechaInicio, fechaFin, gith
             {imagen &&
                 <div className='w-1/4'>
                     <a href={`${deploy}`} target='_blank'>
-                        <img className='h-full object-contain w-full rounded-xl'
+                        <img className='h-full object-cover w-full rounded-xl'
                             src={`${imagen && imagen}`} alt="" />
                     </a>
                 </div>

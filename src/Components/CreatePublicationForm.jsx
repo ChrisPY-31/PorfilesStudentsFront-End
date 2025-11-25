@@ -1,95 +1,101 @@
-import React, { useEffect, useState } from 'react'
-import { AiOutlineLike } from 'react-icons/ai'
-import { BiLike } from 'react-icons/bi'
-import { LuMessageSquareText } from 'react-icons/lu'
+import { useState } from "react";
 
-const CreatePublicationForm = ({ id, nombre, apellido, imagenPersona, especialidad, descripcion, imagenPublicacion, handleClickRecomendation, setComentario, comentario, onChangeComent, numDeComent, interacciones }) => {
+const CreatePublicationForm = ({
+    id,
+    nombre,
+    apellido,
+    imagenPersona,
+    especialidad,
+    descripcion,
+    imagenPublicacion,
 
-    const [añadirComentario, setAñadirComentario] = useState("")
+    handleClickRecomendation,
+    handleToggleComment,
+    openCommentId,
+    onChangeComent,
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        onChangeComent(añadirComentario, id)
-        setAñadirComentario('')
-    }
+    numDeComent,
+    interacciones
+}) => {
+    const [comentario, setComentario] = useState('')
+
+
 
     return (
+        <div className="w-full bg-white p-4 mt-4 rounded-2xl shadow">
 
-        <div className='rounded my-3 min-h-[200px] px-4 py-1 shadow'>
-            <div className='flex gap-2'>
+            {/* Encabezado */}
+            <div className="flex items-center gap-4">
                 <img
-                    className='size-12 rounded-full'
-                    src={`${imagenPersona ? imagenPersona : "https://avatars.githubusercontent.com/u/1561955?v=4"}`} alt="" />
+                    className="size-12 rounded-full"
+                    src={imagenPersona}
+                    alt="foto perfil"
+                />
                 <div>
-                    <h3>{`${nombre} ${apellido}`}</h3>
-                    <p>{especialidad}</p>
-                </div>
-            </div>
-            <div className='text-[13px] my-2'>
-                <p>{descripcion}</p>
-            </div>
-            <div>
-                {imagenPublicacion ?
-                    <img src={`${imagenPublicacion ? imagenPublicacion : ""}`} alt="imagen_persona" /> : null
-                }
-            </div>
-            <div className='mt-2 '>
-                <div className='flex justify-between w-[90%] mx-auto'>
-                    <div className='flex gap-2'>
-                        <AiOutlineLike className='size-5 items-center border-1 rounded-full bg-blue-600  text-white border-white ' />
-                        <span>0</span>
-                    </div>
-
-                    <span>
-                        {numDeComent} {" "}
-                        comentarios
-                    </span>
+                    <p className="font-semibold">{nombre} {apellido}</p>
+                    <p className="text-gray-500 text-sm">{especialidad}</p>
                 </div>
             </div>
 
-            <div className='flex justify-around border-t-1 mt-2'>
+            {/* Descripción */}
+            <p className="mt-3 text-gray-800">{descripcion}</p>
+
+            {/* Imagen de la publicación (si existe) */}
+            {imagenPublicacion && (
+                <img
+                    className="w-full mt-3 rounded-2xl"
+                    src={imagenPublicacion}
+                    alt="imagen publicación"
+                />
+            )}
+
+            {/* Botones de acción */}
+            <div className="flex justify-between mt-4">
                 <button
                     onClick={() => handleClickRecomendation(id)}
-                    className='flex items-center p-2 cursor-pointer gap-1 hover:bg-emerald-500/7'>
-                    <BiLike />
-                    Recomendar
+                    className="text-blue-600 font-semibold"
+                >
+                    Recomendar 👍
                 </button>
 
                 <button
-                    onClick={() => setComentario(true)}
-                    className='flex items-center p-2 cursor-pointer gap-1 hover:bg-emerald-500/7'>
-                    <LuMessageSquareText />
-                    Comentar
+                    onClick={() => handleToggleComment(id)}
+                    className="text-green-600 font-semibold"
+                >
+                    Comentar 💬
                 </button>
+
+                <span className="text-gray-500">{numDeComent} comentarios</span>
             </div>
-            {comentario && <div className='min-h-36'>
-                <form className='relative' onSubmit={(e) => handleSubmit(e)}>
-                    <div className={`${añadirComentario.length > 0 ? 'py-8 w-full  rounded-xl shadow outline-none' : "w-full rounded-xl shadow outline-none"} p-2 h-10`}>
-                        <input
-                            value={añadirComentario}
-                            onChange={(e) => setAñadirComentario(e.target.value)}
-                            className='absolute top-0 outline-none w-full text-[14px]'
-                            type="text" placeholder="Añadir un comentario"
-                        />
-                        {añadirComentario.length > 0 &&
-                            <button
-                                className='px-4 py-0 bg-blue-600 rounded-xl text-white font-semibold absolute right-3 bottom-2
-                            cursor-pointer hover:bg-blue-800
-                            '>comentar</button>
-                        }
 
-                    </div>
-                    <div>
-                        {interacciones?.map(interacion => {
-                            return <div>
-                                {interacion.comentario}
-                            </div>
-                        })}
-                    </div>
+            {/* Cuadro de comentarios SOLO si este id está abierto */}
+            {openCommentId === id && (
+                <form
+                    onSubmit={(e) => onChangeComent(e, comentario, id)}
+                >
+
+                    <textarea
+                        className="w-full p-2 mt-3 border rounded-xl outline-none"
+                        placeholder="Escribe un comentario..."
+                        onChange={(e) => setComentario(e.target.value)}
+                    />
+                    <input type="submit" />
                 </form>
-            </div>}
-        </div>
-    )
-}
+            )}
 
-export default CreatePublicationForm
+            {/* Listado de comentarios */}
+            {interacciones?.length > 0 && (
+                <div className="mt-4">
+                    {interacciones.map((c, index) => (
+                        <p key={index} className="text-sm text-gray-700  py-1">
+                            {c.comentario}
+                        </p>
+                    ))}
+                </div>
+            )}
+
+        </div>
+    );
+};
+
+export default CreatePublicationForm;

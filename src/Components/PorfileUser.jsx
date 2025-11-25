@@ -71,7 +71,11 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
                     <div className='relative rounded-xl min-h-[150px] my-5 p-4 border border-gray-200'>
                         <div className='flex justify-between items-center'>
                             <h3 className='text-xl font-semibold'>Educaciones</h3>
-                            {myAccount && <IoMdAdd className='size-5 cursor-pointer' onClick={() => setMenuEdutacionForm(true)} />}
+                            {myAccount && <IoMdAdd className='size-5 cursor-pointer' onClick={() => {
+                                document.body.className = "overflow-hidden"
+                                window.scrollTo({ top: 0, behavior: 'smooth' })
+                                setMenuEdutacionForm(true)
+                            }} />}
                         </div>
                         {
                             educaciones?.length > 0 ?
@@ -114,7 +118,7 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
 
                     </div>
 
-                    
+
                 </div>
             </div>
             {updateAccount && <EditProfileForm
@@ -142,7 +146,7 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
                 menuContact && <MenuContact
                     nombreUser={`${user.nombre} ${user.apellido}`}
                     contactos={redContactos}
-                    onClose={()=>setMenuContact(false)}
+                    onClose={() => setMenuContact(false)}
                     myAccount={myAccount}
                     setMenuRedesContacto={setMenuRedesContacto}
                 />

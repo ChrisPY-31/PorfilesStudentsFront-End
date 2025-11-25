@@ -11,7 +11,7 @@ import {
     IoCheckmarkCircleOutline,
     IoRadioButtonOffOutline
 } from "react-icons/io5";
-import { useCreateEducationUserMutation, useUpdateEducationUserMutation } from "../services/UserSlice";
+import { useCreateEducationUserMutation, useDeleteEducationUserMutation, useUpdateEducationUserMutation } from "../services/UserSlice";
 import { useAppSelector } from "../Hooks/store";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
@@ -19,8 +19,9 @@ import { useUserAccount } from "../Hooks/useUserAccount";
 
 const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
     const [formErrors, setFormErrors] = useState({});
-    const [createEducationUser, { isSuccess, error, data }] = useCreateEducationUserMutation();
+    const [createEducationUser, { isSuccess }] = useCreateEducationUserMutation();
     const [updateEducationUser, { isSuccess: success }] = useUpdateEducationUserMutation();
+    const [deleteEducationUser, { isSuccess: successdelete , error }] = useDeleteEducationUserMutation();
     const { userId, username, userToken } = useAppSelector(state => state.users);
     const [enProgreso, setEnProgreso] = useState(false);
     const { getUserByUsername } = useUserAccount();
@@ -32,18 +33,32 @@ const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
             setTimeout(() => {
                 onCancel()
             }, 1000)
+            document.body.className = ""
             return;
         }
 
         if (success) {
-            toast.success("educacion actualizada con exito");
+            toast.success("Educacion actualizada con exito");
             setTimeout(() => {
                 onCancel()
             }, 1000)
+            document.body.className = ""
+
             return
         }
 
-    }, [isSuccess, success])
+        if (successdelete) {
+            toast.success("Educacion eliminada con exito")
+            setTimeout(() => {
+                onCancel()
+            }, 1000)
+            document.body.className = ""
+
+        }
+
+        console.log(error)
+
+    }, [isSuccess, success, successdelete])
 
 
     const educationTypes = [
@@ -134,6 +149,12 @@ const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
         }
     };
 
+    const HandleDeleteEducation = async(idEducacion) => {
+        await deleteEducationUser({ idEducacion, userToken })
+        getUserByUsername(username, userToken);
+        return
+    }
+
 
     return (
         <div className="absolute inset-0 z-50 flex justify-center items-center">
@@ -143,6 +164,7 @@ const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
                         <IoCloseSharp
                             className="absolute top-4 right-4 text-gray-600 hover:text-red-500 transition-colors duration-200 size-7 cursor-pointer z-10"
                             onClick={() => {
+                                document.body.className = ""
                                 setObjectEducation({})
                                 onCancel()
                             }}
@@ -325,10 +347,19 @@ const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
                                         </div>
                                     </div>
                                     <div>
-                                        
+
                                     </div>
 
                                     <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
+                                        {Object.keys(objectEducation).length > 0
+                                            &&
+                                            <button
+                                                type="button"
+                                                onClick={() => HandleDeleteEducation(objectEducation.idEducacion)}
+                                                className="px-5 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 font-semibold text-sm cursor-pointer"
+                                            >Eliminar educacion</button>
+                                        }
+
 
                                         <button
                                             type="button"
@@ -337,7 +368,7 @@ const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
                                                 setEnProgreso(false);
                                                 onCancel();
                                             }}
-                                            className="px-5 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 font-semibold text-sm"
+                                            className="px-5 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 font-semibold text-sm cursor-pointer"
                                         >
                                             Cancelar
                                         </button>
@@ -347,7 +378,10 @@ const EducationForm = ({ onCancel, objectEducation, setObjectEducation }) => {
                                             className="flex items-center justify-center px-5 py-2 border border-transparent rounded-lg shadow text-sm font-semibold text-white bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-300 cursor-pointer disabled:opacity-50"
                                         >
                                             <IoAddCircleOutline className="h-4 w-4 mr-1" />
-                                            Agregar Educación
+                                            {Object.keys(objectEducation).length > 0 ? "Actualizar educacion" :
+
+                                                "Agregar Educación"
+                                            }
                                         </button>
                                     </div>
                                 </Form>

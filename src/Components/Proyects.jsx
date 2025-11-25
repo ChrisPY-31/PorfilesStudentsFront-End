@@ -13,7 +13,7 @@ const Proyects = ({ proyectos, myAccount, tipo }) => {
       <h2 className='text-center text-3xl'>Proyectos</h2>
       <div>
         {(myAccount && proyectos?.length > 0)  &&
-          <h4 className='flex items-center gap-2 '>Deseas agregar proyectos
+          <h4 className='flex items-center gap-2'>Deseas agregar proyectos
             <FaPlus className='cursor-pointer'
               onClick={() => {
                 setMyFormProyect(true)
