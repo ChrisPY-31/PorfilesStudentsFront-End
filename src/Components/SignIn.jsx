@@ -21,7 +21,7 @@ const SignIn = ({ setAutenticate }) => {
     if (error) {
       toast.error(
         "Error al iniciar sesión: " + error?.data?.message &&
-        "Correo y contraseña invalidos o usuario bloqueado"
+        "Correo y contraseña invalidos. "
       );
       return;
     } else if (isSuccess) {

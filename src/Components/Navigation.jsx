@@ -11,9 +11,11 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
 
   const [menuNotification, setMenuNotification] = useState(false)
   const [menuProfile, setMenuProfile] = useState(false)
-  const {user} = useAppSelector(state => state.users)
+  const { user } = useAppSelector(state => state.users)
 
   const navigate = useNavigate();
+
+  console.log(user.recomendaciones.length)
 
   return (
     <header className=" border-b-2 border-gray-200 ">
@@ -40,13 +42,17 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
             <div className="flex gap-2 justify-center items-center relative ">
               {/* <input type="text" placeholder="Buscar Estudiante" className="outline-none shadow-sm px-2 rounded" />
               <IoIosSearch className="absolute right-[29%] top-2 cursor-pointer " /> */}
-
-              <IoMdNotificationsOutline
-                onClick={() => {
-                  setMenuNotification(!menuNotification)
-                  menuProfile && setMenuProfile(false)
-                }}
-                className="size-6 cursor-pointer" />
+              <div className="">
+                <div className="absolute bg-red-500 px-2 text-white rounded-full top-[-10px]">
+                  {user.recomendaciones?.length > 0 && user.recomendaciones?.length}
+                </div>
+                <IoMdNotificationsOutline
+                  onClick={() => {
+                    setMenuNotification(!menuNotification)
+                    menuProfile && setMenuProfile(false)
+                  }}
+                  className="size-8 cursor-pointer " />
+              </div>
               <img
                 onClick={() => {
                   setMenuProfile(!menuProfile)
@@ -54,12 +60,12 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
                 }}
                 className="size-8 cursor-pointer rounded-full"
                 src={`${user.imagen ? user.imagen : 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true'}`} alt="foto de perfil"
-                />
-                {
-                menuNotification && <NotificationMenu />
-                }
+              />
+              {
+                menuNotification && <NotificationMenu recomendaciones ={user?.recomendaciones} />
+              }
 
-                {menuProfile && <ProfileMenu setMenuProfile={setMenuProfile} setMyPorfile={setMyPorfile} />}
+              {menuProfile && <ProfileMenu setMenuProfile={setMenuProfile} setMyPorfile={setMyPorfile} />}
 
             </div>
             : (
