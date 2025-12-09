@@ -35,7 +35,6 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
           }
 
         </div>
-
         {
           autenticate ?
             <div className="flex gap-2 justify-center items-center relative ">

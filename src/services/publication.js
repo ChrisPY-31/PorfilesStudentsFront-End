@@ -40,6 +40,7 @@ export const publicationApi = createApi({
           Authorization: `Bearer ${userToken}`,
         },
       }),
+      invalidatesTags: ["publications"],
     }),
   }),
 });

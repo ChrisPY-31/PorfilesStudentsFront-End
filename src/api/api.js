@@ -1,6 +1,6 @@
-export const apiServer = "https://alluring-warmth-production.up.railway.app/";
+export const apiServer = "http://localhost:8080/";
 
 export const API_KEY =
-  "https://alluring-warmth-production.up.railway.app/api/v1";
+  "http://localhost:8080/api/v1";
 
 // "https://alluring-warmth-production.up.railway.app/api/v1";
