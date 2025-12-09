@@ -10,6 +10,8 @@ import { useAppSelector } from '../Hooks/store';
 import { useGetloginAdminQuery } from '../services/autenticateUser';
 import { userAccountSlice } from '../store/UserAccount/userAccountSlice';
 import { useUserAccount } from '../Hooks/useUserAccount';
+import { IoIosInformationCircleOutline } from 'react-icons/io';
+import Manager from './Manager';
 const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
 
     const navigate = useNavigate();
@@ -57,13 +59,19 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
         setMenuProfile(false);
     }
 
-   const handleRecruitment = () => {
-    setMenuProfile(false); // Cierra el menú al navegar
-    setTimeout(() => {
-        navigate('/StudentRecruitment/');
-    }, 100);
-}
+    const handleRecruitment = () => {
+        setMenuProfile(false); // Cierra el menú al navegar
+        setTimeout(() => {
+            navigate('/StudentRecruitment/');
+        }, 100);
+    }
 
+    const handleInfoMenuUser = () => {
+        setMenuProfile(false); // Cierra el menú al navegar
+        setTimeout(() => {
+            navigate('/sing-in-and-security');
+        }, 100);
+    }
 
     return (
         <div className="absolute top-15 right-0 w-[300px] h-min-[400px] p-4 bg-white rounded shadow-lg z-50">
@@ -80,7 +88,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                                 :
                                 <img className='size-16 rounded-full mx-auto' src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWPzckq1VBcfsvTk3ByJnJR-ort0ykcUGROA&s' />
 
-                                }
+                            }
                         </div>
                         <div>
                             {(tipo === "student" || tipo === "recruiter" || tipo === "teacher") ? <>
@@ -126,6 +134,12 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                             </button>
                         </Link>
                     }
+                    <Link className='hover:bg-emerald-400/7 p-2'>
+                        <IoIosInformationCircleOutline className='inline text-green-800' />
+                        <button className='cursor-pointer' onClick={handleInfoMenuUser} >
+                            Informacion del perfil
+                        </button>
+                    </Link>
 
                 </div>
                 <div className=''>

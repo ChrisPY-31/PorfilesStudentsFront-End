@@ -39,11 +39,8 @@ const SignUp = ({ setAutenticate }) => {
       toast.message(error.data?.mensaje)
       return
     }
-    if(isLoading){
-      toast.isLoading("Cargando.....")
-    }
-  }, [isSuccess, isError , isLoading])
-
+    
+  }, [isSuccess, isError ])
   const registerSchema = Yup.object().shape({
     nombre: Yup.string()
       .required("El nombre es requerido")

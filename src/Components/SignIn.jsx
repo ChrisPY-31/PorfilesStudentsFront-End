@@ -25,6 +25,8 @@ const SignIn = ({ setAutenticate }) => {
       );
       return;
     } else if (isSuccess) {
+      console.log(data);
+      localStorage.setItem("userLocked", data?.accoundLocked);
       localStorage.setItem("token", data.jwt);
       toast.success("Inicio de sesión exitoso");
       localStorage.setItem("username", data?.username);
