@@ -15,7 +15,6 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
 
   const navigate = useNavigate();
 
-  console.log(user.recomendaciones.length)
 
   return (
     <header className=" border-b-2 border-gray-200 ">
