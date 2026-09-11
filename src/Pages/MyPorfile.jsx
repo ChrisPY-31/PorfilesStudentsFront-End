@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
 import { useAppSelector } from '../Hooks/store'
-import PorfileUser from './PorfileUser';
+import PorfileUser from '../Components/PorfileUser';
 import Proyects from './Proyects';
-import Recommendations from './Recommendations';
+import Recommendations from '../Components/Recommendations';
 
 const MyPorfile = () => {
 

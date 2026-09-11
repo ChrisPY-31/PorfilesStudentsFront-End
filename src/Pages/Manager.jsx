@@ -4,12 +4,12 @@ import { Link } from "react-router-dom";
 import { IoIosHome } from "react-icons/io";
 import { MdDashboard, MdLogout } from "react-icons/md";
 import { FaUserCog, FaUserPlus, FaUser } from "react-icons/fa";
-import ManagerUsers from "./ManagerUsers";
-import ManagerDashboard from "./ManagerDashboard";
-import ManagerCreateUser from "./ManagerCreateUser";
-import ManagerUpdateUser from "./ManagerUpdateUser";
+import ManagerUsers from "../Components/ManagerUsers";
+import ManagerDashboard from "../Components/ManagerDashboard";
+import ManagerCreateUser from "../Components/ManagerCreateUser";
+import ManagerUpdateUser from "../Components/ManagerUpdateUser";
 import { toast } from "sonner";
-import ChangePassword from "./ChangePassword";
+import ChangePassword from "../Components/ChangePassword";
 
 const Manager = ({ usermenu }) => {
   const [autenticate, setAutenticate] = useState(false);

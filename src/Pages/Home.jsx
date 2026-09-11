@@ -1,11 +1,11 @@
 import logoUniversity from "../assets/LogoUniversitario.jpg"
-import CardsHome from "./CardsHome"
-import Footer from "./Footer"
-import Careers from "./CarrersSection"
+import CardsHome from "../Components/CardsHome"
+import Footer from "../Components/Footer"
+import Careers from "../Components/CarrersSection"
 
 import { empresasTecnologia } from "../Estudiantes"
-import BusinessCard from "./BusinessCard"
-import CareersSection from "./CarrersSection"
+import BusinessCard from "../Components/BusinessCard"
+import CareersSection from "../Components/CarrersSection"
 
 export const Home = () => {
   return (

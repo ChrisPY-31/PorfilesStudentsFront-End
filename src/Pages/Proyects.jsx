@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import MenuNoRegister from './MenuNoRegister'
-import CreateProjectForm from './CreateProjectForm'
+import MenuNoRegister from '../Components/MenuNoRegister'
+import CreateProjectForm from '../Components/CreateProjectForm'
 import { SlPencil } from 'react-icons/sl'
 import { FaPlus } from 'react-icons/fa'
-import ProyectsCard from './ProyectsCard'
+import ProyectsCard from '../Components/ProyectsCard'
 const Proyects = ({ proyectos, myAccount, tipo }) => {
   const [myformProyect, setMyFormProyect] = useState(false)
   const [updateProject, setUpdateProject] = useState({})

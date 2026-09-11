@@ -11,7 +11,7 @@ import { useGetloginAdminQuery } from '../services/autenticateUser';
 import { userAccountSlice } from '../store/UserAccount/userAccountSlice';
 import { useUserAccount } from '../Hooks/useUserAccount';
 import { IoIosInformationCircleOutline } from 'react-icons/io';
-import Manager from './Manager';
+import Manager from '../Pages/Manager';
 const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
 
     const navigate = useNavigate();

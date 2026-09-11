@@ -1,10 +1,10 @@
 import { useGetPublicationsQuery, useInteractionPublicationMutation } from "../services/publication";
 import { useEffect, useState } from "react";
-import CreatePublicationForm from "./CreatePublicationForm";
+import CreatePublicationForm from "../Components/CreatePublicationForm";
 import { useGetTeachersQuery } from "../services/UserSlice";
 import { useAppSelector } from "../Hooks/store";
-import CreatePost from "./CreatePost";
-import StudentCard from "./StudentCard";
+import CreatePost from "../Components/CreatePost";
+import StudentCard from "../Components/StudentCard";
 
 const Comunity = () => {
 

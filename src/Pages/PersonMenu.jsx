@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 
 import Proyects from './Proyects';
-import Recommendations from './Recommendations';
-import PorfileUser from './PorfileUser';
+import Recommendations from '../Components/Recommendations';
+import PorfileUser from '../Components/PorfileUser';
 import { useAppSelector } from '../Hooks/store';
 import { useGetUserByIdQuery } from '../services/UserSlice';
 

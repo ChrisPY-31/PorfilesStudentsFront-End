@@ -2,7 +2,7 @@ import { IoIosSearch } from "react-icons/io";
 import { useGetAllUsersQuery } from "../services/UserSlice";
 import { useUserAccount } from "../Hooks/useUserAccount";
 import { toast } from "sonner";
-import StudentCard from "./StudentCard";
+import StudentCard from "../Components/StudentCard";
 import { useAppSelector } from "../Hooks/store";
 import { useState } from "react";
 
