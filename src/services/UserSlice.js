@@ -48,11 +48,27 @@ export const userSlice = createApi({
       }),
     }),
 
-    getCompanies: builder.query({
-      query: ({ userToken }) => ({
-        url: "/company",
+    getCareers: builder.query({
+      query: ({ token }) => ({
+        url: "/career",
         headers: {
-          Authorization: `Bearer ${userToken}`,
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    getUbications: builder.query({
+      query: ({ token }) => ({
+        url: "/ubication",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    getContactTypes: builder.query({
+      query: ({ token }) => ({
+        url: "/contact",
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
       }),
     }),
@@ -89,7 +105,7 @@ export const userSlice = createApi({
     }),
     createSocialLink: builder.mutation({
       query: ({ newSocialLink, token }) => ({
-        url: "/saveContact",
+        url: "/personContact",
         method: "POST",
         body: newSocialLink,
         headers: {
@@ -98,20 +114,80 @@ export const userSlice = createApi({
         providesTags: ["userById"],
       }),
     }),
-    createSkills: builder.mutation({
-      query: ({ skillsList, token }) => ({
-        url: "/language",
-        method: "POST",
-        body: skillsList,
+    deleteSocialLink: builder.mutation({
+      query: ({ idContact, token }) => ({
+        url: `/personContact/${idContact}`,
+        method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }),
     }),
-    updatePasswordUser: builder.mutation({
-      query: ({ username, newPassword, token }) => ({
-        url: `/${username}/${newPassword}`,
+    // Catalogo de tecnologias + aptitudes: [{ id, nombre, tipo: "TECNOLOGIA" | "APTITUD" }]
+    getSkillsCatalog: builder.query({
+      query: ({ token }) => ({
+        url: "/skills/catalog",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    // Reemplaza todas las habilidades del usuario autenticado: { tecnologias: [ids], aptitudes: [ids] }
+    updateMySkills: builder.mutation({
+      query: ({ skills, token }) => ({
+        url: "/person/skills",
         method: "PUT",
+        body: skills,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    // Idiomas del usuario autenticado; el dueno se resuelve por JWT
+    createLanguages: builder.mutation({
+      query: ({ idiomas, token }) => ({
+        url: "/language",
+        method: "POST",
+        body: idiomas,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    updateLanguage: builder.mutation({
+      query: ({ idioma, token }) => ({
+        url: `/language/${idioma.idIdioma}`,
+        method: "PUT",
+        body: idioma,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    deleteLanguage: builder.mutation({
+      query: ({ idIdioma, token }) => ({
+        url: `/language/${idIdioma}`,
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    changePasswordUser: builder.mutation({
+      query: ({ currentPassword, newPassword, token }) => ({
+        url: "/users/password",
+        method: "PUT",
+        body: { currentPassword, newPassword },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
+    resetPasswordUser: builder.mutation({
+      query: ({ username, newPassword, token }) => ({
+        url: `/users/${username}/password/reset`,
+        method: "PUT",
+        body: { newPassword },
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -125,12 +201,20 @@ export const {
   useGetTeachersQuery,
   useGetUsersAdminQuery,
   useGetUserByIdQuery,
-  useGetCompaniesQuery,
+  useGetCareersQuery,
+  useGetUbicationsQuery,
+  useGetContactTypesQuery,
   useGetAccountUserByUsernameQuery,
   useCreateEducationUserMutation,
   useCreateSocialLinkMutation,
+  useDeleteSocialLinkMutation,
   useUpdateEducationUserMutation,
   useDeleteEducationUserMutation,
-  useCreateSkillsMutation,
-  useUpdatePasswordUserMutation,
+  useGetSkillsCatalogQuery,
+  useUpdateMySkillsMutation,
+  useCreateLanguagesMutation,
+  useUpdateLanguageMutation,
+  useDeleteLanguageMutation,
+  useChangePasswordUserMutation,
+  useResetPasswordUserMutation,
 } = userSlice;

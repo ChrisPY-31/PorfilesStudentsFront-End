@@ -9,6 +9,8 @@ import Mensaje from './Mensaje';
 import EditProfileForm from './EditPorfileForm';
 import EducationForm from './EducationForm';
 import SkillForm from './SkillForm';
+import LanguageForm from './LanguageForm';
+import { NIVELES_IDIOMA } from '../helpers';
 import ContactForm from './ContactForm';
 import Habilities from './Habilities';
 import { useAppSelector } from '../Hooks/store';
@@ -18,6 +20,7 @@ import MenuContact from './MenuContact';
 const PorfileUser = ({ user, myAccount, tipo }) => {
     const [updateAccount, setUpdateAccount] = useState(false);
     const [menuSkillUser, setMenuSkillUser] = useState(false)
+    const [menuIdiomas, setMenuIdiomas] = useState(false)
     const [menuEducationForm, setMenuEdutacionForm] = useState(false)
     const [menuRedesContacto, setMenuRedesContacto] = useState(false)
     const [objectEducation, setObjectEducation] = useState({})
@@ -35,10 +38,17 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
         ubicacion,
         carrera,
         descripcion,
+        habilidades: habilidadesUser,
         lenguajes,
         redContactos,
         educaciones
     } = user;
+
+    const habilidades = habilidadesUser ?? []
+    const idiomas = lenguajes ?? []
+    const etiquetaNivel = (nivel) => NIVELES_IDIOMA.find(n => n.value === nivel)?.label ?? nivel
+    const tecnologias = habilidades.filter(h => h.tipo === "TECNOLOGIA")
+    const aptitudes = habilidades.filter(h => h.tipo === "APTITUD")
 
 
     return (
@@ -103,19 +113,39 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
                 <div className='w-1/4'>
                     <div className='relative rounded-xl mt-4 p-4 min-h-[100px] border border-gray-200 '>
                         <div className='flex justify-between items-center'>
-                            <h3 className='text-xl font-semibold'>Habilidades </h3>
-                            {myAccount && <SlPencil className='size-5  cursor-pointer' />}
-                            {myAccount && <IoMdAdd className='size-5 cursor-pointer' onClick={() => setMenuSkillUser(true)} />}
+                            <h3 className='text-xl font-semibold'>Habilidades</h3>
+                            {myAccount && (habilidades.length > 0
+                                ? <SlPencil className='size-5 cursor-pointer' onClick={() => setMenuSkillUser(true)} />
+                                : <IoMdAdd className='size-5 cursor-pointer' onClick={() => setMenuSkillUser(true)} />)}
                         </div>
-                        {lenguajes?.map(lenguaje => {
-                            return <Habilities
-                                key={lenguaje.idIdioma}
-                                id={lenguaje.idIdioma}
-                                nombre={lenguaje.nombre}
-                                nivel={lenguaje.nivel.toLowerCase()}
-                            />
-                        })}
+                        {habilidades.length > 0
+                            ? <>
+                                <Habilities titulo="Tecnologías" tipo="TECNOLOGIA" habilidades={tecnologias} />
+                                <Habilities titulo="Aptitudes" tipo="APTITUD" habilidades={aptitudes} />
+                            </>
+                            : <Mensaje mensaje={"No hay habilidades agregadas aún."} />}
 
+                    </div>
+
+                    <div className='relative rounded-xl mt-4 p-4 min-h-[100px] border border-gray-200'>
+                        <div className='flex justify-between items-center'>
+                            <h3 className='text-xl font-semibold'>Idiomas</h3>
+                            {myAccount && (idiomas.length > 0
+                                ? <SlPencil className='size-5 cursor-pointer' onClick={() => setMenuIdiomas(true)} />
+                                : <IoMdAdd className='size-5 cursor-pointer' onClick={() => setMenuIdiomas(true)} />)}
+                        </div>
+                        {idiomas.length > 0
+                            ? <ul className='mt-3 space-y-2'>
+                                {idiomas.map(idioma => (
+                                    <li key={idioma.idIdioma} className='flex items-center justify-between gap-2 text-sm'>
+                                        <span className='font-medium text-gray-800'>{idioma.nombre}</span>
+                                        <span className='px-2 py-0.5 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-medium'>
+                                            {etiquetaNivel(idioma.nivel)}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                            : <Mensaje mensaje={"No hay idiomas agregados aún."} />}
                     </div>
 
 
@@ -126,19 +156,28 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
                 onClose={() => setUpdateAccount(false)}
                 tipo={tipo}
             />}
+            {menuIdiomas && <LanguageForm
+                idiomasActuales={idiomas}
+                onCancel={() => setMenuIdiomas(false)}
+            />}
             {menuEducationForm && <EducationForm
                 objectEducation={objectEducation}
                 setObjectEducation={setObjectEducation}
                 onCancel={() => setMenuEdutacionForm(false)}
             />}
             {menuSkillUser && <SkillForm
+                habilidadesActuales={habilidades}
                 onCancel={() => setMenuSkillUser(false)}
             />}
 
             {menuRedesContacto && <ContactForm
                 updateContact={updateContact}
+                contactosExistentes={redContactos}
                 onClose={() => setUpdateContact([])}
-                onCancel={() => setMenuRedesContacto(false)}
+                onCancel={() => {
+                    setMenuRedesContacto(false)
+                    setUpdateContact([])
+                }}
             />
             }
 
@@ -148,7 +187,14 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
                     contactos={redContactos}
                     onClose={() => setMenuContact(false)}
                     myAccount={myAccount}
-                    setMenuRedesContacto={setMenuRedesContacto}
+                    onAgregarContacto={() => {
+                        setUpdateContact([])
+                        setMenuRedesContacto(true)
+                    }}
+                    onEditarContactos={() => {
+                        setUpdateContact(redContactos)
+                        setMenuRedesContacto(true)
+                    }}
                 />
             }
         </div>

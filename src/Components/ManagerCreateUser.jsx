@@ -16,7 +16,8 @@ import {
 import { useCreateUserMutation } from "../services/autenticateUser";
 import { toast, Toaster } from "sonner";
 import { useAppSelector } from "../Hooks/store";
-import { useGetCompaniesQuery } from "../services/UserSlice";
+import { useGetCareersQuery } from "../services/UserSlice";
+import { obtenerMensajeError } from "../helpers";
 
 const ManagerCreateUser = () => {
   const navigate = useNavigate();
@@ -24,6 +25,8 @@ const ManagerCreateUser = () => {
   const [formErrors, setFormErrors] = useState({});
   const [showStudentFields, setShowStudentFields] = useState(false);
   const [createUser, { isLoading, isSuccess, error }] = useCreateUserMutation();
+  const { userToken } = useAppSelector(state => state.users);
+  const { data: carreras = [] } = useGetCareersQuery({ token: userToken });
 
   useEffect(() => {
 
@@ -33,12 +36,7 @@ const ManagerCreateUser = () => {
     }
 
     if (error) {
-      console.log(error)
-      if (error.status === 'FETCH_ERROR') {
-        toast.error("Error del servidor. Por favor, intenta de nuevo más tarde.");
-        return;
-      }
-      toast.error(`Error : ${error?.data?.mensaje === "El correo ya esta en uso." ? error?.data?.mensaje : " Numero de cuenta ya esta en uso"}` || '');
+      toast.error(obtenerMensajeError(error, "No se pudo crear el usuario"));
       return
     }
   }, [error, isSuccess ]);
@@ -74,12 +72,13 @@ const ManagerCreateUser = () => {
       .required("El correo institucional es requerido"),
     password: Yup.string().required("La contraseña es requerida"),
     tipoUsuario: Yup.string().required("Debes seleccionar un tipo de usuario"),
-    carrera: Yup.string().when("tipoUsuario", (tipoUsuario, schema) => {
+    // En yup 1.x el valor de "tipoUsuario" llega dentro de un arreglo
+    carrera: Yup.string().when("tipoUsuario", ([tipoUsuario], schema) => {
       return tipoUsuario === "estudiante"
         ? schema.required("La carrera es requerida para estudiantes")
         : schema.notRequired();
     }),
-    semestre: Yup.string().when("tipoUsuario", (tipoUsuario, schema) => {
+    semestre: Yup.string().when("tipoUsuario", ([tipoUsuario], schema) => {
       return tipoUsuario === "estudiante"
         ? schema.required("El semestre es requerido para estudiantes")
         : schema.notRequired();
@@ -108,6 +107,11 @@ const ManagerCreateUser = () => {
       const person = {
         nombre: values.nombre,
         apellido: values.apellidoPaterno
+      }
+      if (values.tipoUsuario === "estudiante") {
+        // OJO: el PersonDto de /auth/sign-up aun no tiene idCarrera ni semestre
+        person.idCarrera = parseInt(values.carrera);
+        person.semestre = values.semestre;
       }
       await createUser({ user, person });
       console.log("se envio")
@@ -415,15 +419,11 @@ const ManagerCreateUser = () => {
                               }`}
                           >
                             <option value="">Seleccionar carrera</option>
-                            <option value="ingenieriaSW">
-                              Ingeniería en Software
-                            </option>
-                            <option value="ingenieriaC">
-                              Ingeniería en Computación
-                            </option>
-                            <option value="ciberseguridad">
-                              Ciberseguridad
-                            </option>
+                            {carreras.map(carrera => (
+                              <option key={carrera.idCarrera} value={carrera.idCarrera}>
+                                {carrera.carrera}
+                              </option>
+                            ))}
                           </Field>
                           {formErrors.carrera && (
                             <div className="mt-2 text-sm text-red-600 font-medium w-full">

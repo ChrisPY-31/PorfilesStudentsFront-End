@@ -8,8 +8,9 @@ import {
   IoEyeOffOutline,
   IoCheckmarkCircleOutline,
 } from "react-icons/io5";
-import { useGetAllUsersQuery, useUpdatePasswordUserMutation } from "../services/UserSlice";
+import { useGetAllUsersQuery, useResetPasswordUserMutation } from "../services/UserSlice";
 import { toast } from "sonner";
+import { obtenerMensajeError } from "../helpers";
 
 const ManagerUpdateUser = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,7 +18,7 @@ const ManagerUpdateUser = () => {
   const [formErrors, setFormErrors] = useState({});
   const [searchUsername, setSearchUsername] = useState()
   const [students, setStudents] = useState([])
-  const [updatePasswordUser, { isSuccess , error , }] = useUpdatePasswordUserMutation();
+  const [resetPasswordUser, { isSuccess , error , }] = useResetPasswordUserMutation();
 
   useEffect(() => {
     if (isSuccess) {
@@ -25,7 +26,7 @@ const ManagerUpdateUser = () => {
       return
     }
     if(error){
-      toast.error("Error el usuario no exite intentelo mas tarde")
+      toast.error(obtenerMensajeError(error, "No se pudo actualizar la contraseña"))
     }
 
   }, [isSuccess , error])
@@ -66,10 +67,9 @@ const ManagerUpdateUser = () => {
       const newPassword = values.password
       const token = localStorage.getItem("token")
 
-      await updatePasswordUser({ username, newPassword, token });
+      await resetPasswordUser({ username, newPassword, token });
 
       setSubmitting(false);
-      onCancel();
     } catch (err) {
       setFormErrors({ _general: "Ocurrió un error al actualizar la contraseña" });
       setSubmitting(false);
@@ -196,7 +196,6 @@ const ManagerUpdateUser = () => {
                         setPasswordGenerated(false);
                         setShowPassword(false);
                         setFormErrors({});
-                        onCancel();
                       }}
                       className="px-5 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 font-semibold text-sm"
                     >

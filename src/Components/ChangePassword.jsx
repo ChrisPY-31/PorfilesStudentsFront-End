@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import { IoEyeOutline, IoEyeOffOutline, IoLockClosedOutline } from "react-icons/io5";
-import { useUpdatePasswordUserMutation } from "../services/UserSlice";
+import { useChangePasswordUserMutation } from "../services/UserSlice";
 import { toast } from "sonner";
+import { obtenerMensajeError } from "../helpers";
 
 const ChangePassword = () => {
     const [formErrors, setFormErrors] = useState({});
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [updatePasswordUser, { isSuccess, error, }] = useUpdatePasswordUserMutation();
+    const [changePasswordUser, { isSuccess, error, }] = useChangePasswordUserMutation();
 
     useEffect(() => {
         if (isSuccess) {
@@ -16,28 +18,31 @@ const ChangePassword = () => {
             return
         }
         if (error) {
-            toast.error("Error el usuario no exite intentelo mas tarde")
+            toast.error(obtenerMensajeError(error, "No se pudo actualizar la contraseña"))
         }
 
     }, [isSuccess, error])
 
 
-    const handleSubmit = async (values, { setSubmitting }) => {
+    const handleSubmit = async (values, { setSubmitting, resetForm }) => {
         const errors = {};
 
+        if (!values.currentPassword) errors.currentPassword = "Ingresa tu contraseña actual";
         if (!values.newPassword) errors.newPassword = "Ingresa la nueva contraseña";
         if (!values.confirmPassword) errors.confirmPassword = "Confirma la contraseña";
         if (values.newPassword !== values.confirmPassword)
             errors.confirmPassword = "Las contraseñas no coinciden";
 
         setFormErrors(errors);
+        if (Object.keys(errors).length > 0) {
+            setSubmitting(false);
+            return;
+        }
 
-        const username = localStorage.getItem("username");
         const token = localStorage.getItem("token");
-        const newPassword = values.newPassword;
-        await updatePasswordUser({ username, newPassword, token });
-        values.newPassword = "";
-        values.confirmPassword = "";
+        const { currentPassword, newPassword } = values;
+        const result = await changePasswordUser({ currentPassword, newPassword, token });
+        if (!result.error) resetForm();
 
         setSubmitting(false);
     };
@@ -57,11 +62,48 @@ const ChangePassword = () => {
                         </div>
 
                         <Formik
-                            initialValues={{ newPassword: "", confirmPassword: "" }}
+                            initialValues={{ currentPassword: "", newPassword: "", confirmPassword: "" }}
                             onSubmit={handleSubmit}
                         >
                             {({ isSubmitting }) => (
                                 <Form className="space-y-6">
+
+                                    <div>
+                                        <label
+                                            htmlFor="currentPassword"
+                                            className="flex text-base font-medium text-gray-700 mb-2"
+                                        >
+                                            <IoLockClosedOutline className="h-4 w-4 text-green-500 mr-2 mt-1" />
+                                            Contraseña actual:
+                                        </label>
+                                        <div className="relative">
+                                            <Field
+                                                type={showCurrentPassword ? "text" : "password"}
+                                                name="currentPassword"
+                                                className={`block w-full px-4 py-3 text-base pr-12 border-2 rounded-xl shadow-sm focus:outline-none transition-all duration-300 ${formErrors.currentPassword
+                                                    ? "border-red-400 bg-red-50"
+                                                    : "border-gray-300 hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                                                    }`}
+                                                placeholder="******"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="absolute inset-y-0 right-0 pr-4 flex items-center transition-transform duration-200 hover:scale-110"
+                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                            >
+                                                {showCurrentPassword ? (
+                                                    <IoEyeOffOutline className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
+                                                ) : (
+                                                    <IoEyeOutline className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
+                                                )}
+                                            </button>
+                                        </div>
+                                        {formErrors.currentPassword && (
+                                            <div className="mt-2 text-sm text-red-600 font-medium">
+                                                {formErrors.currentPassword}
+                                            </div>
+                                        )}
+                                    </div>
 
                                     <div>
                                         <label

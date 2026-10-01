@@ -43,14 +43,10 @@ export const usersApiSlice = createApi({
         body: credentials,
       }),
       transformResponse: (response) => response,
-      transformErrorResponse: (response) => ({
-        status: response.status,
-        message: response.data?.message,
-      }),
     }),
     userBlocked: builder.mutation({
       query: ({ userToken, userId }) => ({
-        url: `/api/v1/user-blocked/${userId}`,
+        url: `api/v1/users/${userId}/blocked`,
         method:"POST",
         headers: {
           Authorization: `Bearer ${userToken}`,

@@ -7,6 +7,7 @@ import { IoIosLogIn } from "react-icons/io";
 import { useLoginUserMutation } from "../services/autenticateUser";
 import { toast } from "sonner";
 import { useUserAccount } from "../Hooks/useUserAccount";
+import { obtenerMensajeError } from "../helpers";
 
 
 const SignIn = ({ setAutenticate }) => {
@@ -19,10 +20,7 @@ const SignIn = ({ setAutenticate }) => {
 
   useEffect(() => {
     if (error) {
-      toast.error(
-        "Error al iniciar sesión: " + error?.data?.message &&
-        "Correo y contraseña invalidos. "
-      );
+      toast.error(obtenerMensajeError(error, "Error al iniciar sesión"));
       return;
     } else if (isSuccess) {
       console.log(data);

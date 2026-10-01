@@ -1,361 +1,241 @@
-import React, { useEffect, useState } from "react";
-import { Formik, Form, Field } from "formik";
-import * as Yup from "yup";
+import React, { useMemo, useState } from "react";
 import {
     IoCodeSlashOutline,
-    IoServerOutline,
-    IoColorPaletteOutline,
-    IoDocumentTextOutline,
-    IoAddCircleOutline,
-    IoCheckmarkCircleOutline,
-    IoAlertCircleOutline,
-    IoBriefcaseOutline,
-    IoCloseSharp
+    IoBulbOutline,
+    IoSearchOutline,
+    IoCheckmark,
+    IoCloseSharp,
+    IoAlertCircleOutline
 } from "react-icons/io5";
-import { useAppSelector } from "../Hooks/store";
-import { useCreateSkillsMutation } from "../services/UserSlice";
 import { toast } from "sonner";
+import { useAppSelector } from "../Hooks/store";
+import { useGetSkillsCatalogQuery, useUpdateMySkillsMutation } from "../services/UserSlice";
 import { useUserAccount } from "../Hooks/useUserAccount";
+import { obtenerMensajeError } from "../helpers";
 
-const SkillForm = ({ onSubmit, onCancel }) => {
-    const [selectedCategory, setSelectedCategory] = useState("");
-    const [skillsList, setSkillsList] = useState([]); // NUEVO ARRAY
-    const { userId, username, userToken } = useAppSelector(state => state.users);
-    const [createSkillMutation, { isSuccess, error, data }] = useCreateSkillsMutation();
+// Limites que valida el back en PUT /person/skills
+const SECCIONES = [
+    {
+        tipo: "TECNOLOGIA",
+        titulo: "Tecnologías",
+        descripcion: "Lenguajes, frameworks y herramientas que dominas",
+        maximo: 15,
+        icon: IoCodeSlashOutline,
+        iconClass: "text-green-600 bg-green-100",
+        barraClass: "bg-green-500",
+        chipActivo: "bg-green-600 border-green-600 text-white shadow-sm",
+        chipInactivo: "border-gray-300 text-gray-700 hover:border-green-400 hover:bg-green-50"
+    },
+    {
+        tipo: "APTITUD",
+        titulo: "Aptitudes",
+        descripcion: "Habilidades blandas que te describen",
+        maximo: 5,
+        icon: IoBulbOutline,
+        iconClass: "text-indigo-600 bg-indigo-100",
+        barraClass: "bg-indigo-500",
+        chipActivo: "bg-indigo-600 border-indigo-600 text-white shadow-sm",
+        chipInactivo: "border-gray-300 text-gray-700 hover:border-indigo-400 hover:bg-indigo-50"
+    }
+];
+
+// Los ids se repiten entre tecnologias y aptitudes, por eso la llave es el par (tipo, id)
+const llave = (habilidad) => `${habilidad.tipo}-${habilidad.id}`;
+
+const SkillForm = ({ onCancel, habilidadesActuales = [] }) => {
+    const { username, userToken } = useAppSelector(state => state.users);
     const { getUserByUsername } = useUserAccount();
+    const { data: catalogo = [], isLoading, isError, error } = useGetSkillsCatalogQuery({ token: userToken });
+    const [updateMySkills, { isLoading: guardando }] = useUpdateMySkillsMutation();
 
+    const [busqueda, setBusqueda] = useState("");
+    const [seleccion, setSeleccion] = useState(() => new Set(habilidadesActuales.map(llave)));
 
-    const skillCategories = {
-        frontend: [
-            "React", "Vue.js", "Angular", "HTML/CSS", "JavaScript",
-            "TypeScript", "Tailwind CSS", "Bootstrap", "Next.js", "Sass"
-        ],
-        backend: [
-            "Node.js", "Python", "Java", "PHP", "C#",
-            "Ruby", "Go", "Spring Boot", "Django", "Express.js"
-        ],
-        database: [
-            "MySQL", "PostgreSQL", "MongoDB", "Oracle",
-            "SQL Server", "Firebase", "Redis", "SQLite"
-        ],
-        tools: [
-            "Git", "Docker", "Kubernetes", "Jenkins", "GitHub Actions",
-            "VS Code", "IntelliJ IDEA", "Postman", "Figma", "Jira"
-        ],
-        other: [
-            "Testing", "Documentación", "Metodologías Ágiles", "API REST",
-            "Microservicios", "Clean Code", "DevOps", "Seguridad", "CI/CD"
-        ]
+    const seleccionInicial = useMemo(() => new Set(habilidadesActuales.map(llave)), [habilidadesActuales]);
+    const hayCambios = seleccion.size !== seleccionInicial.size
+        || [...seleccion].some(k => !seleccionInicial.has(k));
+
+    const contarTipo = (tipo) => [...seleccion].filter(k => k.startsWith(`${tipo}-`)).length;
+
+    const toggle = (habilidad, maximo) => {
+        const k = llave(habilidad);
+        setSeleccion(prev => {
+            const nueva = new Set(prev);
+            if (nueva.has(k)) {
+                nueva.delete(k);
+            } else if (contarTipo(habilidad.tipo) < maximo) {
+                nueva.add(k);
+            }
+            return nueva;
+        });
     };
 
-    const validationSchema = Yup.object().shape({
-        name: Yup.string()
-            .required("Debes seleccionar o escribir una habilidad")
-            .min(2, "La habilidad debe tener al menos 2 caracteres")
-            .max(100, "La habilidad no puede exceder 100 caracteres"),
-        level: Yup.string()
-            .required("Debes seleccionar un nivel de dominio")
-            .oneOf(["Basico", "Intermedio", "Avanzado"], "Nivel inválido"),
-        category: Yup.string()
-            .required("Debes seleccionar una categoría")
-    });
+    const idsDeTipo = (tipo) => catalogo
+        .filter(h => h.tipo === tipo && seleccion.has(llave(h)))
+        .map(h => h.id);
 
-    const initialValues = {
-        name: "",
-        level: "",
-        category: "",
-        customSkill: ""
-    };
-
-    // ✅ Agregar al array
-    const handleAddSkillToList = (values, resetForm, setFieldValue) => {
-        const skillName = values.customSkill || values.name;
-
-        const newSkill = {
-            idPersona: userId,
-            nombre: skillName,
-            nivel: values.level.toUpperCase()
-        };
-
-        setSkillsList(prev => [...prev, newSkill]);
-
-        resetForm();
-        setSelectedCategory("");
-        setFieldValue("category", "");
-    };
-
-    // ✅ Eliminar skill
-    const handleRemoveSkill = (index) => {
-        setSkillsList(prev => prev.filter((_, i) => i !== index));
-    };
-
-    // ✅ Enviar todo el array
-    const handleFinalSubmit = () => {
-        if (skillsList.length === 0) {
-            toast.message("Agrega al menos una habilidad primero");
-            return;
+    const handleGuardar = async () => {
+        try {
+            await updateMySkills({
+                skills: {
+                    tecnologias: idsDeTipo("TECNOLOGIA"),
+                    aptitudes: idsDeTipo("APTITUD")
+                },
+                token: userToken
+            }).unwrap();
+            toast.success("Habilidades actualizadas");
+            await getUserByUsername(username, userToken);
+            onCancel();
+        } catch (err) {
+            toast.error(obtenerMensajeError(err, "No se pudieron guardar las habilidades"));
         }
-        if (onSubmit) onSubmit(skillsList);
-        const token = localStorage.getItem("token")
-        createSkillMutation({ skillsList, token })
-        setSkillsList([])
     };
 
-    const categories = [
-        { value: "frontend", label: "Frontend", icon: IoColorPaletteOutline },
-        { value: "backend", label: "Backend", icon: IoServerOutline },
-        { value: "database", label: "Base de Datos", icon: IoDocumentTextOutline },
-        { value: "tools", label: "Herramientas", icon: IoBriefcaseOutline },
-        { value: "other", label: "Otras", icon: IoCheckmarkCircleOutline }
-    ];
-
-    const levels = [
-        { value: "Basico", label: "Básico", description: "Conocimientos fundamentales" },
-        { value: "Intermedio", label: "Intermedio", description: "Puedo trabajar con confianza" },
-        { value: "Avanzado", label: "Avanzado", description: "Dominio experto" }
-    ];
-
-    useEffect(() => {
-
-        if (isSuccess) {
-            toast.success("Habilidades agregadas correctamente")
-            getUserByUsername(username, userToken);
-            setTimeout(() => {
-                onCancel()
-            }, 1000)
-            return;
-        }
-        if (error) {
-            toast.error("Error intentelo mas tarde")
-        }
-    }, [isSuccess, error])
-
+    const texto = busqueda.trim().toLowerCase();
 
     return (
-        <div className="absolute inset-0 z-50 flex justify-center items-center">
-            <IoCloseSharp
-                className="absolute top-4 right-4 text-gray-600 hover:text-red-500 transition-colors duration-200 size-7 cursor-pointer z-10"
-                onClick={onCancel}
-            />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+            <div className="w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden">
 
-            <div className="bg-gradient-to-br from-green-50 min-h-screen flex items-center justify-center p-4 w-full">
-                <div className="w-full max-w-3xl">
-                    <div className="bg-white py-8 px-8 shadow-2xl rounded-3xl border-2 border-green-100">
+                {/* Encabezado */}
+                <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-gray-100">
+                    <div>
+                        <h2 className="text-2xl font-extrabold text-gray-900">Mis habilidades</h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Elige las tecnologías y aptitudes que quieres mostrar en tu perfil.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="p-1 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        aria-label="Cerrar"
+                    >
+                        <IoCloseSharp className="size-6" />
+                    </button>
+                </div>
 
-                        <div className="text-center mb-8">
-                            <div className="flex justify-center items-center gap-3">
-                                <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg">
-                                    <IoCodeSlashOutline className="h-10 w-10 text-white" />
+                {/* Buscador */}
+                <div className="px-6 pt-4">
+                    <div className="relative">
+                        <IoSearchOutline className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                        <input
+                            type="text"
+                            value={busqueda}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                            placeholder="Buscar habilidad..."
+                            className="w-full pl-10 pr-4 py-2.5 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all"
+                        />
+                    </div>
+                </div>
+
+                {/* Catalogo */}
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+                    {isLoading && (
+                        <div className="space-y-3 animate-pulse">
+                            {[...Array(3)].map((_, i) => (
+                                <div key={i} className="flex flex-wrap gap-2">
+                                    {[...Array(6)].map((_, j) => (
+                                        <div key={j} className="h-8 w-20 rounded-full bg-gray-200" />
+                                    ))}
                                 </div>
-                                <h2 className="text-2xl font-extrabold text-gray-900">
-                                    Agregar Habilidad
-                                </h2>
-                            </div>
+                            ))}
                         </div>
+                    )}
 
-                        <Formik
-                            initialValues={initialValues}
-                            validationSchema={validationSchema}
-                            validateOnChange={false}
-                            validateOnBlur={false}
+                    {isError && (
+                        <div className="flex items-center gap-2 p-4 rounded-xl bg-red-50 text-red-700 text-sm font-medium">
+                            <IoAlertCircleOutline className="size-5 shrink-0" />
+                            {obtenerMensajeError(error, "No se pudo cargar el catálogo de habilidades")}
+                        </div>
+                    )}
+
+                    {!isLoading && !isError && SECCIONES.map(({ tipo, titulo, descripcion, maximo, icon: Icon, iconClass, barraClass, chipActivo, chipInactivo }) => {
+                        const opciones = catalogo.filter(h =>
+                            h.tipo === tipo && h.nombre.toLowerCase().includes(texto)
+                        );
+                        const elegidas = contarTipo(tipo);
+                        const lleno = elegidas >= maximo;
+
+                        return (
+                            <section key={tipo}>
+                                <div className="flex items-center justify-between gap-3 mb-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${iconClass}`}>
+                                            <Icon className="size-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-gray-900">{titulo}</h3>
+                                            <p className="text-xs text-gray-500">{descripcion}</p>
+                                        </div>
+                                    </div>
+                                    <span className={`text-sm font-semibold ${lleno ? "text-amber-600" : "text-gray-600"}`}>
+                                        {elegidas}/{maximo}
+                                    </span>
+                                </div>
+
+                                <div className="h-1.5 w-full rounded-full bg-gray-100 mb-3 overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-300 ${barraClass}`}
+                                        style={{ width: `${(elegidas / maximo) * 100}%` }}
+                                    />
+                                </div>
+
+                                {lleno && (
+                                    <p className="text-xs text-amber-600 mb-2">
+                                        Llegaste al máximo. Quita una para elegir otra.
+                                    </p>
+                                )}
+
+                                <div className="flex flex-wrap gap-2">
+                                    {opciones.length === 0 && (
+                                        <p className="text-sm text-gray-400">
+                                            {texto ? "Sin resultados para tu búsqueda." : "No hay opciones disponibles."}
+                                        </p>
+                                    )}
+                                    {opciones.map(habilidad => {
+                                        const activa = seleccion.has(llave(habilidad));
+                                        const bloqueada = !activa && lleno;
+                                        return (
+                                            <button
+                                                key={llave(habilidad)}
+                                                type="button"
+                                                disabled={bloqueada}
+                                                onClick={() => toggle(habilidad, maximo)}
+                                                className={`flex items-center gap-1 px-3.5 py-1.5 rounded-full border text-sm font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${activa ? chipActivo : chipInactivo}`}
+                                            >
+                                                {activa && <IoCheckmark className="size-4" />}
+                                                {habilidad.nombre}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        );
+                    })}
+                </div>
+
+                {/* Pie */}
+                <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50">
+                    <span className="text-xs text-gray-500">
+                        {hayCambios ? "Tienes cambios sin guardar" : "Sin cambios"}
+                    </span>
+                    <div className="flex gap-3">
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            className="px-5 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-white font-semibold text-sm transition-colors"
                         >
-                            {({ values, errors, touched, setFieldValue, resetForm }) => (
-                                <Form className="space-y-6">
-
-                                    {/* CATEGORÍAS */}
-                                    <div>
-                                        <label className="flex items-center text-lg font-semibold text-gray-800 mb-3">
-                                            <IoServerOutline className="h-6 w-6 text-green-600 mr-2" />
-                                            Categoría de Habilidad
-                                        </label>
-
-                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                            {categories.map(({ value, label, icon: Icon }) => (
-                                                <button
-                                                    key={value}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setFieldValue("category", value);
-                                                        setFieldValue("name", "");
-                                                        setFieldValue("customSkill", "");
-                                                        setSelectedCategory(value);
-                                                    }}
-                                                    className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${values.category === value
-                                                        ? "border-green-500 bg-green-50 shadow-md scale-105"
-                                                        : "border-gray-300 hover:border-green-300 hover:bg-gray-50"
-                                                        }`}
-                                                >
-                                                    <Icon className={`h-7 w-7 ${values.category === value ? "text-green-600" : "text-gray-500"}`} />
-                                                    <span className={`font-semibold text-sm ${values.category === value ? "text-green-700" : "text-gray-700"}`}>
-                                                        {label}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        {errors.category && touched.category && (
-                                            <p className="mt-2 text-red-600 text-sm font-medium flex items-center gap-1">
-                                                <IoAlertCircleOutline className="h-4 w-4" />
-                                                {errors.category}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* SKILLS */}
-                                    {values.category && (
-                                        <div className="animate-fadeIn">
-                                            <label className="flex items-center text-lg font-semibold text-gray-800 mb-3">
-                                                <IoCodeSlashOutline className="h-6 w-6 text-green-600 mr-2" />
-                                                Selecciona la Habilidad
-                                            </label>
-
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                                                {skillCategories[values.category]?.map((skill) => (
-                                                    <button
-                                                        key={skill}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setFieldValue("name", skill);
-                                                            setFieldValue("customSkill", "");
-                                                        }}
-                                                        className={`px-4 py-3 rounded-xl border-2 transition-all duration-200 font-medium text-sm ${values.name === skill && !values.customSkill
-                                                            ? "border-green-500 bg-green-50 text-green-700 shadow-md"
-                                                            : "border-gray-300 text-gray-700 hover:border-green-300 hover:bg-gray-50"
-                                                            }`}
-                                                    >
-                                                        {skill}
-                                                    </button>
-                                                ))}
-                                            </div>
-
-                                            {/* CUSTOM SKILL */}
-                                            <div className="mb-4">
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    O escribe una habilidad personalizada:
-                                                </label>
-                                                <Field
-                                                    name="customSkill"
-                                                    placeholder="Escribe tu habilidad personalizada..."
-                                                    className="block w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl shadow-sm focus:outline-none hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-300"
-                                                />
-                                            </div>
-
-                                            {errors.name && touched.name && (
-                                                <p className="mt-2 text-red-600 text-sm font-medium flex items-center gap-1">
-                                                    <IoAlertCircleOutline className="h-4 w-4" />
-                                                    {errors.name}
-                                                </p>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* NIVEL */}
-                                    <div>
-                                        <label className="flex items-center text-lg font-semibold text-gray-800 mb-3">
-                                            <IoCheckmarkCircleOutline className="h-6 w-6 text-green-600 mr-2" />
-                                            Nivel de Dominio
-                                        </label>
-
-                                        <Field
-                                            as="select"
-                                            name="level"
-                                            className="block w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl shadow-sm focus:outline-none hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-300"
-                                        >
-                                            <option value="">Selecciona un nivel</option>
-                                            {levels.map((lvl) => (
-                                                <option key={lvl.value} value={lvl.value}>
-                                                    {lvl.label} - {lvl.description}
-                                                </option>
-                                            ))}
-                                        </Field>
-
-                                        {errors.level && touched.level && (
-                                            <p className="mt-2 text-red-600 text-sm font-medium flex items-center gap-1">
-                                                <IoAlertCircleOutline className="h-4 w-4" />
-                                                {errors.level}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* RESUMEN TEMPORAL */}
-                                    {(values.customSkill || values.name) && values.level && (
-                                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-5 animate-fadeIn">
-                                            <div className="flex items-center gap-3">
-                                                <IoCheckmarkCircleOutline className="h-8 w-8 text-green-600" />
-                                                <div>
-                                                    <p className="text-sm text-gray-600 font-medium">Habilidad seleccionada:</p>
-                                                    <p className="text-xl font-bold text-gray-900">
-                                                        {values.customSkill || values.name}
-                                                        <span className="text-green-600 ml-2">
-                                                            Nivel {values.level}
-                                                        </span>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* ✅ BOTÓN PARA AGREGAR A LA LISTA */}
-                                    <button
-                                        type="button"
-                                        onClick={() => handleAddSkillToList(values, resetForm, setFieldValue)}
-                                        className="w-full py-3 bg-green-200 hover:bg-green-300 text-green-900 font-semibold rounded-xl transition-all"
-                                    >
-                                        ➕ Agregar habilidad a la lista
-                                    </button>
-
-                                    {/* ✅ LISTA DE HABILIDADES AGREGADAS */}
-                                    {skillsList.length > 0 && (
-                                        <div className="mt-6 bg-white border-2 border-green-200 rounded-xl p-4 animate-fadeIn">
-                                            <h3 className="text-lg font-bold mb-3 text-gray-800">Habilidades agregadas:</h3>
-
-                                            <div className="flex flex-wrap gap-3">
-                                                {skillsList.map((skill, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="flex items-center gap-2 bg-green-50 border border-green-300 px-4 py-2 rounded-xl"
-                                                    >
-                                                        <span className="font-semibold text-green-700">
-                                                            {skill.nombre} ({skill.nivel})
-                                                        </span>
-
-                                                        <button
-                                                            className="text-red-500 font-bold hover:text-red-700"
-                                                            onClick={() => handleRemoveSkill(index)}
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* ✅ BOTONES FINALES */}
-                                    <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6">
-
-                                        <button
-                                            type="button"
-                                            onClick={onCancel}
-                                            className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold"
-                                        >
-                                            Cancelar
-                                        </button>
-
-                                        {/* ✅ ENVIAR TODO EL ARRAY */}
-                                        <button
-                                            type="button"
-                                            onClick={handleFinalSubmit}
-                                            className="flex items-center justify-center px-8 py-3 rounded-xl shadow-lg text-base font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 cursor-pointer"
-                                        >
-                                            Guardar todas las habilidades
-                                        </button>
-                                    </div>
-
-                                </Form>
-                            )}
-                        </Formik>
-
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleGuardar}
+                            disabled={!hayCambios || guardando || isLoading || isError}
+                            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-green-600 hover:bg-green-700 shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {guardando ? "Guardando..." : "Guardar"}
+                        </button>
                     </div>
                 </div>
             </div>

@@ -16,10 +16,11 @@ export const updatePersonApi = createApi({
       }),
     }),
     updateMyPhoto: builder.mutation({
-      query: ({ userId, formData, token }) => {
+      query: ({ userId, formData, token, tipo }) => {
         return {
           url: `/fileUsers/${userId}`,
           method: "PATCH",
+          params: { tipo },
           body: formData,
           headers: {
             Authorization: `Bearer ${token}`,

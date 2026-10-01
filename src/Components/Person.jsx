@@ -1,8 +1,11 @@
 import React, { useState } from 'react'
 import { SlPencil } from 'react-icons/sl'
+import { IoCameraOutline } from 'react-icons/io5'
+import PhotoForm from './PhotoForm'
 
 const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, ubicacion, carrera, myAccount, setUpdateAccount, contactos, openMenuContact, user }) => {
 
+  const [menuFoto, setMenuFoto] = useState(false)
 
   let renderWeb = contactos?.filter(contacto => {
     return contacto.contactos.red === "WEB"
@@ -21,20 +24,33 @@ const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, 
           onClick={() => setUpdateAccount(true)}
         />}
 
-        <img className='size-32 rounded-full absolute border-5 border-white top-[110px]' src={`${imagen ? imagen : 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true'}`} alt="foto de perfil" />
+        <div className='size-32 rounded-full absolute border-5 border-white top-[110px] overflow-hidden group'>
+          <img className='size-full object-cover' src={imagen || 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true'} alt="foto de perfil" />
+          {myAccount && (
+            <button
+              type="button"
+              onClick={() => setMenuFoto(true)}
+              aria-label="Cambiar foto de perfil"
+              className='absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer'
+            >
+              <IoCameraOutline className='size-6 mb-1' />
+              Cambiar foto
+            </button>
+          )}
+        </div>
+
         <div className='mt-5 flex flex-col gap-2'>
           <div>
             <h4 className='text-xl font-semibold'>{`${nombre} ${apellido}`}</h4>
             <div className='flex justify-between'>
               <p>{especialidad}</p>
-              {carrera && <p>Ingeniero en {carrera}</p>}
+              {carrera && <p>{carrera}</p>}
             </div>
           </div>
           <div className='flex gap-4'>
-            {ubicacion ? (
-              <span className='text-gray-400 text-[14px]'>{`${ubicacion?.ciudad} ${ubicacion?.pais}`} </span>)
-              : ""
-            }
+            {ubicacion?.estado && (
+              <span className='text-gray-400 text-[14px]'>{ubicacion.estado}</span>
+            )}
             {
               <p
                 onClick={handleOpenMenu}
@@ -61,6 +77,7 @@ const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, 
         </div>
 
       </div>
+      {menuFoto && <PhotoForm tipo={user?.tipo} onCancel={() => setMenuFoto(false)} />}
     </div>
   )
 }

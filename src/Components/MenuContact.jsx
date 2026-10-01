@@ -3,9 +3,16 @@ import ContactsCard from './ContactsCard'
 import { IoCloseSharp } from 'react-icons/io5'
 import { IoMdAdd } from 'react-icons/io'
 import { SlPencil } from 'react-icons/sl'
+import { useAppSelector } from '../Hooks/store'
+import { useGetContactTypesQuery } from '../services/UserSlice'
 
-const MenuContact = ({ nombreUser, contactos, isEditable, onClose, myAccount, setMenuRedesContacto }) => {
-    console.log(contactos)
+const MenuContact = ({ nombreUser, contactos = [], onClose, myAccount, onAgregarContacto, onEditarContactos }) => {
+    const { userToken } = useAppSelector(state => state.users)
+    // Catalogo de redes del back: [{ idContacto, red }]
+    const { data: tiposContacto = [] } = useGetContactTypesQuery({ token: userToken }, { skip: !myAccount })
+    const tieneContactos = contactos.length > 0
+    // Solo se puede tener un contacto por red, cuando estan todas ya no se puede agregar
+    const puedeAgregar = tiposContacto.length > 0 && contactos.length < tiposContacto.length
 
     const handleCloseMenu = () => {
         document.body.className = ""
@@ -22,29 +29,21 @@ const MenuContact = ({ nombreUser, contactos, isEditable, onClose, myAccount, se
                     <div className='flex justify-between items-center px-4 pt-4'>
                         <h4 className='text-xl '>Informacion de contacto</h4>
                         <div className='flex gap-2'>
-                            {myAccount && <SlPencil className='size-5  cursor-pointer'
-                                onClick={() => {
-                                    // setMenuRedesContacto(true)
-                                    // setUpdateContact(contactos)
-                                }
-                                }
+                            {myAccount && tieneContactos && <SlPencil className='size-5  cursor-pointer'
+                                title="Editar contactos"
+                                onClick={onEditarContactos}
                             />}
-                            {(myAccount) && (
-                                contactos?.length === 4 ? '' :
-                                    <IoMdAdd className='size-6 cursor-pointer'
-                                        onClick={() => {
-                                            setMenuRedesContacto(true)
-                                            
-                                        }}
-                                    />
-                            )}
+                            {myAccount && puedeAgregar && <IoMdAdd className='size-6 cursor-pointer'
+                                title="Agregar contacto"
+                                onClick={onAgregarContacto}
+                            />}
                         </div>
 
                     </div>
                     <div className='p-4 '>
 
                         {
-                            contactos.length > 0 ?
+                            tieneContactos ?
                                 contactos?.map((contact) => {
                                     return <ContactsCard
                                         key={contact.contactos.idContacto}

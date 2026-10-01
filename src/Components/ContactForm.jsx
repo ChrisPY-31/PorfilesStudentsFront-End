@@ -12,19 +12,22 @@ import {
     IoCloseSharp
 } from "react-icons/io5";
 import { useAppSelector } from "../Hooks/store";
-import { useCreateSocialLinkMutation } from "../services/UserSlice";
+import { useCreateSocialLinkMutation, useDeleteSocialLinkMutation, useGetContactTypesQuery } from "../services/UserSlice";
 import { toast } from "sonner";
 import { useUserAccount } from "../Hooks/useUserAccount";
+import { obtenerMensajeError } from "../helpers";
 
-const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, onClose }) => {
+const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact = [], contactosExistentes = [], onClose }) => {
     const [formErrors, setFormErrors] = useState({});
     const [selectedType, setSelectedType] = useState("");
     const [contacts, setContacts] = useState(initialContacts);
     const [editingContact, setEditingContact] = useState(null);
     const { getUserByUsername } = useUserAccount();
     const { userId, username, userToken } = useAppSelector(state => state.users)
-    const [newSocialLink, setNewSocialLink] = useState([])
     const [createSocialLink, { isSuccess, error }] = useCreateSocialLinkMutation()
+    const [deleteSocialLink] = useDeleteSocialLinkMutation()
+    // Catalogo de redes del back: [{ idContacto, red }]
+    const { data: tiposContacto = [] } = useGetContactTypesQuery({ token: userToken })
 
 
     useEffect(() => {
@@ -45,48 +48,62 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
         }
 
         if (error) {
-            console.log(error)
+            toast.error(obtenerMensajeError(error, "No se pudieron guardar los contactos"))
         }
     }, [isSuccess, error])
 
 
-    const contactTypes = [
-        {
-            value: "LINKEDIN",
+    // Solo la parte visual de cada red; las redes disponibles vienen del back (/contact)
+    // Las clases van completas para que Tailwind las genere
+    const estiloRedes = {
+        LINKEDIN: {
             label: "LinkedIn",
             icon: <IoLogoLinkedin className="h-5 w-5 text-blue-600" />,
             placeholder: "https://linkedin.com/in/tu-perfil",
-            color: "blue"
+            selectedClass: "border-blue-500 bg-blue-50 scale-105"
         },
-        {
-            value: "EMAIL",
+        EMAIL: {
             label: "Email",
             icon: <IoMailOutline className="h-5 w-5 text-red-500" />,
             placeholder: "tu.email@ejemplo.com",
-            color: "red"
+            selectedClass: "border-red-500 bg-red-50 scale-105"
         },
-        {
-            value: "PHONE",
+        PHONE: {
             label: "Teléfono",
             icon: <IoCallOutline className="h-5 w-5 text-green-500" />,
             placeholder: "+52 123 456 7890",
-            color: "green"
+            selectedClass: "border-green-500 bg-green-50 scale-105"
         },
-        {
-            value: "WEB",
+        WEB: {
             label: "Sitio Web",
             icon: <IoGlobeOutline className="h-5 w-5 text-purple-500" />,
             placeholder: "https://tu-sitio-web.com",
-            color: "purple"
-        },
-        {
-            value: "OTHER",
-            label: "Otro",
-            icon: <IoEllipsisHorizontal className="h-5 w-5 text-gray-500" />,
-            placeholder: "Agrega el enlace o información",
-            color: "gray"
+            selectedClass: "border-purple-500 bg-purple-50 scale-105"
         }
-    ];
+    };
+
+    const estiloDefault = (red) => ({
+        label: red,
+        icon: <IoEllipsisHorizontal className="h-5 w-5 text-gray-500" />,
+        placeholder: "Agrega el enlace",
+        selectedClass: "border-gray-500 bg-gray-50 scale-105"
+    });
+
+    const contactTypes = tiposContacto.map(tipo => ({
+        ...(estiloRedes[tipo.red] ?? estiloDefault(tipo.red)),
+        value: tipo.red,
+        idContacto: tipo.idContacto
+    }));
+
+    // Una red ya usada (guardada o agregada en este formulario) no se puede volver a elegir.
+    // Al editar se bloquea la red: el POST del back solo agrega o sobrescribe, no cambia de red
+    const redesUsadas = new Set([
+        ...contactosExistentes.map(c => c.contactos?.red),
+        ...contacts.map(c => c.contactos?.red)
+    ]);
+    const redDisponible = (red) => editingContact
+        ? editingContact.contactos?.red === red
+        : !redesUsadas.has(red);
 
     const getContactIcon = (type) => {
         const contactType = contactTypes.find(t => t.value === type);
@@ -102,37 +119,30 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
         try {
             setFormErrors({});
 
-            const formateRed = (red) => {
-                const redes = {
-                    "LINKEDIN": 1,
-                    "EMAIL": 2,
-                    "PHONE": 3,
-                    "WEB": 4
-                };
-                return redes[red] || null;
+            const tipo = tiposContacto.find(t => t.red === values.red);
+            if (!tipo) {
+                setFormErrors({ _general: "Este tipo de contacto no esta disponible en el servidor" });
+                setSubmitting(false);
+                return;
             }
 
             const contactData = {
                 id: {
                     idPerson: userId,
-                    idContact: formateRed(values.red)
+                    idContact: tipo.idContacto
                 },
                 url: values.valor,
                 contactos: {
-                    idContacto: editingContact?.contactos?.idContacto || null,
+                    idContacto: tipo.idContacto,
                     red: values.red
                 }
             };
 
-            if (editingContact) {
-                setContacts(contacts.map(c =>
-                    c.id.contactId === editingContact.id.contactId ? contactData : c
-                ));
-            } else {
-                setContacts([...contacts, contactData]);
-                const { id, url } = contactData;
-                setNewSocialLink([{ id, url }, ...contacts])
-            }
+            // Una persona solo puede tener un contacto por red (la PK es idPerson + idContact)
+            const sinDuplicado = contacts.filter(c =>
+                c.contactos.red !== values.red && (!editingContact || c.contactos.red !== editingContact.contactos.red)
+            );
+            setContacts([...sinDuplicado, contactData]);
 
             resetForm();
             setSelectedType("");
@@ -152,16 +162,27 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
         setSelectedType(contact.contactos.red);
     };
 
-    const handleDeleteContact = (idContact) => {
-        console.log(idContact)
-        setContacts(contacts.filter(c => c.id.idContact !== idContact));
+    const handleDeleteContact = async (idContact) => {
+        const guardado = updateContact?.some(c => c.contactos?.idContacto === idContact);
+        if (guardado) {
+            const token = localStorage.getItem("token")
+            const result = await deleteSocialLink({ idContact, token });
+            if (result.error) {
+                toast.error(obtenerMensajeError(result.error, "No se pudo eliminar el contacto"));
+                return;
+            }
+            getUserByUsername(username, userToken);
+        }
+        setContacts(contacts.filter(c => c.contactos?.idContacto !== idContact));
     };
 
     const handleFinalSubmit = async () => {
-        console.log("entro aqui")
         const token = localStorage.getItem("token")
+        const newSocialLink = contacts.map(({ contactos, url }) => ({
+            id: { idPerson: userId, idContact: contactos.idContacto },
+            url,
+        }));
         await createSocialLink({ newSocialLink, token });
-        console.log("salio aqui")
     };
 
 
@@ -193,7 +214,7 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
                                 <h3 className="text-lg font-semibold text-gray-700 mb-3">Tus contactos</h3>
                                 <div className="space-y-2">
                                     {contacts.map((contact) => (
-                                        <div key={contact.id?.idContact} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                        <div key={contact.contactos?.idContacto} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
                                             <div className="flex items-center gap-3">
                                                 {getContactIcon(contact.contactos.red)}
                                                 <div>
@@ -214,7 +235,7 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDeleteContact(contact.id.idContact)}
+                                                    onClick={() => handleDeleteContact(contact.contactos?.idContacto)}
                                                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                 >
                                                     <IoTrashOutline className="h-4 w-4" />
@@ -228,10 +249,8 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
 
                         <Formik
                             initialValues={{
-                                id: editingContact?.id || { contactId: "", personId: null },
                                 red: editingContact?.contactos?.red || "",
-                                valor: editingContact?.url || "",
-                                otroTipo: ""
+                                valor: editingContact?.url || ""
                             }}
                             onSubmit={handleSubmit}
                             enableReinitialize
@@ -245,22 +264,24 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
                                             {editingContact ? "Editando contacto" : "Agregar nuevo contacto"}
                                         </label>
                                         <div className="grid grid-cols-3 gap-3">
+                                            {contactTypes.length === 0 && (
+                                                <p className="col-span-3 text-sm text-gray-500">Cargando redes...</p>
+                                            )}
                                             {contactTypes.map((type) => (
                                                 <button
                                                     key={type.value}
                                                     type="button"
+                                                    disabled={!redDisponible(type.value)}
+                                                    title={!redDisponible(type.value) ? "Ya tienes un contacto de esta red" : undefined}
                                                     onClick={() => {
                                                         setSelectedType(type.value);
                                                         setFieldValue("red", type.value);
-                                                        if (type.value !== "OTHER") {
-                                                            setFieldValue("otroTipo", "");
-                                                        }
                                                         if (!editingContact || editingContact.contactos.red !== type.value) {
                                                             setFieldValue("valor", "");
                                                         }
                                                     }}
-                                                    className={`p-4 border-2 rounded-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 ${selectedType === type.value
-                                                        ? `border-${type.color}-500 bg-${type.color}-50 scale-105`
+                                                    className={`p-4 border-2 rounded-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 ${selectedType === type.value
+                                                        ? type.selectedClass
                                                         : "border-gray-300 bg-white hover:border-gray-400 hover:scale-105"
                                                         }`}
                                                 >
@@ -273,27 +294,12 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
                                         </div>
                                     </div>
 
-                                    {selectedType === "OTHER" && (
-                                        <div className="animate-fade-in">
-                                            <label className="flex items-center text-base font-medium text-gray-700 mb-2">
-                                                <IoEllipsisHorizontal className="h-5 w-5 text-gray-500 mr-2" />
-                                                Especifica el tipo
-                                            </label>
-                                            <Field
-                                                name="otroTipo"
-                                                type="text"
-                                                className="block w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl shadow-sm focus:outline-none hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-300"
-                                                placeholder="Ej: GitHub, Twitter, Instagram, etc."
-                                            />
-                                        </div>
-                                    )}
-
                                     {selectedType && (
                                         <div className="animate-fade-in">
                                             <label className="flex items-center text-base font-medium text-gray-700 mb-2">
                                                 {contactTypes.find(t => t.value === selectedType)?.icon}
                                                 <span className="ml-2">
-                                                    {selectedType === "OTHER" ? "Valor del contacto" : contactTypes.find(t => t.value === selectedType)?.label}
+                                                    {contactTypes.find(t => t.value === selectedType)?.label}
                                                 </span>
                                             </label>
                                             <Field
@@ -305,11 +311,17 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact, 
                                         </div>
                                     )}
 
+                                    {formErrors._general && (
+                                        <div className="text-sm text-red-600 font-medium">
+                                            {formErrors._general}
+                                        </div>
+                                    )}
+
                                     <div className="flex flex-col sm:flex-row justify-between space-y-3 sm:space-y-0 sm:space-x-4 pt-4 border-t border-gray-200">
                                         <div className="flex gap-3">
                                             <button
                                                 type="submit"
-                                                disabled={isSubmitting || !selectedType || !values.valor || (selectedType === "OTHER" && !values.otroTipo)}
+                                                disabled={isSubmitting || !selectedType || !values.valor}
                                                 className="flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <IoAddCircleOutline className="h-4 w-4 mr-2" />

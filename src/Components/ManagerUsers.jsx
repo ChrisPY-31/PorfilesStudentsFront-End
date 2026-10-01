@@ -4,30 +4,23 @@ import { useGetAllUsersQuery } from '../services/UserSlice';
 import { useUserBlockedMutation } from '../services/autenticateUser';
 import { useAppSelector } from '../Hooks/store';
 import { toast } from 'sonner';
+import { obtenerMensajeError } from '../helpers';
 
 const ManagerUsers = () => {
   const [users, setUsers] = useState([]);
   const { data } = useGetAllUsersQuery();
-  const [userBlocked, { isSuccess, isError, data: bloqueo }] = useUserBlockedMutation();
+  const [userBlocked, { isSuccess, error, data: bloqueo }] = useUserBlockedMutation();
   const { userToken } = useAppSelector(state => state.users)
 
   useEffect(() => {
     if (isSuccess) {
-      if (bloqueo.message === 'Cuenta desbloqueada con exito') {
-
-      }
-      if (bloqueo.message === "Cuenta bloqueada tempralmente"){
-        
-      }
-      console.log(bloqueo)
-      toast.success("Estudiante bloqueado con exito");
+      toast.success(bloqueo?.mensaje || "Estado del estudiante actualizado");
       return
     }
-    if (isError) {
-      S
-      toast.error("Error del servidor intentelo mas tarde")
+    if (error) {
+      toast.error(obtenerMensajeError(error, "Error del servidor intentelo mas tarde"))
     }
-  }, [isSuccess, isError])
+  }, [isSuccess, error])
 
 
   const toggleUserStatus = (userId) => {

@@ -1,0 +1,41 @@
+// Formatos que dejamos elegir; HEIC y otros no se pueden leer en la mayoria de navegadores
+export const FORMATOS_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
+export const MAX_MB_IMAGEN = 10;
+
+export const validarImagen = (archivo) => {
+  if (!FORMATOS_IMAGEN.includes(archivo.type)) {
+    return "Formato no permitido. Usa JPG, PNG o WebP";
+  }
+  if (archivo.size > MAX_MB_IMAGEN * 1024 * 1024) {
+    return `La imagen pesa más de ${MAX_MB_IMAGEN} MB`;
+  }
+  return null;
+};
+
+const cargarImagen = (src) =>
+  new Promise((resolve, reject) => {
+    const imagen = new Image();
+    imagen.onload = () => resolve(imagen);
+    imagen.onerror = () => reject(new Error("No se pudo leer la imagen"));
+    imagen.src = src;
+  });
+
+// Recorta el area elegida en el Cropper (en pixeles de la imagen original),
+// la escala a un cuadrado de `tamano` px y la devuelve como JPEG comprimido
+export const recortarImagen = async (src, area, tamano = 512, calidad = 0.85) => {
+  const imagen = await cargarImagen(src);
+  const canvas = document.createElement("canvas");
+  canvas.width = tamano;
+  canvas.height = tamano;
+  const ctx = canvas.getContext("2d");
+
+  // JPEG no tiene transparencia: un PNG transparente quedaria negro sin este fondo
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, tamano, tamano);
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(imagen, area.x, area.y, area.width, area.height, 0, 0, tamano, tamano);
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", calidad));
+  if (!blob) throw new Error("No se pudo procesar la imagen");
+  return new File([blob], "perfil.jpg", { type: "image/jpeg" });
+};
