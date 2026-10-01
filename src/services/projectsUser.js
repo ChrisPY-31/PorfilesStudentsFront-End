@@ -5,61 +5,50 @@ export const projectUserApi = createApi({
   reducerPath: "projectUserApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${API_KEY}` }),
   endpoints: (builder) => ({
+    // Proyectos de todos los estudiantes (requiere token)
+    getAllProjects: builder.query({
+      query: ({ token }) => ({
+        url: "/projects",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      transformResponse: (respuesta) => (Array.isArray(respuesta) ? respuesta : respuesta?.object ?? []),
+    }),
+    // El idEstudiante lo toma el back del token; tecnologias y menciones deben ser ids existentes
     createProject: builder.mutation({
-      query: ({ token, newProyect }) => ({
-        url: "projects",
+      query: ({ token, proyecto }) => ({
+        url: "/projects",
         method: "POST",
-        body: newProyect,
+        body: proyecto,
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }),
     }),
+    // El body debe traer idProject
     updateProjectStudent: builder.mutation({
-      query: ({ token, updatedProject }) => ({
-        url: "projects",
+      query: ({ token, proyecto }) => ({
+        url: "/projects",
         method: "PUT",
-        body: updatedProject,
+        body: proyecto,
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }),
     }),
     deleteProjectStudent: builder.mutation({
-      query: ({ userToken, idProject }) => ({
-        url: `projects/${idProject}`,
+      query: ({ token, idProject }) => ({
+        url: `/projects/${idProject}`,
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      }),
-    }),
-
-    createTechnology: builder.mutation({
-      query: ({ token, tecnologias }) => ({
-        url: "/technology",
-        method: "POST",
-        body: tecnologias,
-        headers: {
           Authorization: `Bearer ${token}`,
         },
       }),
     }),
-
-    updateTechnology: builder.mutation({
-      query: ({ token, updateTechnologyUser }) => ({
-        url: "/technology",
-        method: "PUT",
-        body: updateTechnologyUser,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }),
-    }),
-
-    loadedPhotoProject: builder.mutation({
-      query: ({ idProyecto, formData, token }) => ({
-        url: `/fileProjects/${idProyecto}`,
+    uploadProjectImage: builder.mutation({
+      query: ({ idProject, formData, token }) => ({
+        url: `/fileProjects/${idProject}`,
         method: "PATCH",
         body: formData,
         headers: {
@@ -67,14 +56,29 @@ export const projectUserApi = createApi({
         },
       }),
     }),
+    // Catalogo: [{ idTecnologia, nombre }]
+    getTechnologies: builder.query({
+      query: () => ({
+        url: "/technology",
+      }),
+    }),
+    // Para elegir colaboradores; la respuesta es paginada ({ content: [...] })
+    getStudentsForMentions: builder.query({
+      query: () => ({
+        url: "/students",
+        params: { page: 0, size: 200 },
+      }),
+      transformResponse: (respuesta) => respuesta?.content ?? [],
+    }),
   }),
 });
 
 export const {
+  useGetAllProjectsQuery,
   useCreateProjectMutation,
   useUpdateProjectStudentMutation,
   useDeleteProjectStudentMutation,
-  useCreateTechnologyMutation,
-  useUpdateTechnologyMutation,
-  useLoadedPhotoProjectMutation,
+  useUploadProjectImageMutation,
+  useGetTechnologiesQuery,
+  useGetStudentsForMentionsQuery,
 } = projectUserApi;

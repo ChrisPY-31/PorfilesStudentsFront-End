@@ -39,3 +39,30 @@ export const recortarImagen = async (src, area, tamano = 512, calidad = 0.85) =>
   if (!blob) throw new Error("No se pudo procesar la imagen");
   return new File([blob], "perfil.jpg", { type: "image/jpeg" });
 };
+
+// Reduce la imagen para que su lado mayor no pase de `maxLado` px, sin recortarla,
+// y la devuelve como JPEG comprimido (para publicaciones y proyectos)
+export const comprimirImagen = async (archivo, maxLado = 1600, calidad = 0.85) => {
+  const src = URL.createObjectURL(archivo);
+  try {
+    const imagen = await cargarImagen(src);
+    const escala = Math.min(1, maxLado / Math.max(imagen.width, imagen.height));
+    const ancho = Math.round(imagen.width * escala);
+    const alto = Math.round(imagen.height * escala);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = ancho;
+    canvas.height = alto;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, ancho, alto);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(imagen, 0, 0, ancho, alto);
+
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", calidad));
+    if (!blob) throw new Error("No se pudo procesar la imagen");
+    return new File([blob], "imagen.jpg", { type: "image/jpeg" });
+  } finally {
+    URL.revokeObjectURL(src);
+  }
+};

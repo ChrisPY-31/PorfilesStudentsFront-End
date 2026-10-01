@@ -72,34 +72,33 @@ export const userSlice = createApi({
         },
       }),
     }),
+    // Educacion: institucion, grado, educacionTipo y fechaInicio son obligatorios
     createEducationUser: builder.mutation({
-      query: ({ newEducationUser, token }) => ({
-        url: `/education`,
+      query: ({ educacion, token }) => ({
+        url: "/education",
         method: "POST",
-        body: newEducationUser,
+        body: educacion,
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        invalidatesTags: ["userById"],
       }),
     }),
     updateEducationUser: builder.mutation({
-      query: ({ updateEducation, token }) => ({
-        url: `education/${updateEducation.idEducacion}`,
+      query: ({ educacion, token }) => ({
+        url: `/education/${educacion.idEducacion}`,
         method: "PUT",
-        body: updateEducation,
+        body: educacion,
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        invalidatesTags: ["userById"],
       }),
     }),
     deleteEducationUser: builder.mutation({
-      query: ({ idEducacion, userToken }) => ({
+      query: ({ idEducacion, token }) => ({
         url: `/education/${idEducacion}`,
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${userToken}`,
+          Authorization: `Bearer ${token}`,
         },
       }),
     }),

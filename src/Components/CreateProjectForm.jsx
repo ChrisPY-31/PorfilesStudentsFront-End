@@ -1,580 +1,443 @@
-import React, { useEffect, useState } from "react";
-import { Formik, Form, Field } from "formik";
-import * as Yup from "yup";
-import { useNavigate } from "react-router-dom";
-import { IoCloseSharp } from "react-icons/io5";
-import { useAppSelector } from "../Hooks/store";
-import { useCreateProjectMutation, useCreateTechnologyMutation, useDeleteProjectStudentMutation, useLoadedPhotoProjectMutation, useUpdateProjectStudentMutation, useUpdateTechnologyMutation } from "../services/projectsUser";
-import { useUserAccount } from "../Hooks/useUserAccount";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  IoCloseSharp,
+  IoCloudUploadOutline,
+  IoTrashOutline,
+  IoSearchOutline,
+  IoCheckmark,
+  IoLogoGithub,
+  IoGlobeOutline,
+  IoAlertCircleOutline
+} from "react-icons/io5";
 import { toast } from "sonner";
+import { useAppSelector } from "../Hooks/store";
+import { useUserAccount } from "../Hooks/useUserAccount";
+import {
+  useCreateProjectMutation,
+  useUpdateProjectStudentMutation,
+  useUploadProjectImageMutation,
+  useGetTechnologiesQuery,
+  useGetStudentsForMentionsQuery
+} from "../services/projectsUser";
+import { esUrlValida, obtenerMensajeError } from "../helpers";
+import { FORMATOS_IMAGEN, MAX_MB_IMAGEN, comprimirImagen, validarImagen } from "../helpers/recortarImagen";
 
-const CreateProjectForm = ({ onClose, updateProject, setUpdateProject }) => {
-  const navigate = useNavigate();
-  const [formErrors, setFormErrors] = useState({});
-  const [tecnologiasSeleccionadas, setTecnologiasSeleccionadas] = useState([]);
-  const [colaboradores, setColaboradores] = useState([]);
-  const [mensajeExito, setMensajeExito] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
+const FOTO_DEFAULT = "https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true";
 
-  const { students } = useAppSelector(state => state.students)
-  const { userId, username, userToken } = useAppSelector(state => state.users)
-  const [createProject, { isSuccess, error }] = useCreateProjectMutation();
-  const [updateProjectStudent, { isSuccess: success }] = useUpdateProjectStudentMutation();
-  const [createTechnology] = useCreateTechnologyMutation();
-  const [updateTechnologyMutation] = useUpdateTechnologyMutation()
-  const [loadedPhotoProject] = useLoadedPhotoProjectMutation()
-  const [deleteProjectStudent, { isSuccess: successPro }] = useDeleteProjectStudentMutation();
+const inputClass = (conError) =>
+  `w-full px-4 py-2.5 text-sm border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${conError
+    ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-100"
+    : "border-gray-200 focus:border-green-500 focus:ring-green-100"
+  }`;
+
+const Campo = ({ label, error, opcional, children }) => (
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+      {label} {opcional && <span className="font-normal text-gray-400">(opcional)</span>}
+    </label>
+    {children}
+    {error && (
+      <p className="mt-1 flex items-center gap-1 text-xs font-medium text-red-600">
+        <IoAlertCircleOutline className="size-4" /> {error}
+      </p>
+    )}
+  </div>
+);
+
+// El back responde el proyecto creado; por si viene envuelto se revisa tambien `object`
+const obtenerIdCreado = (respuesta) => respuesta?.idProject ?? respuesta?.object?.idProject;
+
+const CreateProjectForm = ({ onClose, proyecto }) => {
+  const editando = !!proyecto?.idProject;
+  const { userId, username, userToken } = useAppSelector(state => state.users);
   const { getUserByUsername } = useUserAccount();
+  const [createProject] = useCreateProjectMutation();
+  const [updateProject] = useUpdateProjectStudentMutation();
+  const [uploadProjectImage] = useUploadProjectImageMutation();
+  const { data: catalogo = [], isLoading: cargandoCatalogo } = useGetTechnologiesQuery();
+  const { data: estudiantes = [] } = useGetStudentsForMentionsQuery();
 
-
-
-  useEffect(() => {
-    if (Object.keys(updateProject).length > 0) {
-      let tecnologias = updateProject.tecnologias.map(tech => tech.nombre || [])
-      setTecnologiasSeleccionadas(tecnologias)
-      setColaboradores(updateProject.menciones)
-      setPreviewImage(updateProject.imagen)
-      console.log(updateProject.idProject)
-    }
-  }, [updateProject])
-
-  useEffect(() => {
-
-    if (isSuccess) {
-      toast.success("el proyecto se creo con exito")
-      document.body.className = ""
-      getUserByUsername(username, userToken);
-      getUserByUsername(username, userToken);
-      setTimeout(() => {
-        onClose();
-      }, [1000])
-      document.body.className = ""
-      return
-    }
-    if (error) {
-      toast.success("error intentelo mas tarde")
-      return
-    }
-
-  }, [isSuccess, error])
-
-  useEffect(() => {
-    if (success) {
-      toast.success("Proyecto actualizado con exito")
-      getUserByUsername(username, userToken);
-      setTimeout(() => {
-        onClose();
-      }, [1000])
-      document.body.className = ""
-
-      return
-    }
-
-    if (successPro) {
-      toast.success("Proyecto eliminado con exito")
-      getUserByUsername(username, userToken);
-      setTimeout(() => {
-        onClose();
-      }, [1000])
-      document.body.className = ""
-
-      return
-    }
-
-  }, [success, successPro])
-
-
-
-  const projectSchema = Yup.object().shape({
-    nombreProyecto: Yup.string().required("El nombre del proyecto es requerido"),
-    descripcion: Yup.string().required("La descripción es requerida"),
-    fechaInicio: Yup.string().required("La fecha de inicio es requerida"),
-    urlHub: Yup.string()
-      .url("Debe ser una URL válida"),
-    urlDeploy: Yup.string().url("Debe ser una URL válida"),
+  const [valores, setValores] = useState({
+    nombre: proyecto?.nombre ?? "",
+    descripcion: proyecto?.descripcion ?? "",
+    fechaInicio: proyecto?.fechaInicio ?? "",
+    fechaFin: proyecto?.fechaFin ?? "",
+    enCurso: editando && !proyecto?.fechaFin,
+    github: proyecto?.github ?? "",
+    deploy: proyecto?.deploy ?? ""
   });
+  const [tecnologias, setTecnologias] = useState(() => new Set((proyecto?.tecnologias ?? []).map(t => t.idTecnologia)));
+  const [menciones, setMenciones] = useState(proyecto?.menciones ?? []);
+  const [busquedaTec, setBusquedaTec] = useState("");
+  const [busquedaColab, setBusquedaColab] = useState("");
+  const [archivo, setArchivo] = useState(null);
+  const [quitarGuardada, setQuitarGuardada] = useState(false); // borrar la imagen que ya tenia el proyecto
+  const [vistaPrevia, setVistaPrevia] = useState(null);
+  const [arrastrando, setArrastrando] = useState(false);
+  const [errores, setErrores] = useState({});
+  const [guardando, setGuardando] = useState(false);
+  const inputImagenRef = useRef(null);
 
-  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+  useEffect(() => {
+    return () => {
+      if (vistaPrevia) URL.revokeObjectURL(vistaPrevia);
+    };
+  }, [vistaPrevia]);
+
+  const cambiar = (campo) => (e) => {
+    const valor = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    setValores(v => ({ ...v, [campo]: valor }));
+    setErrores(err => ({ ...err, [campo]: undefined }));
+  };
+
+  const elegirImagen = (nuevo) => {
+    if (!nuevo) return;
+    const errorValidacion = validarImagen(nuevo);
+    if (errorValidacion) {
+      toast.error(errorValidacion);
+      return;
+    }
+    setArchivo(nuevo);
+    setVistaPrevia(URL.createObjectURL(nuevo));
+    setQuitarGuardada(false);
+  };
+
+  const quitarImagen = () => {
+    setArchivo(null);
+    setVistaPrevia(null);
+    if (proyecto?.imagen) setQuitarGuardada(true);
+  };
+
+  const toggleTecnologia = (idTecnologia) => {
+    setTecnologias(prev => {
+      const nueva = new Set(prev);
+      nueva.has(idTecnologia) ? nueva.delete(idTecnologia) : nueva.add(idTecnologia);
+      return nueva;
+    });
+  };
+
+  const agregarColaborador = (estudiante) => {
+    setMenciones(prev => [...prev, estudiante]);
+    setBusquedaColab("");
+  };
+
+  const validar = () => {
+    const nuevos = {};
+    if (!valores.nombre.trim()) nuevos.nombre = "El nombre del proyecto es obligatorio";
+    if (!valores.enCurso && valores.fechaInicio && valores.fechaFin && valores.fechaFin < valores.fechaInicio) {
+      nuevos.fechaFin = "La fecha de fin no puede ser antes del inicio";
+    }
+    if (valores.github.trim() && !esUrlValida(valores.github.trim())) nuevos.github = "Escribe la URL completa, con https://";
+    if (valores.deploy.trim() && !esUrlValida(valores.deploy.trim())) nuevos.deploy = "Escribe la URL completa, con https://";
+    setErrores(nuevos);
+    return Object.keys(nuevos).length === 0;
+  };
+
+  const handleGuardar = async (e) => {
+    e.preventDefault();
+    if (guardando || !validar()) return;
+    setGuardando(true);
+
+    // Fechas vacias van como null (un "" da 500 en el back); los textos van como "" para poder borrarlos
+    const datos = {
+      nombre: valores.nombre.trim(),
+      descripcion: valores.descripcion.trim(),
+      fechaInicio: valores.fechaInicio || null,
+      fechaFin: valores.enCurso ? null : (valores.fechaFin || null),
+      github: valores.github.trim(),
+      deploy: valores.deploy.trim(),
+      tecnologias: [...tecnologias].map(idTecnologia => ({ idTecnologia })),
+      menciones: menciones.map(m => ({ id: m.id })),
+      // "" borra la imagen guardada (null lo ignoraria el back); si no se toca, no se manda
+      ...(editando && quitarGuardada && !archivo ? { imagen: "" } : {})
+    };
+
+    let idProject = proyecto?.idProject;
     try {
-      await projectSchema.validate(values, { abortEarly: false });
-      setFormErrors({});
-      const token = localStorage.getItem("token");
-
-      if (updateProject.idProject) {
-        // ACTUALIZACIÓN DE PROYECTO
-        const updatedProject = {
-          idProject: updateProject.idProject,
-          idEstudiante: updateProject.idEstudiante,
-          nombre: values.nombreProyecto,
-          descripcion: values.descripcion,
-          imagen: updateProject.imagen,
-          fechaInicio: values.fechaInicio,
-          github: values.urlHub,
-          deploy: values.urlDeploy,
-          menciones: colaboradores.map(c => ({ id: c.id })),
-        };
-
-        // ESPERAR la actualización del proyecto
-
-        await updateProjectStudent({ token, updatedProject })
-
-
-        const idProyecto = updateProject.idProject;
-
-        try {
-          const tecnologias = tecnologiasSeleccionadas.map(nombreTec => ({
-            idProyecto,
-            nombre: nombreTec
-          }));
-          if (tecnologias.length > 0) {
-            await createTechnology({ token, tecnologias }).unwrap();
-          }
-        } catch (err) {
-          toast.error("Error guardando tecnologías", err);
-
-        }
-
-        console.log(selectedImage)
-        if (selectedImage) {
-          const formData = new FormData();
-          formData.append("image", selectedImage);
-          try {
-            const result = await loadedPhotoProject({ idProyecto, formData, token });
-            if (result?.data) {
-              toast.success("Foto actualizada con éxito");
-              // getUserByUsername(username, token);
-            } else {
-              toast.warning("No se recibió respuesta clara del servidor, pero puede que se haya actualizado.");
-            }
-          } catch (photoError) {
-            toast.error("Error al actualizar la foto, pero los datos se guardaron");
-            console.error(photoError);
-          }
-        } else if (!selectedImage) {
-          return;
-        }
-
-        setTimeout(() => {
-          onClose();
-        }, 1000)
-      }
-      else {
-        // CREACIÓN DE NUEVO PROYECTO
-        const newProyect = {
-          idEstudiante: userId,
-          nombre: values.nombreProyecto,
-          descripcion: values.descripcion,
-          imagen: "",
-          fechaInicio: values.fechaInicio,
-          fechaFin: "",
-          github: values.urlHub,
-          deploy: values.urlDeploy,
-          menciones: colaboradores.map(c => ({ id: c.id })),
-        };
-
-        const createResult = await createProject({ token, newProyect }).unwrap();
-
-        const idProyecto = createResult.object.idProject;
-
-        const tecnologias = tecnologiasSeleccionadas.map(nombreTec => ({
-          idProyecto,
-          nombre: nombreTec
-        }));
-
-        try {
-          if (tecnologias.length > 0) {
-            await createTechnology({ token, tecnologias }).unwrap();
-          }
-        } catch (err) {
-          toast.error("Error al crear tecnologías", err);
-        }
-
-        if (selectedImage) {
-          console.log("entro")
-          const formData = new FormData();
-          formData.append("image", selectedImage);
-          console.log(selectedImage)
-          try {
-            await loadedPhotoProject({ idProyecto, formData, token }).unwrap();
-            toast.success("Foto actualizada con éxito");
-            // getUserByUsername(username, userToken);
-          } catch (photoError) {
-            toast.error("Error al actualizar la foto, pero los datos se guardaron");
-          }
-        } else if (!selectedImage) {
-          return;
-        }
-
-      }
-
-      // Limpiar formulario
-      setUpdateProject({});
-      setTimeout(() => setMensajeExito(""), 3000);
-      resetForm();
-      setTecnologiasSeleccionadas([]);
-      setColaboradores([]);
-      setSubmitting(false);
-
-    } catch (err) {
-      const errorMap = {};
-      if (err && Array.isArray(err.inner) && err.inner.length) {
-        err.inner.forEach((e) => {
-          if (e && e.path) errorMap[e.path] = e.message;
-        });
-      } else if (err && err.path && err.message) {
-        errorMap[err.path] = err.message;
+      if (editando) {
+        await updateProject({ token: userToken, proyecto: { idProject, ...datos } }).unwrap();
       } else {
-        errorMap._general = "Ocurrió un error en la validación";
+        const creado = await createProject({ token: userToken, proyecto: { idEstudiante: userId, ...datos } }).unwrap();
+        idProject = obtenerIdCreado(creado);
       }
-      setFormErrors(errorMap);
-      setSubmitting(false);
-    }
-  };
-
-  const agregarTecnologia = (tecnologia, setFieldValue) => {
-    if (tecnologia && !tecnologiasSeleccionadas.includes(tecnologia)) {
-      const nuevasTecnologias = [...tecnologiasSeleccionadas, tecnologia];
-      setTecnologiasSeleccionadas(nuevasTecnologias);
-      setFieldValue("nuevaTecnologia", "");
-    }
-  };
-
-  const eliminarTecnologia = (tecnologiaEliminar) => {
-    const nuevasTecnologias = tecnologiasSeleccionadas.filter(tech => tech !== tecnologiaEliminar);
-    setTecnologiasSeleccionadas(nuevasTecnologias);
-  };
-
-  const agregarColaborador = (id, setFieldValue) => {
-    if (!id) return;
-
-    const estudiante = students.find(s => s.id === Number(id));
-    if (!estudiante) return;
-
-    if (!colaboradores.some(c => c.id === estudiante.id)) {
-      setColaboradores([...colaboradores, estudiante]);
+    } catch (err) {
+      toast.error(obtenerMensajeError(err, "No se pudo guardar el proyecto"));
+      setGuardando(false);
+      return;
     }
 
-    setFieldValue("buscarColaborador", "");
-  };
-  const eliminarColaborador = (id) => {
-    setColaboradores(colaboradores.filter(colab => colab.id !== id));
-  };
-
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setSelectedImage(file);
-      setPreviewImage(URL.createObjectURL(file)); // crea la vista previa
+    let avisoImagen = null;
+    if (archivo) {
+      // El proyecto ya se guardo: si falla la imagen solo se avisa
+      try {
+        if (!idProject) throw new Error("El servidor no devolvió el id del proyecto");
+        const formData = new FormData();
+        formData.append("image", await comprimirImagen(archivo));
+        await uploadProjectImage({ idProject, formData, token: userToken }).unwrap();
+      } catch (err) {
+        avisoImagen = err instanceof Error ? err.message : obtenerMensajeError(err, "no se pudo subir");
+      }
     }
+
+    await getUserByUsername(username, userToken).catch(() => {});
+    if (avisoImagen) {
+      toast.warning(`Proyecto guardado, pero sin la imagen nueva: ${avisoImagen}`);
+    } else {
+      toast.success(editando ? "Proyecto actualizado" : "Proyecto creado");
+    }
+    onClose();
   };
 
-  const handleOnClose = () => {
-    setUpdateProject({})
-    onClose()
-  }
-
-  const handleDeleteProject = (idProject) => {
-    deleteProjectStudent({ userToken, idProject })
-  }
+  const imagenMostrada = vistaPrevia || (!quitarGuardada && proyecto?.imagen);
+  const texto = busquedaTec.trim().toLowerCase();
+  const tecSeleccionadas = catalogo.filter(t => tecnologias.has(t.idTecnologia));
+  const tecDisponibles = catalogo.filter(t => !tecnologias.has(t.idTecnologia) && t.nombre.toLowerCase().includes(texto));
+  const textoColab = busquedaColab.trim().toLowerCase();
+  const sugerenciasColab = textoColab
+    ? estudiantes
+      .filter(s => s.id !== userId && !menciones.some(m => m.id === s.id))
+      .filter(s => `${s.nombre} ${s.apellido}`.toLowerCase().includes(textoColab))
+      .slice(0, 6)
+    : [];
 
   return (
-    <div className="h-[100vh] overflow-scroll absolute inset-0 z-50">
-      <div className="h-full">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <form onSubmit={handleGuardar} className="w-full max-w-2xl max-h-[92vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden">
 
-        <div className="w-full bg-gray-100 flex items-center justify-center p-4 ">
+        {/* Encabezado */}
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+          <h2 className="text-2xl font-extrabold text-gray-900">{editando ? "Editar proyecto" : "Nuevo proyecto"}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={guardando}
+            className="p-1 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+            aria-label="Cerrar"
+          >
+            <IoCloseSharp className="size-6" />
+          </button>
+        </div>
 
-          <div className="w-full max-w-3xl">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
-            {mensajeExito && (
-              <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-xl text-center">
-                {mensajeExito}
-              </div>
-            )}
-
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 relative">
-              <IoCloseSharp className='absolute right-5 top-5 size-7 cursor-pointer' onClick={() => {
-                document.body.className = "";
-                handleOnClose()
-              }} />
-              <div className="p-6">
-                <div className="text-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text">
-                    Crear Nuevo Proyecto
-                  </h2>
-                </div>
-
-                <Formik
-                  initialValues={{
-                    nombreProyecto: `${updateProject.nombre ? updateProject.nombre : ''}`,
-                    descripcion: `${updateProject.descripcion ? updateProject.descripcion : ''}`,
-                    fechaInicio: `${updateProject.fechaInicio ? updateProject.fechaInicio : ''}`,
-                    urlHub: `${updateProject.github ? updateProject.github : ''}`,
-                    urlDeploy: `${updateProject.deploy ? updateProject.deploy : ''}`,
-                    nuevaTecnologia: `${updateProject.tecnologias?.nombre ? updateProject.tecnologias?.nombre : ''}`,
-                    buscarColaborador: `${updateProject.menciones?.nombre ? updateProject.menciones?.nombre : ''}`,
-                  }}
-                  onSubmit={handleSubmit}
-                  validateOnChange={false}
-                  validateOnBlur={false}
+          {/* Imagen */}
+          <input
+            ref={inputImagenRef}
+            type="file"
+            accept={FORMATOS_IMAGEN.join(",")}
+            className="hidden"
+            onChange={(e) => { elegirImagen(e.target.files[0]); e.target.value = ""; }}
+          />
+          {imagenMostrada ? (
+            <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-100 group">
+              <img src={imagenMostrada} alt="Imagen del proyecto" className="size-full object-cover" />
+              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  onClick={() => inputImagenRef.current?.click()}
+                  className="px-4 py-2 rounded-xl bg-white text-sm font-semibold text-gray-800 hover:bg-gray-100"
                 >
-                  {({ values, setFieldValue, isSubmitting }) => (
-                    <Form className="space-y-6">
-
-                      <div className="flex flex-col">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Nombre del Proyecto
-                        </label>
-                        <div className="relative w-full">
-                          <Field
-                            type="text"
-                            name="nombreProyecto"
-                            className={`w-full h-12 border-2 rounded-lg px-4 outline-none bg-white transition-all duration-300 ${formErrors.nombreProyecto
-                              ? "border-red-400 bg-red-50"
-                              : "border-gray-300 focus:border-green-500"
-                              }`}
-                            placeholder="Ingresa el nombre del proyecto"
-                          />
-                        </div>
-                        {formErrors.nombreProyecto && (
-                          <div className="mt-1 text-sm text-red-600 font-medium">
-                            {formErrors.nombreProyecto}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <h4 className="text-sm font-semibold text-gray-700">Imagen del Proyecto</h4>
-                        <div className="border-2 border-dashed border-green-300 rounded-lg p-4 text-center hover:border-green-500 transition-colors duration-300 cursor-pointer bg-green-50">
-                          <div className="space-y-2">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="text-gray-700 text-sm font-medium"
-                              onChange={handleImageChange}
-                            />
-                            <p className="text-gray-600 text-xs">
-                              Arrastra y suelta o haz clic para buscar
-                            </p>
-                          </div>
-
-                          {previewImage && (
-                            <div className="mt-4 flex justify-center">
-                              <img
-                                src={previewImage}
-                                alt="Vista previa"
-                                className="w-40 h-40 object-cover rounded-lg shadow-md border"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-
-                      <div className="space-y-3">
-                        <label className="block text-sm font-semibold text-gray-700">
-                          Descripción
-                        </label>
-                        <div className="relative w-full">
-                          <Field
-                            as="textarea"
-                            name="descripcion"
-                            rows="3"
-                            className={`w-full border-2 rounded-lg px-4 py-3 outline-none bg-white transition-all duration-300 ${formErrors.descripcion
-                              ? "border-red-400 bg-red-50"
-                              : "border-gray-300 focus:border-green-500"
-                              }`}
-                            placeholder="Proporciona una descripción detallada del proyecto"
-                          />
-                        </div>
-                        {formErrors.descripcion && (
-                          <div className="mt-1 text-sm text-red-600 font-medium">
-                            {formErrors.descripcion}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-3">
-                          <label className="block text-sm font-semibold text-gray-700">
-                            Fecha de Inicio
-                          </label>
-                          <div className="relative w-full">
-                            <Field
-                              type="date"
-                              name="fechaInicio"
-                              className={`w-full h-12 border-2 rounded-lg px-4 outline-none bg-white transition-all duration-300 ${formErrors.fechaInicio
-                                ? "border-red-400 bg-red-50"
-                                : "border-gray-300 focus:border-green-500"
-                                }`}
-                            />
-                          </div>
-                          {formErrors.fechaInicio && (
-                            <div className="mt-1 text-sm text-red-600 font-medium">
-                              {formErrors.fechaInicio}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="space-y-3">
-                          <label className="block text-sm font-semibold text-gray-700">
-                            Tecnologías
-                          </label>
-                          <div className="space-y-2">
-                            <div className="flex flex-wrap gap-1">
-                              {tecnologiasSeleccionadas.map((tech, index) => (
-                                <span
-                                  key={index}
-                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                                >
-                                  {tech}
-                                  <button
-                                    type="button"
-                                    onClick={() => eliminarTecnologia(tech)}
-                                    className="ml-1 text-green-600 hover:text-green-800"
-                                  >
-                                    ×
-                                  </button>
-                                </span>
-                              ))}
-                            </div>
-                            <div className="flex gap-2">
-                              <Field
-                                type="text"
-                                name="nuevaTecnologia"
-                                className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-green-500 transition-all duration-300 text-sm"
-                                placeholder="Agregar tecnología"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => agregarTecnologia(values.nuevaTecnologia, setFieldValue)}
-                                className="px-4 py-2 border-2 border-green-500 text-green-600 rounded-lg font-semibold hover:bg-green-500 hover:text-white transition-all duration-300 text-sm"
-                              >
-                                Agregar
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <label className="block text-sm font-semibold text-gray-700">
-                          Colaboradores
-                        </label>
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap gap-1">
-                            {colaboradores.map((colab, index) => (
-                              <span key={index} className="inline-flex items-center px-2 py-1 rounded-full">
-                                {colab.nombre} {colab.apellido}
-                                <button type="button" onClick={() => eliminarColaborador(colab.id)}>×</button>
-                              </span>
-                            ))}
-                          </div>
-                          <div className="flex gap-2">
-                            <Field
-                              as="select"
-                              name="buscarColaborador"
-                              className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 outline-none"
-                            >
-                              <option value="">Buscar miembros del equipo...</option>
-
-                              {students.map(student => (
-                                <option key={student.id} value={student.id}>
-                                  {student.nombre} {student.apellido}
-                                </option>
-                              ))}
-                            </Field>
-                            <button
-                              type="button"
-                              onClick={() => agregarColaborador(values.buscarColaborador, setFieldValue)}
-                              className="px-4 py-2 border-2 border-emerald-500 text-emerald-600 rounded-lg font-semibold hover:bg-emerald-500 hover:text-white transition-all duration-300 text-sm"
-                            >
-                              Agregar
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="space-y-3">
-                          <label className="block text-sm font-semibold text-gray-700">
-                            URL de repositorio
-                          </label>
-                          <div className="relative w-full">
-                            <Field
-                              type="url"
-                              name="urlHub"
-                              className={`w-full h-12 border-2 rounded-lg px-4 outline-none bg-white transition-all duration-300 ${formErrors.urlHub
-                                ? "border-red-400 bg-red-50"
-                                : "border-gray-300 focus:border-green-500"
-                                }`}
-                              placeholder="https://ihub.example.com/..."
-                            />
-                          </div>
-                          {formErrors.urlHub && (
-                            <div className="mt-1 text-sm text-red-600 font-medium">
-                              {formErrors.urlHub}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="border-t border-gray-300 my-3"></div>
-
-                        <div className="space-y-3">
-                          <label className="block text-sm font-semibold text-gray-700">
-                            URL de Deploy (Opcional)
-                          </label>
-                          <div className="relative w-full">
-                            <Field
-                              type="url"
-                              name="urlDeploy"
-                              className={`w-full h-12 border-2 rounded-lg px-4 outline-none bg-white transition-all duration-300 ${formErrors.urlDeploy
-                                ? "border-red-400 bg-red-50"
-                                : "border-gray-300 focus:border-green-500"
-                                }`}
-                              placeholder="https://deploy.example.com"
-                            />
-                          </div>
-                          {formErrors.urlDeploy && (
-                            <div className="mt-1 text-sm text-red-600 font-medium">
-                              {formErrors.urlDeploy}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className={`${updateProject ? 'flex gap-4' : 'p-4'}`}>
-                        {Object.keys(updateProject).length > 0 &&
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteProject(updateProject.idProject)}
-                            className="w-full py-3 px-6 border border-transparent rounded-lg shadow-md text-base font-semibold text-black  to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer "
-                          >
-                            Eliminar Proyecto
-                          </button>
-                        }
-                        <button
-                          type="submit"
-                          disabled={isSubmitting}
-                          className="w-full py-3 px-6 border border-transparent rounded-lg shadow-md text-base font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                          {Object.keys(updateProject).length > 0 ? "Actualizar proyecto" :
-                            isSubmitting ? "Creando..." : "Crear Proyecto"
-                          }
-
-                        </button>
-                      </div>
-                    </Form>
-                  )}
-                </Formik>
+                  Cambiar imagen
+                </button>
+                <button
+                  type="button"
+                  onClick={quitarImagen}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-sm font-semibold text-red-600 hover:bg-red-50"
+                >
+                  <IoTrashOutline className="size-4" /> Quitar imagen
+                </button>
               </div>
             </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => inputImagenRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setArrastrando(true); }}
+              onDragLeave={() => setArrastrando(false)}
+              onDrop={(e) => { e.preventDefault(); setArrastrando(false); elegirImagen(e.dataTransfer.files[0]); }}
+              className={`w-full aspect-video flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-colors ${arrastrando ? "border-green-500 bg-green-50" : "border-gray-300 hover:border-green-400 hover:bg-gray-50"}`}
+            >
+              <IoCloudUploadOutline className="size-8 text-green-600" />
+              <span className="font-semibold text-gray-800">{arrastrando ? "Suelta la imagen aquí" : "Agrega una imagen del proyecto"}</span>
+              <span className="text-xs text-gray-500">JPG, PNG o WebP · máximo {MAX_MB_IMAGEN} MB</span>
+            </button>
+          )}
+          {quitarGuardada && !archivo && (
+            <p className="-mt-3 text-xs text-gray-500">
+              La imagen actual se quitará al guardar.{" "}
+              <button type="button" onClick={() => setQuitarGuardada(false)} className="font-semibold text-green-700 hover:underline">
+                Deshacer
+              </button>
+            </p>
+          )}
+
+          <Campo label="Nombre del proyecto" error={errores.nombre}>
+            <input value={valores.nombre} onChange={cambiar("nombre")} placeholder="Ej. Sistema de lockers" className={inputClass(errores.nombre)} />
+          </Campo>
+
+          <Campo label="Descripción" opcional>
+            <textarea
+              value={valores.descripcion}
+              onChange={cambiar("descripcion")}
+              rows={3}
+              placeholder="¿Qué problema resuelve y qué hiciste tú?"
+              className={`${inputClass(false)} resize-none`}
+            />
+          </Campo>
+
+          {/* Fechas */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Campo label="Inicio" opcional>
+              <input type="date" value={valores.fechaInicio} onChange={cambiar("fechaInicio")} className={inputClass(false)} />
+            </Campo>
+            <Campo label="Fin" error={errores.fechaFin}>
+              <input
+                type="date"
+                value={valores.enCurso ? "" : valores.fechaFin}
+                onChange={cambiar("fechaFin")}
+                disabled={valores.enCurso}
+                min={valores.fechaInicio || undefined}
+                className={`${inputClass(errores.fechaFin)} disabled:bg-gray-100 disabled:text-gray-400`}
+              />
+              <label className="flex items-center gap-2 mt-2 text-sm text-gray-600 cursor-pointer">
+                <input type="checkbox" checked={valores.enCurso} onChange={cambiar("enCurso")} className="accent-green-600" />
+                En curso
+              </label>
+            </Campo>
+          </div>
+
+          {/* Tecnologias */}
+          <Campo label="Tecnologías" opcional>
+            {tecSeleccionadas.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {tecSeleccionadas.map(t => (
+                  <button
+                    key={t.idTecnologia}
+                    type="button"
+                    onClick={() => toggleTecnologia(t.idTecnologia)}
+                    className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-600 text-white text-xs font-medium hover:bg-green-700"
+                    title="Quitar"
+                  >
+                    <IoCheckmark className="size-3.5" /> {t.nombre} <IoCloseSharp className="size-3.5" />
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="relative mb-2">
+              <IoSearchOutline className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+              <input
+                value={busquedaTec}
+                onChange={(e) => setBusquedaTec(e.target.value)}
+                placeholder="Buscar tecnología..."
+                className={`${inputClass(false)} pl-9`}
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+              {cargandoCatalogo && <p className="text-xs text-gray-400">Cargando catálogo...</p>}
+              {!cargandoCatalogo && tecDisponibles.length === 0 && (
+                <p className="text-xs text-gray-400">{texto ? "Sin resultados." : "Ya elegiste todas."}</p>
+              )}
+              {tecDisponibles.map(t => (
+                <button
+                  key={t.idTecnologia}
+                  type="button"
+                  onClick={() => toggleTecnologia(t.idTecnologia)}
+                  className="px-3 py-1 rounded-full border border-gray-300 text-xs font-medium text-gray-700 hover:border-green-400 hover:bg-green-50"
+                >
+                  {t.nombre}
+                </button>
+              ))}
+            </div>
+          </Campo>
+
+          {/* Colaboradores */}
+          <Campo label="Colaboradores" opcional>
+            {menciones.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {menciones.map(m => (
+                  <span key={m.id} className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full bg-gray-100 text-sm text-gray-800">
+                    <img src={m.imagen || FOTO_DEFAULT} alt="" className="size-6 rounded-full object-cover" />
+                    {m.nombre} {m.apellido}
+                    <button
+                      type="button"
+                      onClick={() => setMenciones(prev => prev.filter(x => x.id !== m.id))}
+                      className="text-gray-400 hover:text-red-600"
+                      aria-label={`Quitar a ${m.nombre}`}
+                    >
+                      <IoCloseSharp className="size-4" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="relative">
+              <IoSearchOutline className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+              <input
+                value={busquedaColab}
+                onChange={(e) => setBusquedaColab(e.target.value)}
+                placeholder="Busca un compañero por nombre..."
+                className={`${inputClass(false)} pl-9`}
+              />
+              {textoColab && (
+                <div className="absolute left-0 right-0 mt-1 py-1 bg-white rounded-xl shadow-lg border border-gray-100 z-10">
+                  {sugerenciasColab.length === 0 && <p className="px-4 py-2 text-sm text-gray-400">Sin resultados</p>}
+                  {sugerenciasColab.map(s => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => agregarColaborador(s)}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50"
+                    >
+                      <img src={s.imagen || FOTO_DEFAULT} alt="" className="size-8 rounded-full object-cover" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{s.nombre} {s.apellido}</p>
+                        {s.carrera?.carrera && <p className="text-xs text-gray-500">{s.carrera.carrera}</p>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Campo>
+
+          {/* Enlaces */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Campo label="Repositorio" opcional error={errores.github}>
+              <div className="relative">
+                <IoLogoGithub className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-500" />
+                <input value={valores.github} onChange={cambiar("github")} placeholder="https://github.com/..." className={`${inputClass(errores.github)} pl-9`} />
+              </div>
+            </Campo>
+            <Campo label="Demo / deploy" opcional error={errores.deploy}>
+              <div className="relative">
+                <IoGlobeOutline className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-500" />
+                <input value={valores.deploy} onChange={cambiar("deploy")} placeholder="https://mi-proyecto.com" className={`${inputClass(errores.deploy)} pl-9`} />
+              </div>
+            </Campo>
           </div>
         </div>
 
-      </div>
+        {/* Pie */}
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={guardando}
+            className="px-5 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-white font-semibold text-sm transition-colors disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={guardando}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-green-600 hover:bg-green-700 shadow-md transition-colors disabled:opacity-50"
+          >
+            {guardando && <span className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+            {guardando ? "Guardando..." : editando ? "Guardar cambios" : "Crear proyecto"}
+          </button>
+        </div>
+      </form>
     </div>
-
   );
 };
 

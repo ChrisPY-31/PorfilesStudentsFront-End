@@ -29,6 +29,7 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
               <ul className="flex gap-5 items-center cursor-pointer">
                 <li><Link to={"/Inicio"}>Inicio</Link></li>
                 <li><Link to={"/Students"}>Estudiantes</Link></li>
+                <li><Link to={"/Projects"}>Proyectos</Link></li>
                 <li><Link onClick={() => toast.message("funcionalida no habilitada")}>Empleos</Link></li>
               </ul>
             )

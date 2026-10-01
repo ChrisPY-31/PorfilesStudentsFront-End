@@ -7,7 +7,7 @@ import Comunity from './Pages/Comunity'
 import SignIn from './Pages/SignIn'
 import SignUp from './Pages/SignUp'
 import { PersonMenu } from './Pages/PersonMenu'
-import Proyects from './Pages/Proyects'
+import AllProjects from './Pages/AllProjects'
 import Manager from './Pages/Manager'
 import { useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
@@ -60,7 +60,7 @@ function App() {
         <Route path='/' element={<Home />} />
         <Route path='/Inicio' element={autenticate ? < Comunity /> : <Navigate to="/" />} />
         <Route path='/Students' element={autenticate ? <Students /> : <Navigate to="/" />} />
-        <Route path='/Projects' element={autenticate ? <Proyects /> : <Navigate to="/" />} />
+        <Route path='/Projects' element={autenticate ? <AllProjects /> : <Navigate to="/" />} />
         <Route path={`/Person/:id`} element={autenticate ? <PersonMenu /> : <Navigate to="/" />} />
         <Route path='/MyProfile/:id' element={autenticate ? <MyPorfile /> : <Navigate to="/" />} />
         <Route path='/Sign-In' element={<SignIn setAutenticate={setAutenticate} />} />

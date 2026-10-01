@@ -8,15 +8,30 @@ export const publicationApi = createApi({
   tagTypes: ["publications"],
   endpoints: (builder) => ({
     getPublications: builder.query({
-      query: () => ({
+      query: ({ token }) => ({
         url: "/publication",
-        providesTags: ["publications"],
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }),
+      providesTags: ["publications"],
     }),
+    // Se crea solo con JSON ({ idPersona, descripcion }); la imagen va despues con uploadPublicationImage
     createPublication: builder.mutation({
-      query: ({ formData, token }) => ({
+      query: ({ publicacion, token }) => ({
         url: "/publication",
         method: "POST",
+        body: publicacion,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: ["publications"],
+    }),
+    uploadPublicationImage: builder.mutation({
+      query: ({ id, formData, token }) => ({
+        url: `/filePublication/${id}`,
+        method: "PATCH",
         body: formData,
         headers: {
           Authorization: `Bearer ${token}`,
@@ -24,22 +39,60 @@ export const publicationApi = createApi({
       }),
       invalidatesTags: ["publications"],
     }),
-    fileUpload: builder.mutation({
-      query: ({ image, id }) => ({
-        url: `filePublication/${id}`,
-        method: "POST",
-        params: { image: image },
+    updatePublication: builder.mutation({
+      query: ({ id, publicacion, token }) => ({
+        url: `/publication/${id}`,
+        method: "PUT",
+        body: publicacion,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }),
+      invalidatesTags: ["publications"],
     }),
+    deletePublication: builder.mutation({
+      query: ({ id, token }) => ({
+        url: `/publication/${id}`,
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      invalidatesTags: ["publications"],
+    }),
+    // Upsert: cada persona tiene un solo registro por publicacion con like y comentario juntos,
+    // asi que siempre se mandan los dos para no pisar uno al cambiar el otro
     interactionPublication: builder.mutation({
-      query: ({ userToken, interaction }) => ({
+      query: ({ token, interaction }) => ({
         url: `/interactionPublicacion`,
         method: "POST",
         body: interaction,
         headers: {
-          Authorization: `Bearer ${userToken}`,
+          Authorization: `Bearer ${token}`,
         },
       }),
+      // Se refleja en el feed al instante; si falla se deshace
+      async onQueryStarted({ token, interaction }, { dispatch, queryFulfilled }) {
+        const parche = dispatch(
+          publicationApi.util.updateQueryData("getPublications", { token }, (publicaciones) => {
+            const publicacion = publicaciones?.find(p => p.id === interaction.id.idPublication);
+            if (!publicacion) return;
+            publicacion.interacciones ??= [];
+            const mia = publicacion.interacciones.find(i => i.id?.idPerson === interaction.id.idPerson);
+            if (mia) {
+              mia.meGusta = interaction.meGusta;
+              mia.comentario = interaction.comentario;
+            } else {
+              publicacion.interacciones.push({ ...interaction, createdAt: new Date().toISOString() });
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          parche.undo();
+        }
+      },
       invalidatesTags: ["publications"],
     }),
   }),
@@ -48,6 +101,8 @@ export const publicationApi = createApi({
 export const {
   useGetPublicationsQuery,
   useCreatePublicationMutation,
-  useFileUploadMutation,
+  useUploadPublicationImageMutation,
+  useUpdatePublicationMutation,
+  useDeletePublicationMutation,
   useInteractionPublicationMutation,
 } = publicationApi;

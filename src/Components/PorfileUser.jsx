@@ -21,9 +21,9 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
     const [updateAccount, setUpdateAccount] = useState(false);
     const [menuSkillUser, setMenuSkillUser] = useState(false)
     const [menuIdiomas, setMenuIdiomas] = useState(false)
-    const [menuEducationForm, setMenuEdutacionForm] = useState(false)
+    // null = cerrado, {} = nueva, educacion = editando
+    const [educacionEnForm, setEducacionEnForm] = useState(null)
     const [menuRedesContacto, setMenuRedesContacto] = useState(false)
-    const [objectEducation, setObjectEducation] = useState({})
     const [updateContact, setUpdateContact] = useState([])
     const [menuContact, setMenuContact] = useState(false)
 
@@ -47,6 +47,9 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
     const habilidades = habilidadesUser ?? []
     const idiomas = lenguajes ?? []
     const etiquetaNivel = (nivel) => NIVELES_IDIOMA.find(n => n.value === nivel)?.label ?? nivel
+    // La mas reciente primero (fechas "YYYY-MM-DD" se comparan como texto)
+    const educacionesOrdenadas = [...(educaciones ?? [])]
+        .sort((a, b) => (b.fechaInicio ?? "").localeCompare(a.fechaInicio ?? ""))
     const tecnologias = habilidades.filter(h => h.tipo === "TECNOLOGIA")
     const aptitudes = habilidades.filter(h => h.tipo === "APTITUD")
 
@@ -81,29 +84,20 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
                     <div className='relative rounded-xl min-h-[150px] my-5 p-4 border border-gray-200'>
                         <div className='flex justify-between items-center'>
                             <h3 className='text-xl font-semibold'>Educaciones</h3>
-                            {myAccount && <IoMdAdd className='size-5 cursor-pointer' onClick={() => {
-                                document.body.className = "overflow-hidden"
-                                window.scrollTo({ top: 0, behavior: 'smooth' })
-                                setMenuEdutacionForm(true)
-                            }} />}
+                            {myAccount && <IoMdAdd className='size-5 cursor-pointer' onClick={() => setEducacionEnForm({})} />}
                         </div>
                         {
-                            educaciones?.length > 0 ?
-                                educaciones?.map(educacion => {
-                                    return <Educations
-                                        key={educacion.idEducacion}
-                                        id={educacion.idEducacion}
-                                        myAccount={myAccount}
-                                        institucion={educacion.institucion}
-                                        grado={educacion.grado}
-                                        fechaInicio={educacion.fechaInicio}
-                                        fechaFin={educacion.fechaFin}
-                                        descripcion={educacion.descripcion}
-                                        educacion={educacion.educacionTipo}
-                                        openMenu={() => setMenuEdutacionForm(true)}
-                                        onEdit={() => setObjectEducation(educacion)}
-                                    />
-                                })
+                            educacionesOrdenadas.length > 0 ?
+                                <div className='mt-1'>
+                                    {educacionesOrdenadas.map(educacion => (
+                                        <Educations
+                                            key={educacion.idEducacion}
+                                            educacion={educacion}
+                                            myAccount={myAccount}
+                                            onEdit={() => setEducacionEnForm(educacion)}
+                                        />
+                                    ))}
+                                </div>
                                 : <Mensaje mensaje={"No hay educaciones agregadas aún."} />}
 
                     </div>
@@ -160,10 +154,9 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
                 idiomasActuales={idiomas}
                 onCancel={() => setMenuIdiomas(false)}
             />}
-            {menuEducationForm && <EducationForm
-                objectEducation={objectEducation}
-                setObjectEducation={setObjectEducation}
-                onCancel={() => setMenuEdutacionForm(false)}
+            {educacionEnForm && <EducationForm
+                educacion={educacionEnForm}
+                onClose={() => setEducacionEnForm(null)}
             />}
             {menuSkillUser && <SkillForm
                 habilidadesActuales={habilidades}
