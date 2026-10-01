@@ -17,6 +17,29 @@ import { useAppSelector } from '../Hooks/store';
 import { useUserAccount } from '../Hooks/useUserAccount';
 import MenuContact from './MenuContact';
 
+// Recuadro con el mismo espaciado para todas las secciones del perfil
+const Seccion = ({ titulo, accion, children }) => (
+    <section className='bg-white rounded-2xl border border-gray-200 p-6'>
+        <div className='flex items-center justify-between gap-3 mb-4'>
+            <h2 className='text-lg font-semibold text-gray-900'>{titulo}</h2>
+            {accion}
+        </div>
+        {children}
+    </section>
+)
+
+const BotonAccion = ({ icono: Icono, etiqueta, onClick }) => (
+    <button
+        type='button'
+        onClick={onClick}
+        title={etiqueta}
+        aria-label={etiqueta}
+        className='p-2 -m-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors'
+    >
+        <Icono className='size-5' />
+    </button>
+)
+
 const PorfileUser = ({ user, myAccount, tipo }) => {
     const [updateAccount, setUpdateAccount] = useState(false);
     const [menuSkillUser, setMenuSkillUser] = useState(false)
@@ -55,7 +78,7 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
 
 
     return (
-        <div className='w-[60%] mx-auto '>
+        <div className='w-full max-w-5xl mx-auto px-4 pb-12'>
             <Person
                 nombre={nombre}
                 apellido={apellido}
@@ -72,77 +95,71 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
                 user={user}
             />
 
+            <div className='mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start'>
+                <div className='lg:col-span-2 space-y-6'>
+                    <Seccion titulo='Acerca de'>
+                        {descripcion
+                            ? <p className='text-gray-700 leading-relaxed whitespace-pre-line break-words'>{descripcion}</p>
+                            : <Mensaje mensaje={"Aún no hay una descripción."} />}
+                    </Seccion>
 
-            <div className='flex gap-3'>
-                <div className='w-3/4'>
-                    <div className='relative rounded-xl mt-4 p-4 min-h-[125px] border border-gray-200'>
-                        <div className='flex justify-between items-center'>
-                            <h3 className='text-xl font-semibold'>Acerca de: </h3>
-                        </div>
-                        <p className="text-[14px] font-li">{descripcion}</p>
-                    </div>
-                    <div className='relative rounded-xl min-h-[150px] my-5 p-4 border border-gray-200'>
-                        <div className='flex justify-between items-center'>
-                            <h3 className='text-xl font-semibold'>Educaciones</h3>
-                            {myAccount && <IoMdAdd className='size-5 cursor-pointer' onClick={() => setEducacionEnForm({})} />}
-                        </div>
-                        {
-                            educacionesOrdenadas.length > 0 ?
-                                <div className='mt-1'>
-                                    {educacionesOrdenadas.map(educacion => (
-                                        <Educations
-                                            key={educacion.idEducacion}
-                                            educacion={educacion}
-                                            myAccount={myAccount}
-                                            onEdit={() => setEducacionEnForm(educacion)}
-                                        />
-                                    ))}
-                                </div>
-                                : <Mensaje mensaje={"No hay educaciones agregadas aún."} />}
-
-                    </div>
-
+                    <Seccion
+                        titulo='Educación'
+                        accion={myAccount && <BotonAccion icono={IoMdAdd} etiqueta='Agregar educación' onClick={() => setEducacionEnForm({})} />}
+                    >
+                        {educacionesOrdenadas.length > 0
+                            ? <div className='-my-4'>
+                                {educacionesOrdenadas.map(educacion => (
+                                    <Educations
+                                        key={educacion.idEducacion}
+                                        educacion={educacion}
+                                        myAccount={myAccount}
+                                        onEdit={() => setEducacionEnForm(educacion)}
+                                    />
+                                ))}
+                            </div>
+                            : <Mensaje mensaje={"No hay educaciones agregadas aún."} />}
+                    </Seccion>
                 </div>
 
-                <div className='w-1/4'>
-                    <div className='relative rounded-xl mt-4 p-4 min-h-[100px] border border-gray-200 '>
-                        <div className='flex justify-between items-center'>
-                            <h3 className='text-xl font-semibold'>Habilidades</h3>
-                            {myAccount && (habilidades.length > 0
-                                ? <SlPencil className='size-5 cursor-pointer' onClick={() => setMenuSkillUser(true)} />
-                                : <IoMdAdd className='size-5 cursor-pointer' onClick={() => setMenuSkillUser(true)} />)}
-                        </div>
+                <div className='space-y-6'>
+                    <Seccion
+                        titulo='Habilidades'
+                        accion={myAccount && <BotonAccion
+                            icono={habilidades.length > 0 ? SlPencil : IoMdAdd}
+                            etiqueta={habilidades.length > 0 ? 'Editar habilidades' : 'Agregar habilidades'}
+                            onClick={() => setMenuSkillUser(true)}
+                        />}
+                    >
                         {habilidades.length > 0
-                            ? <>
+                            ? <div className='-mt-3 space-y-1'>
                                 <Habilities titulo="Tecnologías" tipo="TECNOLOGIA" habilidades={tecnologias} />
                                 <Habilities titulo="Aptitudes" tipo="APTITUD" habilidades={aptitudes} />
-                            </>
+                            </div>
                             : <Mensaje mensaje={"No hay habilidades agregadas aún."} />}
+                    </Seccion>
 
-                    </div>
-
-                    <div className='relative rounded-xl mt-4 p-4 min-h-[100px] border border-gray-200'>
-                        <div className='flex justify-between items-center'>
-                            <h3 className='text-xl font-semibold'>Idiomas</h3>
-                            {myAccount && (idiomas.length > 0
-                                ? <SlPencil className='size-5 cursor-pointer' onClick={() => setMenuIdiomas(true)} />
-                                : <IoMdAdd className='size-5 cursor-pointer' onClick={() => setMenuIdiomas(true)} />)}
-                        </div>
+                    <Seccion
+                        titulo='Idiomas'
+                        accion={myAccount && <BotonAccion
+                            icono={idiomas.length > 0 ? SlPencil : IoMdAdd}
+                            etiqueta={idiomas.length > 0 ? 'Editar idiomas' : 'Agregar idiomas'}
+                            onClick={() => setMenuIdiomas(true)}
+                        />}
+                    >
                         {idiomas.length > 0
-                            ? <ul className='mt-3 space-y-2'>
+                            ? <ul className='space-y-3'>
                                 {idiomas.map(idioma => (
                                     <li key={idioma.idIdioma} className='flex items-center justify-between gap-2 text-sm'>
                                         <span className='font-medium text-gray-800'>{idioma.nombre}</span>
-                                        <span className='px-2 py-0.5 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-medium'>
+                                        <span className='px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-medium'>
                                             {etiquetaNivel(idioma.nivel)}
                                         </span>
                                     </li>
                                 ))}
                             </ul>
                             : <Mensaje mensaje={"No hay idiomas agregados aún."} />}
-                    </div>
-
-
+                    </Seccion>
                 </div>
             </div>
             {updateAccount && <EditProfileForm

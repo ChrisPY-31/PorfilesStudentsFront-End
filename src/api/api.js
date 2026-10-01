@@ -7,3 +7,6 @@ export const API_KEY =
 
   //peticion al servidor de produccion
 // "https://alluring-warmth-production.up.railway.app/api/v1";
+
+// WebSocket de notificaciones (STOMP sobre SockJS), mismo host que la API
+export const WS_URL = `${new URL(API_KEY).origin}/ws`;

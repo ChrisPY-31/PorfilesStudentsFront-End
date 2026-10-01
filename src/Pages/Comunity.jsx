@@ -6,6 +6,7 @@ import { useAppSelector } from "../Hooks/store";
 import CreatePost from "../Components/CreatePost";
 import StudentCard from "../Components/StudentCard";
 import { obtenerMensajeError } from "../helpers";
+import { IoLocationOutline, IoSchoolOutline, IoBookOutline } from "react-icons/io5";
 
 const FOTO_DEFAULT = 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true';
 
@@ -16,6 +17,9 @@ const Comunity = () => {
   const { data, isLoading, error, refetch } = useGetPublicationsQuery({ token: userToken });
   const { data: teachers = [] } = useGetTeachersQuery();
 
+  // Ciudad y estado si existen ("Toluca, Estado de México"), o el que haya
+  const ubicacionUsuario = [user?.ciudad, user?.ubicacion?.estado].filter(Boolean).join(", ")
+
   // Las mas recientes primero
   const publications = [...(Array.isArray(data) ? data : [])]
     .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
@@ -25,18 +29,38 @@ const Comunity = () => {
       <div className="flex gap-5 items-start">
 
         {/* Info del usuario */}
-        <div className="hidden lg:block h-[250px] w-60 shrink-0 rounded-2xl relative shadow ">
-          <div className="imagen__home h-[75px] rounded-t-xl bg-contain"></div>
-          <div className="p-4">
+        <div className="hidden lg:block w-60 shrink-0 bg-white rounded-2xl shadow overflow-hidden">
+          <div className="imagen__home h-16 bg-cover"></div>
+          <div className="px-4 pb-4">
             <img
-              className="rounded-full absolute top-10 size-18 shadow-md"
-              src={`${user?.imagen ? user.imagen : 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true'}`}
+              className="-mt-8 size-16 rounded-full object-cover ring-4 ring-white shadow-md"
+              src={user?.imagen || FOTO_DEFAULT}
               alt="foto de perfil"
             />
-            <div className="mt-6">
-              <h2 className="font-semibold text-gray-900 text-lg">{user.nombre} {user.apellido}</h2>
-              <p className="text-gray-600">{user?.especialidad}</p>
+            <div className="mt-2">
+              <h2 className="font-semibold text-gray-900 text-lg leading-tight">{user.nombre} {user.apellido}</h2>
+              {user?.especialidad && <p className="mt-0.5 text-sm text-gray-600">{user.especialidad}</p>}
             </div>
+
+            {(ubicacionUsuario || user?.carrera?.carrera || user?.semestre) && (
+              <ul className="mt-4 pt-4 border-t border-gray-100 space-y-2.5 text-sm text-gray-600">
+                {ubicacionUsuario && (
+                  <li className="flex items-start gap-2">
+                    <IoLocationOutline className="size-4 mt-0.5 shrink-0 text-gray-400" /> {ubicacionUsuario}
+                  </li>
+                )}
+                {user?.carrera?.carrera && (
+                  <li className="flex items-start gap-2">
+                    <IoSchoolOutline className="size-4 mt-0.5 shrink-0 text-gray-400" /> {user.carrera.carrera}
+                  </li>
+                )}
+                {user?.semestre && (
+                  <li className="flex items-start gap-2">
+                    <IoBookOutline className="size-4 mt-0.5 shrink-0 text-gray-400" /> {user.semestre}° semestre
+                  </li>
+                )}
+              </ul>
+            )}
           </div>
         </div>
 

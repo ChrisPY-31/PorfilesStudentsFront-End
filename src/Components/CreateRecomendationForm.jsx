@@ -1,260 +1,191 @@
-import React, { useEffect, useState } from "react";
-import { Formik, Form, Field } from "formik";
-import * as Yup from "yup";
-import { IoCloseSharp } from "react-icons/io5";
-import { useAppSelector } from "../Hooks/store";
-import { useCreateRecomedationMutation } from "../services/recomentationStudent";
+import React, { useState } from "react";
+import { IoCloseSharp, IoSearchOutline, IoAlertCircleOutline } from "react-icons/io5";
 import { toast } from "sonner";
-import { useUserAccount } from "../Hooks/useUserAccount";
+import { useAppSelector } from "../Hooks/store";
+import { useCreateRecomedationMutation, useUpdateRecomendationMutation } from "../services/recomentationStudent";
+import { useGetStudentsForMentionsQuery } from "../services/projectsUser";
+import { obtenerMensajeError } from "../helpers";
 
-const CreateRecommendationForm = ({ onClose, user }) => {
-  const { students } = useAppSelector(state => state.students)
-  const [formErrors, setFormErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
-  const [selectedEstudiante, setSelectedEstudiante] = useState(null);
-  const [estudiantes, setEstudiantes] = useState(students)
-  const [createRecomendation, { isSuccess }] = useCreateRecomedationMutation();
-  const { username } = useAppSelector(state => state.users)
-  const token = localStorage.getItem("token")
-  const { getUserByUsername } = useUserAccount();
+const FOTO_DEFAULT = "https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true";
+const MIN_CARACTERES = 10;
+const MAX_CARACTERES = 500;
 
-
-  useEffect(() => {
-    if (isSuccess) {
-      toast.success("se creo la recomendacion")
-      setTimeout(() => {
-        onClose()
-      }, 1000)
-      return
-    }
-
-  }, [isSuccess])
-
-
-  const recommendationSchema = Yup.object().shape({
-    idStudent: Yup.number()
-      .required("Debe seleccionar un estudiante"),
-    contenido: Yup.string()
-      .min(10, "La recomendación debe tener al menos 10 caracteres")
-      .max(500, "La recomendación no puede exceder los 500 caracteres")
-      .required("Campo requerido")
-  });
-
-  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-    try {
-      await recommendationSchema.validate(values, { abortEarly: false });
-      setFormErrors({});
-
-      // Crear el objeto con la estructura que espera el backend
-      const recomendationData = {
-        id: {
-          idStudent: values.idStudent,
-          idTeacher: user?.id // Asumiendo que el usuario (docente) tiene un id
-        },
-        comentario: values.contenido,
-      };
-
-      await createRecomendation({ recomendationData, token })
-      getUserByUsername(username, token)
-
-
-      setTimeout(() => setSuccessMessage(""), 3000);
-      resetForm();
-      setSelectedEstudiante(null);
-
-    } catch (err) {
-      const errorMap = {};
-      if (err && Array.isArray(err.inner) && err.inner.length) {
-        err.inner.forEach((e) => {
-          if (e && e.path) errorMap[e.path] = e.message;
-        });
-      } else if (err && err.path && err.message) {
-        errorMap[err.path] = err.message;
-      } else {
-        errorMap._general = "Ocurrió un error en la validación";
-      }
-      setFormErrors(errorMap);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleEstudianteChange = (e, setFieldValue) => {
-    const estudianteId = parseInt(e.target.value);
-    const estudiante = estudiantes.find(est => est.id === estudianteId);
-
-    setFieldValue("idStudent", estudianteId);
-    setSelectedEstudiante(estudiante);
-  };
-
-  return (
-    <div className="absolute inset-0 z-50 flex justify-center items-center h-[100dvh]">
-      <IoCloseSharp className='absolute right-5 top-5 size-7 cursor-pointer' onClick={onClose} />
-
-      <div className="h-full w-full bg-gradient-to-br bg-gray-100 flex items-center justify-center overflow-hidden">
-
-        <div className="w-full max-w-2xl">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100">
-            <div className="p-5">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-black mb-3">
-                  Crear Recomendación
-                </h2>
-              </div>
-
-              {successMessage && (
-                <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-xl text-center">
-                  {successMessage}
-                </div>
-              )}
-
-              <Formik
-                initialValues={{
-                  idStudent: "",
-                  contenido: ""
-                }}
-                onSubmit={handleSubmit}
-                validateOnChange={false}
-                validateOnBlur={false}
-              >
-                {({ values, setFieldValue, isSubmitting }) => (
-                  <Form className="space-y-6">
-                    {/* Campo de docente (solo lectura) */}
-                    <div className="flex flex-col items-center">
-                      <div className="relative w-4/5 h-12">
-                        <Field
-                          type="text"
-                          name="nombreDocente"
-                          value={`${user?.nombre} ${user?.apellido}`}
-                          readOnly
-                          className="peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-gray-100 z-10 transition-all duration-300 placeholder-transparent"
-                          placeholder=" "
-                        />
-                        <label
-                          className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
-                                   peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
-                                   peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
-                        >
-                          Nombre del docente
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Campo de estudiantes (dropdown) */}
-                    <div className="flex flex-col items-center">
-                      <div className="relative w-4/5 h-12">
-                        <Field
-                          as="select"
-                          name="idStudent"
-                          onChange={(e) => handleEstudianteChange(e, setFieldValue)}
-                          className={`peer w-full h-full border border-gray-300 rounded-xl px-5 outline-none bg-transparent z-10 transition-all duration-300 appearance-none ${formErrors.idStudent
-                            ? "border-red-400 bg-red-50"
-                            : "focus:border-2 focus:border-green-500"
-                            }`}
-                        >
-                          <option value="">Seleccione un estudiante</option>
-                          {estudiantes?.map((estudiante) => (
-                            <option key={estudiante.id} value={estudiante.id}>
-                              {estudiante.nombre} {estudiante.apellido}
-                            </option>
-                          ))}
-                        </Field>
-                        <label
-                          className="absolute top-3 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
-                                   peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
-                                   peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
-                        >
-                          Estudiante
-                        </label>
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </div>
-                      {formErrors.idStudent && (
-                        <div className="mt-2 text-sm text-red-600 font-medium w-4/5">
-                          {formErrors.idStudent}
-                        </div>
-                      )}
-
-                      {/* Información del estudiante seleccionado */}
-                      {selectedEstudiante && (
-                        <div className="mt-3 w-4/5 flex items-center space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          {selectedEstudiante.foto && (
-                            <img
-                              src={selectedEstudiante.foto}
-                              alt={`${selectedEstudiante.nombre} ${selectedEstudiante.apellido}`}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          )}
-                          <div>
-                            <p className="font-medium text-gray-800">
-                              {selectedEstudiante.nombre} {selectedEstudiante.apellido}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Campo de recomendación */}
-                    <div className="flex flex-col items-center">
-                      <div className="relative w-4/5">
-                        <Field
-                          as="textarea"
-                          name="contenido"
-                          rows="5"
-                          className={`peer w-full border border-gray-300 rounded-xl px-5 py-3 outline-none bg-transparent z-10 transition-all duration-300 placeholder-transparent resize-none ${formErrors.contenido
-                            ? "border-red-400 bg-red-50"
-                            : "focus:border-2 focus:border-green-500"
-                            }`}
-                          placeholder=" "
-                        />
-                        <label
-                          className="absolute top-2 left-5 px-1 bg-white text-gray-400 text-base transition-all duration-300 z-0 pointer-events-none
-                                   peer-focus:top-[-0.5rem] peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600
-                                   peer-not-placeholder-shown:top-[-0.5rem] peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-gray-600"
-                        >
-                          Recomendación
-                        </label>
-                      </div>
-                      {formErrors.contenido && (
-                        <div className="mt-2 text-sm text-red-600 font-medium w-4/5">
-                          {formErrors.contenido}
-                        </div>
-                      )}
-                      <div className="text-right text-sm text-gray-500 w-4/5 mt-1">
-                        {values.contenido.length}/500 caracteres
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center">
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-4/5 py-4 px-6 border border-transparent rounded-xl shadow-lg text-lg font-semibold text-white bg-gradient-to-r
-                       from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2
-                        focus:ring-green-500 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isSubmitting ? (
-                          <div className="flex items-center justify-center">
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                            Creando recomendación...
-                          </div>
-                        ) : (
-                          "Crear Recomendación"
-                        )}
-                      </button>
-                    </div>
-                  </Form>
-                )}
-              </Formik>
-            </div>
-          </div>
+const TarjetaEstudiante = ({ estudiante, children }) => (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
+        <img src={estudiante.imagen || FOTO_DEFAULT} alt="" className="size-11 rounded-full object-cover" />
+        <div className="flex-1 min-w-0">
+            <p className="font-semibold text-gray-900 truncate">{estudiante.nombre} {estudiante.apellido}</p>
+            {estudiante.carrera?.carrera && <p className="text-xs text-gray-500 truncate">{estudiante.carrera.carrera}</p>}
         </div>
-      </div>
+        {children}
     </div>
-  );
+);
+
+/**
+ * - estudiante: alumno ya elegido (desde su perfil o al editar); si no viene, se muestra el buscador
+ * - comentarioActual: si viene, se edita la recomendacion existente (PUT)
+ * - yaRecomendados: ids de alumnos que este maestro ya recomendo (no se pueden elegir de nuevo)
+ * - onGuardado: recarga los datos de la pantalla que abrio el modal
+ */
+const CreateRecommendationForm = ({ estudiante: estudianteInicial = null, comentarioActual, yaRecomendados = new Set(), onClose, onGuardado }) => {
+    const editando = comentarioActual !== undefined;
+    const { userToken } = useAppSelector(state => state.users);
+    const [crear] = useCreateRecomedationMutation();
+    const [actualizar] = useUpdateRecomendationMutation();
+    const { data: estudiantes = [], isLoading: cargandoEstudiantes } = useGetStudentsForMentionsQuery(undefined, { skip: !!estudianteInicial });
+
+    const [estudiante, setEstudiante] = useState(estudianteInicial);
+    const [busqueda, setBusqueda] = useState("");
+    const [comentario, setComentario] = useState(comentarioActual ?? "");
+    const [error, setError] = useState("");
+    const [guardando, setGuardando] = useState(false);
+
+    const texto = busqueda.trim().toLowerCase();
+    const sugerencias = texto
+        ? estudiantes.filter(s => `${s.nombre} ${s.apellido}`.toLowerCase().includes(texto)).slice(0, 6)
+        : [];
+
+    const largo = comentario.trim().length;
+
+    const handleGuardar = async (e) => {
+        e.preventDefault();
+        if (guardando) return;
+        if (!estudiante) return setError("Elige al estudiante que quieres recomendar");
+        if (largo < MIN_CARACTERES) return setError(`Escribe al menos ${MIN_CARACTERES} caracteres`);
+
+        setGuardando(true);
+        try {
+            const datos = { idStudent: estudiante.id, comentario: comentario.trim(), token: userToken };
+            await (editando ? actualizar(datos) : crear(datos)).unwrap();
+            await onGuardado?.();
+            toast.success(editando ? "Recomendación actualizada" : `Recomendaste a ${estudiante.nombre}`);
+            onClose();
+        } catch (err) {
+            toast.error(obtenerMensajeError(err, "No se pudo guardar la recomendación"));
+            setGuardando(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+            <form onSubmit={handleGuardar} className="w-full max-w-lg max-h-[92vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+                {/* Encabezado */}
+                <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+                    <h2 className="text-2xl font-extrabold text-gray-900">{editando ? "Editar recomendación" : "Recomendar estudiante"}</h2>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        disabled={guardando}
+                        className="p-1 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        aria-label="Cerrar"
+                    >
+                        <IoCloseSharp className="size-6" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+                    {/* Estudiante */}
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Estudiante</label>
+                        {estudiante ? (
+                            <TarjetaEstudiante estudiante={estudiante}>
+                                {!estudianteInicial && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setEstudiante(null)}
+                                        className="text-xs font-semibold text-gray-500 hover:text-green-700"
+                                    >
+                                        Cambiar
+                                    </button>
+                                )}
+                            </TarjetaEstudiante>
+                        ) : (
+                            <div className="relative">
+                                <IoSearchOutline className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+                                <input
+                                    value={busqueda}
+                                    onChange={(e) => { setBusqueda(e.target.value); setError(""); }}
+                                    placeholder={cargandoEstudiantes ? "Cargando estudiantes..." : "Busca al estudiante por nombre..."}
+                                    autoFocus
+                                    className="w-full pl-9 pr-4 py-2.5 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                                />
+                                {texto && (
+                                    <div className="absolute left-0 right-0 mt-1 py-1 bg-white rounded-xl shadow-lg border border-gray-100 z-10">
+                                        {sugerencias.length === 0 && <p className="px-4 py-2 text-sm text-gray-400">Sin resultados</p>}
+                                        {sugerencias.map(s => {
+                                            const yaLoRecomende = yaRecomendados.has(s.id);
+                                            return (
+                                                <button
+                                                    key={s.id}
+                                                    type="button"
+                                                    disabled={yaLoRecomende}
+                                                    onClick={() => { setEstudiante(s); setBusqueda(""); }}
+                                                    className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
+                                                >
+                                                    <img src={s.imagen || FOTO_DEFAULT} alt="" className="size-8 rounded-full object-cover" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium text-gray-900 truncate">{s.nombre} {s.apellido}</p>
+                                                        {s.carrera?.carrera && <p className="text-xs text-gray-500 truncate">{s.carrera.carrera}</p>}
+                                                    </div>
+                                                    {yaLoRecomende && <span className="text-xs text-gray-500">Ya lo recomendaste</span>}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Comentario */}
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Recomendación</label>
+                        <textarea
+                            value={comentario}
+                            onChange={(e) => { setComentario(e.target.value.slice(0, MAX_CARACTERES)); setError(""); }}
+                            rows={6}
+                            autoFocus={!!estudianteInicial}
+                            placeholder="¿Qué destacarías de este estudiante? Un proyecto, su desempeño en clase, su actitud..."
+                            className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl resize-none focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                        />
+                        <div className="flex justify-between mt-1 text-xs">
+                            <span className={largo > 0 && largo < MIN_CARACTERES ? "text-amber-600" : "text-gray-400"}>
+                                Mínimo {MIN_CARACTERES} caracteres
+                            </span>
+                            <span className="text-gray-400">{comentario.length}/{MAX_CARACTERES}</span>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <p className="flex items-center gap-1 text-sm font-medium text-red-600">
+                            <IoAlertCircleOutline className="size-4" /> {error}
+                        </p>
+                    )}
+                </div>
+
+                {/* Pie */}
+                <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        disabled={guardando}
+                        className="px-5 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-white font-semibold text-sm transition-colors disabled:opacity-50"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={guardando}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-green-600 hover:bg-green-700 shadow-md transition-colors disabled:opacity-50"
+                    >
+                        {guardando && <span className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                        {guardando ? "Guardando..." : editando ? "Guardar cambios" : "Recomendar"}
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
 };
 
 export default CreateRecommendationForm;

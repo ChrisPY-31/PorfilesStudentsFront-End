@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+/* Tipografias de la app:
+   - Inter (font-sans): texto, botones y formularios. Es la fuente por defecto de toda la pagina
+   - Plus Jakarta Sans (font-display): titulos y subtitulos (h1-h4), logo y navegacion */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}

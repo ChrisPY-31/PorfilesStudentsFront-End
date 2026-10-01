@@ -8,6 +8,7 @@ import { userSlice } from '../services/UserSlice'
 import { updatePersonApi } from '../services/updatePerson'
 import { recomendationStudent } from '../services/recomentationStudent'
 import { projectUserApi } from '../services/projectsUser'
+import { notificationsApi } from '../services/notifications'
 export const store = configureStore({
   reducer: {
     users : userAccountSlice.reducer,
@@ -18,7 +19,8 @@ export const store = configureStore({
     [projectUserApi.reducerPath]: projectUserApi.reducer,
     [publicationApi.reducerPath]:publicationApi.reducer,
     [updatePersonApi.reducerPath]:updatePersonApi.reducer,
-    [recomendationStudent.reducerPath]:recomendationStudent.reducer
+    [recomendationStudent.reducerPath]:recomendationStudent.reducer,
+    [notificationsApi.reducerPath]: notificationsApi.reducer
 
   },
   middleware: (getDefaultMiddleware) =>
@@ -28,6 +30,7 @@ export const store = configureStore({
       publicationApi.middleware,
       updatePersonApi.middleware,
       recomendationStudent.middleware,
-      projectUserApi.middleware
+      projectUserApi.middleware,
+      notificationsApi.middleware
     ),
 })

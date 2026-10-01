@@ -1,6 +1,5 @@
 import logoUniversity from "../assets/LogoUniversitario.jpg"
 import CardsHome from "../Components/CardsHome"
-import Footer from "../Components/Footer"
 import Careers from "../Components/CarrersSection"
 
 import { empresasTecnologia } from "../Estudiantes"
@@ -46,7 +45,6 @@ export const Home = () => {
 
       </div>
 
-      <Footer />
     </section>
   )
 }

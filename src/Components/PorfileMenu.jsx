@@ -1,17 +1,29 @@
 import React, { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { FiUser } from "react-icons/fi";
-import { FiFolder } from "react-icons/fi";
-import { FiUsers } from "react-icons/fi";
-import { FiLock } from "react-icons/fi";
-import { IoArrowBackCircleOutline } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom'
+import { FiFolder, FiUsers, FiLock, FiAward, FiBriefcase, FiSettings, FiLogOut } from "react-icons/fi";
 import { toast } from 'sonner';
 import { useAppSelector } from '../Hooks/store';
 import { useGetloginAdminQuery } from '../services/autenticateUser';
 import { userAccountSlice } from '../store/UserAccount/userAccountSlice';
 import { useUserAccount } from '../Hooks/useUserAccount';
-import { IoIosInformationCircleOutline } from 'react-icons/io';
 import Manager from '../Pages/Manager';
+// Opcion del menu; `proximamente` la muestra deshabilitada
+const Opcion = ({ icono: Icono, children, onClick, proximamente, peligro }) => (
+    <button
+        type='button'
+        onClick={onClick}
+        disabled={proximamente}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-left transition-colors disabled:cursor-not-allowed ${peligro
+            ? 'text-red-600 hover:bg-red-50'
+            : 'text-gray-700 hover:bg-gray-100 disabled:hover:bg-transparent disabled:text-gray-400'
+            }`}
+    >
+        <Icono className={`size-5 shrink-0 ${peligro ? '' : 'text-gray-500'}`} />
+        <span className='flex-1'>{children}</span>
+        {proximamente && <span className='px-2 py-0.5 rounded-full bg-gray-100 text-[10px] font-semibold text-gray-500'>Próximamente</span>}
+    </button>
+)
+
 const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
 
     const navigate = useNavigate();
@@ -73,81 +85,76 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
         }, 100);
     }
 
+    const esUsuario = tipo === "student" || tipo === "recruiter" || tipo === "teacher"
+    const ROLES = { student: "Estudiante", teacher: "Docente", recruiter: "Reclutador" }
+
+    // Lleva a una pestaña de "Mi perfil" (2 proyectos, 3 recomendaciones)
+    const irAPestana = (pestana) => {
+        setMenuProfile(false)
+        navigate(`/MyProfile/${userId}`, { state: { pestana } })
+    }
+
     return (
-        <div className="absolute top-15 right-0 w-[300px] h-min-[400px] p-4 bg-white rounded shadow-lg z-50">
-            <div className='h-full rounded-sm '>
-                <h2 className='font-semibold text-xl mb-2'>UniConnect</h2>
-                <div className='p-3 text-center'>
-                    {tipo === "student" && <span>Estudiante</span>}
-                    {tipo === "teacher" && <span>Docente</span>}
-                    {tipo === "recruiter" && <span>Reclutador</span>}
-                    <div className='flex justify-around items-center my-2'>
-                        <div>
-                            {(tipo === "student" || tipo === "recruiter" || tipo === "teacher") ?
-                                <img className='size-16 rounded-full mx-auto' src={`${user.imagen ? user.imagen : 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true'}`} alt="foto de perfil" />
-                                :
-                                <img className='size-16 rounded-full mx-auto' src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWPzckq1VBcfsvTk3ByJnJR-ort0ykcUGROA&s' />
-
-                            }
-                        </div>
-                        <div>
-                            {(tipo === "student" || tipo === "recruiter" || tipo === "teacher") ? <>
-                                <p className='font-semibold'>{`${user.nombre} ${user.apellido}`}</p>
-                                {
-                                    user.carrera?.carrera &&
-                                    <p>Ingeniero(a) en {user.carrera.carrera}</p>
-                                }
-
-                            </>
-                                : <p>Centro universitario tianguistenco</p>
-
-                            }
-
-                        </div>
+        <div className="absolute top-14 right-0 w-[300px] bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+            {/* Encabezado */}
+            <div className='p-4'>
+                <div className='flex items-center gap-3'>
+                    <img
+                        className='size-14 shrink-0 rounded-full object-cover'
+                        src={esUsuario
+                            ? (user.imagen || 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true')
+                            : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWPzckq1VBcfsvTk3ByJnJR-ort0ykcUGROA&s'}
+                        alt="foto de perfil"
+                    />
+                    <div className='min-w-0'>
+                        <p className='font-semibold text-gray-900 truncate'>
+                            {esUsuario ? `${user.nombre} ${user.apellido}` : 'Centro Universitario Tianguistenco'}
+                        </p>
+                        {esUsuario && (
+                            <span className='inline-block mt-0.5 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold'>
+                                {ROLES[tipo]}
+                            </span>
+                        )}
+                        {user.carrera?.carrera && <p className='mt-1 text-xs text-gray-500 truncate'>{user.carrera.carrera}</p>}
                     </div>
                 </div>
-                <div className='flex flex-col my-2 '>
-                    {(tipo === "student" || tipo === "recruiter" || tipo === "teacher") &&
-                        <Link onClick={handleMyProfile} className='hover:bg-emerald-500/7 p-2'><FiUser className='inline text-green-800' /> Mi Perfil</Link>
-                    }
+                {esUsuario && (
+                    <button
+                        type='button'
+                        onClick={handleMyProfile}
+                        className='mt-4 w-full py-2 rounded-xl border-2 border-green-600 text-sm font-semibold text-green-700 hover:bg-green-50 transition-colors'
+                    >
+                        Ver mi perfil
+                    </button>
+                )}
+            </div>
 
+            {/* Accesos segun el rol */}
+            {esUsuario && (
+                <div className='px-2 py-2 border-t border-gray-100'>
                     {tipo === "student" && <>
-                        <Link className='hover:bg-emerald-500/7 p-2'><FiFolder className='inline text-green-800' /> Mis proyectos</Link>
-                        <Link className='hover:bg-emerald-500/7 p-2'><FiUsers className='inline text-green-800' /> Colaboraciones</Link>
-                    </>
-                    }
-                    {tipo === "teacher" && <>
-                        <Link className='hover:bg-emerald-500/7 p-2'><FiFolder className='inline text-green-800' /> Mis Recomendaciones</Link>
-
+                        <Opcion icono={FiFolder} onClick={() => irAPestana(2)}>Mis proyectos</Opcion>
+                        <Opcion icono={FiAward} onClick={() => irAPestana(3)}>Mis recomendaciones</Opcion>
+                        <Opcion icono={FiUsers} proximamente>Colaboraciones</Opcion>
                     </>}
+                    {tipo === "teacher" &&
+                        <Opcion icono={FiAward} onClick={() => irAPestana(3)}>Mis recomendaciones</Opcion>
+                    }
                     {tipo === "recruiter" && <>
-                        <Link className='hover:bg-emerald-500/7 p-2'><FiFolder className='inline text-green-800' /> Publicar Empleo</Link>
-                        <Link onClick={handleRecruitment} className='hover:bg-emerald-500/7 p-2'><FiUsers className='inline text-green-800' /> Contratar estudiante</Link>
-
+                        <Opcion icono={FiUsers} onClick={handleRecruitment}>Contratar estudiante</Opcion>
+                        <Opcion icono={FiBriefcase} proximamente>Publicar empleo</Opcion>
                     </>}
-
-                    {(tipo !== "student" && tipo !== "recruiter" && tipo !== "teacher") &&
-                        <Link className='hover:bg-emerald-400/7 p-2'><FiLock className='inline text-green-800' />
-                            <button className='cursor-pointer' onClick={() => handleAdmin()}>
-
-                                Administrador
-                            </button>
-                        </Link>
-                    }
-                    <Link className='hover:bg-emerald-400/7 p-2'>
-                        <IoIosInformationCircleOutline className='inline text-green-800' />
-                        <button className='cursor-pointer' onClick={handleInfoMenuUser} >
-                            Informacion del perfil
-                        </button>
-                    </Link>
-
                 </div>
-                <div className=''>
-                    <Link className='hover:bg-emerald-400/7 block p-2' onClick={handleClick}>
-                        <IoArrowBackCircleOutline className='rotate-180 inline text-green-800 size-6' />
-                        Cerrar sesion
-                    </Link>
-                </div>
+            )}
+
+            {/* Cuenta */}
+            <div className='px-2 py-2 border-t border-gray-100'>
+                {!esUsuario && <Opcion icono={FiLock} onClick={handleAdmin}>Administrador</Opcion>}
+                <Opcion icono={FiSettings} onClick={handleInfoMenuUser}>Cuenta y seguridad</Opcion>
+            </div>
+
+            <div className='px-2 py-2 border-t border-gray-100'>
+                <Opcion icono={FiLogOut} onClick={handleClick} peligro>Cerrar sesión</Opcion>
             </div>
         </div>
     )

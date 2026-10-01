@@ -84,3 +84,11 @@ export const TIPOS_EDUCACION = [
   { value: "DIPLOMA", label: "Diplomado" },
   { value: "COURSE", label: "Curso" }
 ];
+
+// "2025-03-07" -> "7 mar 2025", sin el desfase de un dia de new Date("2025-03-07")
+export const formatearFechaCorta = (fecha) => {
+  if (!fecha) return "";
+  const [anio, mes, dia] = String(fecha).slice(0, 10).split("-").map(Number);
+  if (!anio || !mes || !dia) return "";
+  return new Date(anio, mes - 1, dia).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }).replace(".", "");
+};

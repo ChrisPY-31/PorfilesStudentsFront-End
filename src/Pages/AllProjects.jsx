@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { IoSearchOutline, IoCloseSharp } from 'react-icons/io5'
 import { useAppSelector } from '../Hooks/store'
 import { useGetAllProjectsQuery, useGetStudentsForMentionsQuery } from '../services/projectsUser'
@@ -13,6 +14,14 @@ const AllProjects = () => {
   const { data: estudiantes = [] } = useGetStudentsForMentionsQuery()
 
   const [busqueda, setBusqueda] = useState('')
+  // Al llegar desde una notificacion de mencion se resalta ese proyecto
+  const location = useLocation()
+  const resaltado = location.state?.proyecto
+
+  useEffect(() => {
+    if (!resaltado || proyectos.length === 0) return
+    document.getElementById(`proyecto-${resaltado}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [resaltado, proyectos.length, location.key])
   const [tecnologia, setTecnologia] = useState(null)
 
   const autores = useMemo(() => new Map(estudiantes.map(e => [e.id, e])), [estudiantes])
@@ -112,11 +121,13 @@ const AllProjects = () => {
         )}
 
         {filtrados.map(proyecto => (
-          <ProyectsCard
+          <div
             key={proyecto.idProject}
-            proyecto={proyecto}
-            autor={autores.get(proyecto.idEstudiante)}
-          />
+            id={`proyecto-${proyecto.idProject}`}
+            className={proyecto.idProject === resaltado ? 'rounded-2xl ring-4 ring-green-400 ring-offset-2' : ''}
+          >
+            <ProyectsCard proyecto={proyecto} autor={autores.get(proyecto.idEstudiante)} />
+          </div>
         ))}
       </div>
     </div>
