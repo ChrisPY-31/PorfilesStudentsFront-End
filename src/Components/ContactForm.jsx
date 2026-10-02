@@ -192,7 +192,7 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact =
     }
 
     return (
-        <div className="absolute inset-0 z-[100] flex justify-center items-center">
+        <div className="absolute inset-0 z-[110] flex justify-center items-center">
             <IoCloseSharp
                 className="absolute top-4 right-4 text-gray-600 hover:text-red-500 transition-colors duration-200 size-7 cursor-pointer z-10"
                 onClick={handleCloseMenu}

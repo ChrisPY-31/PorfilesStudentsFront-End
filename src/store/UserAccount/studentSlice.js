@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = {
+const initialState = () => ({
   students: [],
   idStudent:localStorage.getItem("idPerson") || null,
   studentById: {},
-};
+});
 
 export const studentSlice = createSlice({
   name: "students",

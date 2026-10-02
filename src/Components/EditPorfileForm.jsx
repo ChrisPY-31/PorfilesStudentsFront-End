@@ -73,7 +73,7 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
             }
 
             if (tipo === "teacher") {
-                updatePerson.departamento = values.departamento;
+                updatePerson.departamento = values.departamento.trim();
                 updatePerson.gradoAcademico = values.gradoAcademico ? values.gradoAcademico.toUpperCase() : null;
             }
 
@@ -436,55 +436,18 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                                                             <div className="flex flex-col">
                                                                 <div className="relative w-full h-12">
                                                                     <Field
-                                                                        as="select"
+                                                                        type="text"
                                                                         name="departamento"
-                                                                        className={`w-full h-full rounded-2xl px-4 outline-none transition-all duration-200 appearance-none bg-white shadow-sm border-2 text-gray-500 ${formErrors.departamento
-                                                                            ? "border-red-400"
+                                                                        placeholder=" "
+                                                                        maxLength={100}
+                                                                        className={`peer w-full h-full rounded-2xl px-4 outline-none bg-white z-10 shadow-sm border-2 ${formErrors.departamento
+                                                                            ? "border-red-400 bg-red-50"
                                                                             : "border-gray-300 focus:border-green-500 focus:ring-0"
                                                                             }`}
-                                                                    >
-                                                                        <option value="" className="text-gray-400">
-                                                                            Seleccionar departamento
-                                                                        </option>
-                                                                        <option
-                                                                            value="sistemas"
-                                                                            className="text-gray-700"
-                                                                        >
-                                                                            Sistemas Computacionales
-                                                                        </option>
-                                                                        <option
-                                                                            value="software"
-                                                                            className="text-gray-700"
-                                                                        >
-                                                                            Ingeniería de Software
-                                                                        </option>
-                                                                        <option
-                                                                            value="computacion"
-                                                                            className="text-gray-700"
-                                                                        >
-                                                                            Computación
-                                                                        </option>
-                                                                        <option
-                                                                            value="ciencias"
-                                                                            className="text-gray-700"
-                                                                        >
-                                                                            Ciencias Básicas
-                                                                        </option>
-                                                                    </Field>
-                                                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                                                        <svg
-                                                                            className="h-5 w-5 text-green-500"
-                                                                            xmlns="http://www.w3.org/2000/svg"
-                                                                            viewBox="0 0 20 20"
-                                                                            fill="currentColor"
-                                                                        >
-                                                                            <path
-                                                                                fillRule="evenodd"
-                                                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                                                clipRule="evenodd"
-                                                                            />
-                                                                        </svg>
-                                                                    </div>
+                                                                    />
+                                                                    <label className="absolute top-2 left-4 px-1 bg-white/95 text-slate-400 text-sm transition-all duration-200 z-0 pointer-events-none peer-focus:-translate-y-3 peer-focus:scale-90 peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600 peer-not-placeholder-shown:-translate-y-3 peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-slate-600">
+                                                                        Departamento
+                                                                    </label>
                                                                 </div>
                                                                 <div className="mt-1 min-h-4 text-sm text-red-600 font-medium">
                                                                     {formErrors.departamento || " "}

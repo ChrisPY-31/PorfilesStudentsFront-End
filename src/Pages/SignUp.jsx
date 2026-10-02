@@ -21,15 +21,13 @@ const SignUp = ({ setAutenticate }) => {
   const [formErrors, setFormErrors] = useState({});
   const [usuarioLengthError, setUsuarioLengthError] = useState(false);
   const [createUser, { isSuccess, isError, error, data ,isLoading}] = useCreateUserMutation()
-  const { getUserNameRol } = useUserAccount();
+  const { iniciarSesion } = useUserAccount();
 
 
   useEffect(() => {
     if (isSuccess) {
-      localStorage.setItem("token", data.jwt);
+      iniciarSesion({ token: data.jwt, username: data?.username });
       toast.success("Cuenta creada con exitoso");
-      localStorage.setItem("username", data?.username);
-      getUserNameRol(localStorage.getItem("username"));
       setTimeout(() => {
         navigate("/Inicio");
         setAutenticate(data.jwt);

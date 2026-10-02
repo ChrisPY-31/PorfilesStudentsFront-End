@@ -1,16 +1,15 @@
-import React, { use } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useUserAccount } from '../Hooks/useUserAccount';
 
 const UserLockedMessage = () => {
     const navigate = useNavigate();
+    const { cerrarSesion } = useUserAccount();
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("username");
-        localStorage.removeItem("userLocked");
+        cerrarSesion();
         toast.info("Cerrando sesión...");
-        document.body.className = "";
         setTimeout(() => {
             navigate('/');
         }, 1000);

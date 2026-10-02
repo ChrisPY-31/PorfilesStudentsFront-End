@@ -15,7 +15,7 @@ const SignIn = ({ setAutenticate }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [loginUser, { isSuccess, error, data }] = useLoginUserMutation();
-  const { getUserNameRol } = useUserAccount();
+  const { iniciarSesion } = useUserAccount();
 
 
   useEffect(() => {
@@ -23,12 +23,9 @@ const SignIn = ({ setAutenticate }) => {
       toast.error(obtenerMensajeError(error, "Error al iniciar sesión"));
       return;
     } else if (isSuccess) {
-      console.log(data);
-      localStorage.setItem("userLocked", data?.accoundLocked);
-      localStorage.setItem("token", data.jwt);
+      // Descarta el perfil y los caches de la sesion anterior
+      iniciarSesion({ token: data.jwt, username: data?.username, userLocked: data?.accoundLocked });
       toast.success("Inicio de sesión exitoso");
-      localStorage.setItem("username", data?.username);
-      getUserNameRol(localStorage.getItem("username"));
       setTimeout(() => {
         navigate("/Inicio");
         setAutenticate(data.jwt);

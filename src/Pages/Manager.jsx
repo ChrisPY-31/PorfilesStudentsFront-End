@@ -10,20 +10,20 @@ import ManagerCreateUser from "../Components/ManagerCreateUser";
 import ManagerUpdateUser from "../Components/ManagerUpdateUser";
 import { toast } from "sonner";
 import ChangePassword from "../Components/ChangePassword";
+import { useUserAccount } from "../Hooks/useUserAccount";
 
 const Manager = ({ usermenu }) => {
   const [autenticate, setAutenticate] = useState(false);
   const [managerMenu, setManagerMenu] = useState(2);
 
   const navigate = useNavigate();
+  const { cerrarSesion } = useUserAccount();
 
   const handleCerrar = () => {
     toast.message("Cerrando sesión...", { duration: 500 })
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
     setTimeout(() => {
-
       navigate("/");
+      cerrarSesion();
     }, 1000)
   }
 

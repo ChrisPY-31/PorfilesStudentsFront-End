@@ -194,6 +194,7 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
             {
                 menuContact && <MenuContact
                     nombreUser={`${user.nombre} ${user.apellido}`}
+                    imagen={user.imagen}
                     contactos={redContactos}
                     onClose={() => setMenuContact(false)}
                     myAccount={myAccount}

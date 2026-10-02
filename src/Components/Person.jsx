@@ -1,11 +1,15 @@
 import React, { useState } from 'react'
 import { SlPencil } from 'react-icons/sl'
-import { IoCameraOutline, IoSchoolOutline, IoBookOutline, IoLocationOutline, IoGlobeOutline } from 'react-icons/io5'
+import { IoCameraOutline, IoSchoolOutline, IoBookOutline, IoLocationOutline, IoGlobeOutline, IoRibbonOutline, IoBusinessOutline } from 'react-icons/io5'
 import PhotoForm from './PhotoForm'
+import { etiquetaGradoAcademico } from '../helpers'
 
 const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, ubicacion, carrera, myAccount, setUpdateAccount, contactos, openMenuContact, user }) => {
 
   const [menuFoto, setMenuFoto] = useState(false)
+  const esProfesor = user?.tipo === 'teacher'
+  const gradoAcademico = esProfesor && user?.gradoAcademico ? etiquetaGradoAcademico(user.gradoAcademico) : null
+  const departamento = esProfesor ? user?.departamento?.trim() : null
 
   let renderWeb = contactos?.filter(contacto => {
     return contacto.contactos.red === "WEB"
@@ -50,12 +54,22 @@ const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, 
 
         {/* Nombre y especialidad */}
         <div className='mt-4'>
-          <h1 className='text-2xl font-bold text-gray-900'>{`${nombre} ${apellido}`}</h1>
+          <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
+            <h1 className='text-2xl font-bold text-gray-900'>{`${nombre} ${apellido}`}</h1>
+            {gradoAcademico && (
+              <span className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold'>
+                <IoRibbonOutline className='size-4' /> {gradoAcademico}
+              </span>
+            )}
+          </div>
           {especialidad && <p className='mt-1 text-gray-700'>{especialidad}</p>}
         </div>
 
         {/* Datos */}
         <div className='mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500'>
+          {departamento && (
+            <span className='flex items-center gap-1.5'><IoBusinessOutline className='size-4' /> {departamento}</span>
+          )}
           {carrera && (
             <span className='flex items-center gap-1.5'><IoSchoolOutline className='size-4' /> {carrera}</span>
           )}

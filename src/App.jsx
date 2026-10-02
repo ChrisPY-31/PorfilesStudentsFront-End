@@ -13,6 +13,7 @@ import Manager from './Pages/Manager'
 import { useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
 import { useUserAccount } from './Hooks/useUserAccount'
+import { useExpiracionSesion } from './Hooks/useExpiracionSesion'
 import FormAdministrador from './Pages/FormAdministrador'
 import MyPorfile from './Pages/MyPorfile'
 import StudentRecruitmentForm from './Pages/StudentRecruitmentForm'
@@ -25,6 +26,8 @@ function App() {
   const username = localStorage.getItem("username");
   const [autenticate, setAutenticate] = useState(tokenUserId);
   const { tokenUser, getUserByUsername } = useUserAccount();
+  // Cierra la sesion cuando vence el token (30 min en el back)
+  useExpiracionSesion();
   const [myPorfile, setMyPorfile] = useState(false)
   // const [userLocked, setUserLocked] = useState(localStorage.getItem("userLocked"));
   const userLockedValue = JSON.parse(localStorage.getItem("userLocked") ?? "true");
@@ -36,7 +39,8 @@ function App() {
 
   useEffect(() => {
     if (username && tokenUserId) {
-      getUserByUsername(username, tokenUserId);
+      // Si falla (ej. admin sin persona) el hook ya limpia el perfil anterior
+      getUserByUsername(username, tokenUserId).catch(() => {});
     } else {
       return;
     }

@@ -1,5 +1,6 @@
 import {
   getUserDetails,
+  limpiarPerfil,
   getUserName,
   getUserToken,
 } from "../store/UserAccount/userAccountSlice";
@@ -8,6 +9,7 @@ import { getIdStudent, getStudents } from "../store/UserAccount/studentSlice";
 import { useAppDispatch } from "./store";
 import axios from "axios";
 import { API_KEY } from "../api/api";
+import { CLAVES_SESION, limpiarEstadoSesion } from "../store/sesion";
 
 export const useUserAccount = () => {
   const dispatch = useAppDispatch();
@@ -35,9 +37,14 @@ export const useUserAccount = () => {
       },
     };
     username = username.toString();
-    const users = await axios.get(`${API_KEY}/userAccount/${username}`, config);
-
-    dispatch(getUserDetails(users.data.object));
+    try {
+      const users = await axios.get(`${API_KEY}/userAccount/${username}`, config);
+      dispatch(getUserDetails(users.data.object));
+    } catch (error) {
+      // Ej. el administrador no tiene persona: no dejar el perfil de la sesion anterior
+      dispatch(limpiarPerfil());
+      throw error;
+    }
   };
 
   const getMyUserAccount = (myUserAccount) => {
@@ -48,6 +55,22 @@ export const useUserAccount = () => {
     dispatch(getUserName(username))
   }
 
+  // Login: guarda la sesion nueva y descarta todo lo de la anterior
+  const iniciarSesion = ({ token, username, userLocked }) => {
+    CLAVES_SESION.forEach((clave) => localStorage.removeItem(clave));
+    localStorage.setItem("token", token);
+    localStorage.setItem("username", username);
+    localStorage.setItem("sesionInicio", Date.now());
+    if (userLocked !== undefined) localStorage.setItem("userLocked", userLocked);
+    dispatch(limpiarEstadoSesion());
+  };
+
+  const cerrarSesion = () => {
+    CLAVES_SESION.forEach((clave) => localStorage.removeItem(clave));
+    document.body.className = "";
+    dispatch(limpiarEstadoSesion());
+  };
+
   return {
     getUser,
     tokenUser,
@@ -55,6 +78,8 @@ export const useUserAccount = () => {
     getIdUser,
     getUserByUsername,
     getMyUserAccount,
-    getUserNameRol
+    getUserNameRol,
+    iniciarSesion,
+    cerrarSesion
   };
 };

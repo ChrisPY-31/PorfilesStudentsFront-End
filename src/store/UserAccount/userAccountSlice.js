@@ -1,12 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = {
+// Funcion: se vuelve a leer localStorage cada vez que el slice se reinicia
+const initialState = () => ({
   tipo: "",
   userId: 0,
   user: {},
   userToken: localStorage.getItem("token") || "",
   username: localStorage.getItem("username") || "",
-};
+});
 
 export const userAccountSlice = createSlice({
   name: "users",
@@ -27,6 +28,12 @@ export const userAccountSlice = createSlice({
     getUserName: (state, action) => {
       state.username = action.payload;
     },
+    // El perfil no se pudo cargar: no dejar el de una sesion anterior
+    limpiarPerfil: (state) => {
+      state.tipo = "";
+      state.userId = 0;
+      state.user = {};
+    },
   },
 });
 
@@ -37,6 +44,7 @@ export const {
   getMyUserAccount,
   getUserDetails,
   getUserName,
+  limpiarPerfil,
 } = userAccountSlice.actions;
 
 export default userAccountSlice.reducer;

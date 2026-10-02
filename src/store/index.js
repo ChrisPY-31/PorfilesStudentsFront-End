@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit'
+import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import { userAccountSlice } from './UserAccount/userAccountSlice'
 import { usersApiSlice } from '../services/autenticateUser'
 import { studentSlice} from './UserAccount/studentSlice'
@@ -9,8 +9,9 @@ import { updatePersonApi } from '../services/updatePerson'
 import { recomendationStudent } from '../services/recomentationStudent'
 import { projectUserApi } from '../services/projectsUser'
 import { notificationsApi } from '../services/notifications'
-export const store = configureStore({
-  reducer: {
+import { reiniciarSesion } from './sesion'
+
+const appReducer = combineReducers({
     users : userAccountSlice.reducer,
     students: studentSlice.reducer,
     publications: publicationSlice.reducer,
@@ -21,8 +22,14 @@ export const store = configureStore({
     [updatePersonApi.reducerPath]:updatePersonApi.reducer,
     [recomendationStudent.reducerPath]:recomendationStudent.reducer,
     [notificationsApi.reducerPath]: notificationsApi.reducer
+})
 
-  },
+// Al cambiar de sesion todo regresa a su estado inicial (ver store/sesion.js)
+const rootReducer = (state, action) =>
+  appReducer(reiniciarSesion.match(action) ? undefined : state, action)
+
+export const store = configureStore({
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       usersApiSlice.middleware, 

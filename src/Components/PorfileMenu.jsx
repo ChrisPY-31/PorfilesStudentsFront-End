@@ -30,7 +30,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
     const token = localStorage.getItem("token");
     const { data, error, isLoading } = useGetloginAdminQuery(token);
     const { user, tipo, userId } = useAppSelector(state => state.users)
-    const { getUserNameRol } = useUserAccount();
+    const { cerrarSesion } = useUserAccount();
 
     const handleClick = () => {
         setMenuProfile(false);
@@ -39,10 +39,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
         })
         setTimeout(() => {
             navigate("/");
-            localStorage.removeItem("token");
-            localStorage.removeItem("idPerson");
-            localStorage.removeItem("username");
-            getUserNameRol("")
+            cerrarSesion()
         }, 1500)
     }
 

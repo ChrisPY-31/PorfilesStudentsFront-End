@@ -35,6 +35,17 @@ export const formatearRedContactos = (nombre) =>{
   return contactoFormateado[nombre]
 }
 
+// Grados que acepta el back (enum de TeacherDto.gradoAcademico)
+export const GRADOS_ACADEMICOS = [
+  { value: "LICENCIATURA", label: "Licenciatura" },
+  { value: "MAESTRIA", label: "Maestría" },
+  { value: "DOCTORADO", label: "Doctorado" },
+  { value: "POSTDOCTORADO", label: "Postdoctorado" }
+]
+
+export const etiquetaGradoAcademico = (grado) =>
+  GRADOS_ACADEMICOS.find(g => g.value === grado?.toUpperCase())?.label ?? grado
+
 // Niveles que acepta el back (enum de LanguageDto)
 export const NIVELES_IDIOMA = [
   { value: "BASICO", label: "Básico" },
