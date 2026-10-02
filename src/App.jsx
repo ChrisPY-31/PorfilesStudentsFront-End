@@ -14,11 +14,11 @@ import { useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
 import { useUserAccount } from './Hooks/useUserAccount'
 import { useExpiracionSesion } from './Hooks/useExpiracionSesion'
-import FormAdministrador from './Pages/FormAdministrador'
 import MyPorfile from './Pages/MyPorfile'
 import StudentRecruitmentForm from './Pages/StudentRecruitmentForm'
 import UserLockedMessage from './Components/UserLockedMessage'
 import Footer from './Components/Footer'
+import RutaAdmin from './Components/RutaAdmin'
 
 function App() {
   const location = useLocation();
@@ -76,10 +76,9 @@ function App() {
         <Route path='/MyProfile/:id' element={autenticate ? <MyPorfile /> : <Navigate to="/" />} />
         <Route path='/Sign-In' element={<SignIn setAutenticate={setAutenticate} />} />
         <Route path='/Sign-Up' element={<SignUp setAutenticate={setAutenticate} />} />
-        <Route path='/Manager' element={<Manager />} />
-        <Route path='/loginAdministrador' element={<FormAdministrador />} />
+        <Route path='/Manager' element={<RutaAdmin><Manager /></RutaAdmin>} />
         <Route path="/StudentRecruitment/" element={<StudentRecruitmentForm />} />
-        <Route path="/sing-in-and-security" element={<Manager usermenu={true} />} />
+        <Route path="/sing-in-and-security" element={autenticate ? <Manager usermenu={true} /> : <Navigate to="/" />} />
       </Routes>
       </main>
       {!esPanelAdmin && <Footer autenticate={autenticate} />}

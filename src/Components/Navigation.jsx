@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Link, NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   IoNotificationsOutline,
   IoNotifications,
@@ -37,11 +37,14 @@ import { useNotificationsSocket } from "../Hooks/useNotificationsSocket";
 import ProfileMenu from "./PorfileMenu";
 import { toast } from "sonner";
 import { useAppSelector } from "../Hooks/store";
+import { useEsAdmin } from "../Hooks/useEsAdmin";
+import LogoCU from "../assets/LogoCUTianguistenco.jpg";
 
 const Navigation = ({ autenticate, setMyPorfile }) => {
   const [menuNotification, setMenuNotification] = useState(false);
   const [menuProfile, setMenuProfile] = useState(false);
   const { user } = useAppSelector((state) => state.users);
+  const esAdmin = useEsAdmin();
   const { noLeidas, abrir } = useNotifications();
 
   // Conexion en tiempo real: cada notificacion nueva entra a la campana y se avisa con un toast
@@ -140,6 +143,7 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
           )}
         </div>
 
+        {/* Sin sesion la barra solo lleva el logo: "Iniciar sesion" esta en la portada y el registro en el inicio de sesion */}
         {autenticate ? (
           <div className="flex items-center gap-3 relative">
             <div ref={campanaRef}>
@@ -186,7 +190,7 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
               >
                 <img
                   className={`size-8 rounded-full object-cover ring-2 ${menuProfile ? "ring-green-500" : "ring-transparent"}`}
-                  src={`${user.imagen ? user.imagen : "https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true"}`}
+                  src={esAdmin ? LogoCU : `${user.imagen ? user.imagen : "https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true"}`}
                   alt="foto de perfil"
                 />
                 {user?.nombre && (
@@ -206,22 +210,7 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
               )}
             </div>
           </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Link
-              to={"/Sign-In"}
-              className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              Inicia sesión
-            </Link>
-            <Link
-              to={"/Sign-Up"}
-              className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-green-600 hover:bg-green-700 shadow-sm transition-colors"
-            >
-              Regístrate
-            </Link>
-          </div>
-        )}
+        ) : null}
       </nav>
     </header>
   );

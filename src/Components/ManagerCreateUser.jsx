@@ -64,10 +64,13 @@ const ManagerCreateUser = () => {
       .matches(/^[0-9]+$/, "El número de cuenta debe contener solo números")
       .length(7, "El número de cuenta debe tener 7 dígitos")
       .required("El número de cuenta es requerido"),
+    // Alumnos: @alumno.uaemex.mx, personal: @uaemex.mx
     correoInstitucional: Yup.string()
+      .trim()
+      .lowercase()
       .matches(
-        /^[a-z]+[0-9]{3}@alumno\.uaemex\.mx$/,
-        "El correo debe seguir el formato: mtorres001@alumno.uaemex.mx"
+        /^[a-z0-9._-]+@(alumno\.)?uaemex\.mx$/,
+        "Usa un correo @uaemex.mx o @alumno.uaemex.mx"
       )
       .required("El correo institucional es requerido"),
     password: Yup.string().required("La contraseña es requerida"),
@@ -96,7 +99,7 @@ const ManagerCreateUser = () => {
       const user = {
         username: values.numeroCuenta,
         password: values.password,
-        email: values.correoInstitucional,
+        email: values.correoInstitucional.trim().toLowerCase(),
         roleRequest: {
           roleListName: [
             tipoUserRol
@@ -109,12 +112,11 @@ const ManagerCreateUser = () => {
         apellido: values.apellidoPaterno
       }
       if (values.tipoUsuario === "estudiante") {
-        // OJO: el PersonDto de /auth/sign-up aun no tiene idCarrera ni semestre
+        // El back los exige para STUDENT (semestre 1-10)
         person.idCarrera = parseInt(values.carrera);
         person.semestre = values.semestre;
       }
-      await createUser({ user, person });
-      console.log("se envio")
+      await createUser({ user, person, token: userToken });
 
 
       values.nombre = "";

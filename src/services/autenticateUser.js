@@ -14,25 +14,18 @@ export const usersApiSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
-      // Agrega transformResponse para debuggear
-      transformResponse: (response, meta) => {
-        console.log("Respuesta completa del backend:", response);
-        console.log("Meta info:", meta);
-        return response;
-      },
-      transformErrorResponse: (response, meta) => {
-        console.log("Error completo:", response);
-        console.log("Meta error:", meta);
-        return response;
-      },
     }),
+    // Solo ADMIN. El jwt de la respuesta es del usuario creado: NO reemplazar la sesion del admin
     createUser: builder.mutation({
-      query: ({ user, person }) => ({
+      query: ({ user, person, token }) => ({
         url: `auth/sign-up`,
         method: "POST",
         body: {
           user,
           person,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
       }),
     }),
@@ -44,15 +37,6 @@ export const usersApiSlice = createApi({
       }),
       transformResponse: (response) => response,
     }),
-    userBlocked: builder.mutation({
-      query: ({ userToken, userId }) => ({
-        url: `api/v1/users/${userId}/blocked`,
-        method:"POST",
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      }),
-    }),
   }),
 });
 
@@ -62,5 +46,4 @@ export const {
   useCreateUserMutation,
   useLoginUserMutation,
   useGetloginAdminQuery,
-  useUserBlockedMutation,
 } = usersApiSlice;

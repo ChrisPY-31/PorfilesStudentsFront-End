@@ -4,20 +4,14 @@ import { API_KEY } from "../api/api";
 export const userSlice = createApi({
   reducerPath: "userSlice",
   baseQuery: fetchBaseQuery({ baseUrl: `${API_KEY}` }),
-  tagTypes: ["Users"],
+  tagTypes: ["Users", "CuentasAdmin", "Carreras"],
   endpoints: (builder) => ({
-    getAllUsers: builder.query({
-      query: () => ({
-        url: "/students",
-        providesTags: ["Users"],
-      }),
-    }),
     getTeachers: builder.query({
       query: () => ({
         url: "/teachers",
       }),
     }),
-    tagTypes: ["userById"],
+    // Solo ADMIN: [{ id (de la cuenta), username, email, enabled, accountNonLocked, roles: ["STUDENT"] }]
     getUsersAdmin: builder.query({
       query: ({ token }) => ({
         url: "/users",
@@ -25,6 +19,39 @@ export const userSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
+      providesTags: ["CuentasAdmin"],
+    }),
+    // Bloquear/desbloquear (toggle). El back pide el id de la PERSONA y /users solo trae
+    // el de la cuenta, asi que primero se busca la persona por username.
+    toggleBloqueoCuenta: builder.mutation({
+      async queryFn({ username, token }, _api, _extra, baseQuery) {
+        const headers = { Authorization: `Bearer ${token}` };
+        const cuenta = await baseQuery({ url: `/userAccount/${username}`, headers });
+        if (cuenta.error) return { error: cuenta.error };
+        const idPersona = cuenta.data?.object?.id;
+        if (!idPersona) {
+          return { error: { status: 404, data: { mensaje: "Esta cuenta no tiene un perfil asociado" } } };
+        }
+        return baseQuery({ url: `/users/${idPersona}/blocked`, method: "POST", headers });
+      },
+      // Solo recarga la lista si el cambio se aplico
+      invalidatesTags: (_res, error) => (error ? [] : ["CuentasAdmin"]),
+    }),
+    // Dashboard: todos los estudiantes para contarlos por carrera (respuesta paginada de Spring)
+    getEstudiantesResumen: builder.query({
+      query: ({ token }) => ({
+        url: "/students",
+        params: { page: 0, size: 1000 },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      transformResponse: (respuesta) => ({
+        estudiantes: respuesta?.content ?? [],
+        total: respuesta?.totalElements ?? respuesta?.content?.length ?? 0,
+      }),
+      // Cada alumno trae el nombre de su carrera: recargar si se renombra una
+      providesTags: ["Carreras"],
     }),
     getUserById: builder.query({
       query: ({ id, token }) => ({
@@ -34,11 +61,6 @@ export const userSlice = createApi({
         },
       }),
     }),
-    transformResponse: (response, meta) => {
-      console.log("Respuesta completa del backend:", response);
-      console.log("Meta info:", meta);
-      return response;
-    },
     getAccountUserByUsername: builder.query({
       query: ({ username, token }) => ({
         url: `/userAccount/${username}`,
@@ -55,6 +77,35 @@ export const userSlice = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
+      providesTags: ["Carreras"],
+    }),
+    // Catalogo de carreras (solo ADMIN). Body: { idCarrera?, carrera }
+    createCareer: builder.mutation({
+      query: ({ carrera, token }) => ({
+        url: "/career",
+        method: "POST",
+        body: { carrera },
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      invalidatesTags: (_res, error) => (error ? [] : ["Carreras"]),
+    }),
+    updateCareer: builder.mutation({
+      query: ({ idCarrera, carrera, token }) => ({
+        url: "/career",
+        method: "PATCH",
+        body: { idCarrera, carrera },
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      invalidatesTags: (_res, error) => (error ? [] : ["Carreras"]),
+    }),
+    // OJO: el back no valida si la carrera tiene alumnos; el front lo impide antes
+    deleteCareer: builder.mutation({
+      query: ({ idCarrera, token }) => ({
+        url: `/career/${idCarrera}`,
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      invalidatesTags: (_res, error) => (error ? [] : ["Carreras"]),
     }),
     getUbications: builder.query({
       query: ({ token }) => ({
@@ -196,11 +247,14 @@ export const userSlice = createApi({
 });
 
 export const {
-  useGetAllUsersQuery,
   useGetTeachersQuery,
   useGetUsersAdminQuery,
+  useGetEstudiantesResumenQuery,
   useGetUserByIdQuery,
   useGetCareersQuery,
+  useCreateCareerMutation,
+  useUpdateCareerMutation,
+  useDeleteCareerMutation,
   useGetUbicationsQuery,
   useGetContactTypesQuery,
   useGetAccountUserByUsernameQuery,
@@ -216,4 +270,5 @@ export const {
   useDeleteLanguageMutation,
   useChangePasswordUserMutation,
   useResetPasswordUserMutation,
+  useToggleBloqueoCuentaMutation,
 } = userSlice;

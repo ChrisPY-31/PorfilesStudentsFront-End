@@ -1,5 +1,5 @@
 .imagen__home {
-  background-image: url("./assets/fondo_landing_page.png");
+  background-image: url("./assets/fondo_landing_page.jpg");
   background-size: cover;
   background-position: bottom;
 }
@@ -15,7 +15,19 @@
 
 .animate-scroll {
   display: flex;
-  animation: scroll 15s linear infinite;
+  animation: scroll 30s linear infinite;
+  will-change: transform;
+}
+
+/* Se detiene al pasar el mouse para ver un logo */
+.carrusel-empresas:hover .animate-scroll {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-scroll {
+    animation: none;
+  }
 }
 
 .no-scroll {

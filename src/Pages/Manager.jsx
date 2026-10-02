@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { IoIosHome } from "react-icons/io";
 import { MdDashboard, MdLogout } from "react-icons/md";
-import { FaUserCog, FaUserPlus, FaUser } from "react-icons/fa";
-import ManagerUsers from "../Components/ManagerUsers";
+import { FaUsers, FaUserPlus, FaUser, FaGraduationCap } from "react-icons/fa";
 import ManagerDashboard from "../Components/ManagerDashboard";
 import ManagerCreateUser from "../Components/ManagerCreateUser";
-import ManagerUpdateUser from "../Components/ManagerUpdateUser";
+import ManagerUsers from "../Components/ManagerUsers";
+import ManagerCareers from "../Components/ManagerCareers";
 import { toast } from "sonner";
 import ChangePassword from "../Components/ChangePassword";
 import { useUserAccount } from "../Hooks/useUserAccount";
@@ -66,8 +66,15 @@ const Manager = ({ usermenu }) => {
                   className="cursor-pointer hover:bg-green-100 p-2 rounded flex "
                   onClick={() => setManagerMenu(4)}
                 >
-                  <FaUserCog className="mr-2 mt-1 text-xl" />
-                  Actualizar cuentas
+                  <FaUsers className="mr-2 mt-1 text-xl" />
+                  Usuarios
+                </li>
+                <li
+                  className="cursor-pointer hover:bg-green-100 p-2 rounded flex "
+                  onClick={() => setManagerMenu(5)}
+                >
+                  <FaGraduationCap className="mr-2 mt-1 text-xl" />
+                  Carreras
                 </li>
               </>
             ) :
@@ -104,9 +111,10 @@ const Manager = ({ usermenu }) => {
         :
         <>
           {managerMenu === 1 && null}
-          {managerMenu === 2 && <ManagerDashboard />}
+          {managerMenu === 2 && <ManagerDashboard onVerUsuarios={() => setManagerMenu(4)} />}
           {managerMenu === 3 && <ManagerCreateUser />}
-          {managerMenu === 4 && <ManagerUpdateUser />}
+          {managerMenu === 4 && <ManagerUsers />}
+          {managerMenu === 5 && <ManagerCareers />}
         </>
 
 

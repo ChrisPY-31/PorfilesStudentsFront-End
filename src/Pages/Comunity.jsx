@@ -3,6 +3,7 @@ import { useState } from "react";
 import PublicationCard from "../Components/PublicationCard";
 import { useGetTeachersQuery } from "../services/UserSlice";
 import { useAppSelector } from "../Hooks/store";
+import { useEsAdmin } from "../Hooks/useEsAdmin";
 import CreatePost from "../Components/CreatePost";
 import StudentCard from "../Components/StudentCard";
 import { obtenerMensajeError } from "../helpers";
@@ -14,6 +15,7 @@ const Comunity = () => {
 
   const [publicationMenu, setPublicationMenu] = useState(false);
   const { user, userToken } = useAppSelector(state => state.users);
+  const esAdmin = useEsAdmin();
   const { data, isLoading, error, refetch } = useGetPublicationsQuery({ token: userToken });
   const { data: teachers = [] } = useGetTeachersQuery();
 
@@ -28,8 +30,8 @@ const Comunity = () => {
     <div className="w-full max-w-[1400px] mx-auto mt-4 px-4">
       <div className="flex gap-5 items-start">
 
-        {/* Info del usuario */}
-        <div className="hidden lg:block w-60 shrink-0 bg-white rounded-2xl shadow overflow-hidden">
+        {/* Info del usuario (el admin no tiene perfil de persona) */}
+        {!esAdmin && <div className="hidden lg:block w-60 shrink-0 bg-white rounded-2xl shadow overflow-hidden">
           <div className="imagen__home h-16 bg-cover"></div>
           <div className="px-4 pb-4">
             <img
@@ -62,14 +64,14 @@ const Comunity = () => {
               </ul>
             )}
           </div>
-        </div>
+        </div>}
 
         {/* Publicaciones */}
         <div className="flex-1 min-w-0 h-[85dvh] px-6 py-4 rounded-2xl shadow overflow-y-scroll">
           <div className="max-w-[640px] mx-auto">
 
-          {/* Crear publicación */}
-          <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow">
+          {/* Crear publicación (el back aun no deja publicar al admin: no tiene perfil de persona) */}
+          {!esAdmin && <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow">
             <img
               className="size-12 shrink-0 rounded-full object-cover"
               src={user?.imagen || FOTO_DEFAULT}
@@ -82,7 +84,7 @@ const Comunity = () => {
             >
               ¿Sobre qué quieres hablar?
             </button>
-          </div>
+          </div>}
 
           {/* Listado de publicaciones */}
           {isLoading && [...Array(3)].map((_, i) => (

@@ -10,6 +10,7 @@ import {
 } from "react-icons/io5";
 import { toast } from "sonner";
 import { useAppSelector } from "../Hooks/store";
+import { useEsAdmin } from "../Hooks/useEsAdmin";
 import {
     useInteractionPublicationMutation,
     useUpdatePublicationMutation,
@@ -25,6 +26,8 @@ const Avatar = ({ src, className = "size-10" }) => (
 
 const PublicationCard = ({ publicacion }) => {
     const { userId, userToken } = useAppSelector(state => state.users);
+    // El back aun no deja al admin dar like ni comentar (no tiene perfil de persona)
+    const puedeInteractuar = !useEsAdmin();
     const [interactuar] = useInteractionPublicationMutation();
     const [updatePublication, { isLoading: guardandoEdicion }] = useUpdatePublicationMutation();
     const [deletePublication, { isLoading: eliminando }] = useDeletePublicationMutation();
@@ -212,7 +215,7 @@ const PublicationCard = ({ publicacion }) => {
 
             {/* Contadores */}
             {(totalLikes > 0 || comentarios.length > 0) && (
-                <div className="flex justify-between px-4 pt-3 text-xs text-gray-500">
+                <div className={`flex justify-between px-4 pt-3 text-xs text-gray-500 ${puedeInteractuar ? "" : "pb-3"}`}>
                     <span>{totalLikes > 0 && `${totalLikes} me gusta`}</span>
                     {comentarios.length > 0 && (
                         <button type="button" onClick={() => setMostrarComentarios(v => !v)} className="hover:underline">
@@ -223,7 +226,7 @@ const PublicationCard = ({ publicacion }) => {
             )}
 
             {/* Acciones */}
-            <div className="grid grid-cols-2 gap-1 mx-4 mt-2 py-1 border-t border-gray-100">
+            {puedeInteractuar && <div className="grid grid-cols-2 gap-1 mx-4 mt-2 py-1 border-t border-gray-100">
                 <button
                     type="button"
                     onClick={() => guardarInteraccion({ meGusta: !meGusta })}
@@ -240,12 +243,12 @@ const PublicationCard = ({ publicacion }) => {
                     <IoChatbubbleOutline className="size-5" />
                     Comentar
                 </button>
-            </div>
+            </div>}
 
             {/* Comentarios */}
             {mostrarComentarios && (
                 <div className="px-4 pb-4 pt-2 space-y-3 border-t border-gray-100">
-                    {mostrarCaja && (
+                    {puedeInteractuar && mostrarCaja && (
                         <form onSubmit={handleEnviarComentario} className="flex items-start gap-2">
                             <input
                                 ref={comentarioRef}

@@ -6,6 +6,7 @@ import { useAppSelector } from '../Hooks/store';
 import { useGetloginAdminQuery } from '../services/autenticateUser';
 import { userAccountSlice } from '../store/UserAccount/userAccountSlice';
 import { useUserAccount } from '../Hooks/useUserAccount';
+import LogoCU from '../assets/LogoCUTianguistenco.jpg';
 import Manager from '../Pages/Manager';
 // Opcion del menu; `proximamente` la muestra deshabilitada
 const Opcion = ({ icono: Icono, children, onClick, proximamente, peligro }) => (
@@ -27,9 +28,8 @@ const Opcion = ({ icono: Icono, children, onClick, proximamente, peligro }) => (
 const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
 
     const navigate = useNavigate();
-    const token = localStorage.getItem("token");
-    const { data, error, isLoading } = useGetloginAdminQuery(token);
-    const { user, tipo, userId } = useAppSelector(state => state.users)
+    const { user, tipo, userId, userToken } = useAppSelector(state => state.users)
+    const { data, error, isLoading } = useGetloginAdminQuery(userToken, { skip: !userToken });
     const { cerrarSesion } = useUserAccount();
 
     const handleClick = () => {
@@ -100,7 +100,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                         className='size-14 shrink-0 rounded-full object-cover'
                         src={esUsuario
                             ? (user.imagen || 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true')
-                            : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWPzckq1VBcfsvTk3ByJnJR-ort0ykcUGROA&s'}
+                            : LogoCU}
                         alt="foto de perfil"
                     />
                     <div className='min-w-0'>
