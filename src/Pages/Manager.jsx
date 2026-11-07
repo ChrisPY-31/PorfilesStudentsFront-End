@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { IoIosHome } from "react-icons/io";
 import { MdDashboard, MdLogout } from "react-icons/md";
-import { FaUsers, FaUserPlus, FaUser, FaGraduationCap, FaLock, FaUserTie } from "react-icons/fa";
+import { FaUsers, FaUserPlus, FaUser, FaGraduationCap, FaLock, FaUserTie, FaBriefcase, FaFileAlt } from "react-icons/fa";
 import ManagerDashboard from "../Components/ManagerDashboard";
 import ManagerCreateUser from "../Components/ManagerCreateUser";
 import ManagerUsers from "../Components/ManagerUsers";
@@ -14,6 +14,8 @@ import { useUserAccount } from "../Hooks/useUserAccount";
 import { useAppSelector } from "../Hooks/store";
 import CompanyRecruiters from "../Components/CompanyRecruiters";
 import RecruiterForm from "../Components/RecruiterForm";
+import CompanyJobs from "../Components/CompanyJobs";
+import CompanyApplications from "../Components/CompanyApplications";
 
 const Manager = ({ usermenu }) => {
   const [autenticate, setAutenticate] = useState(false);
@@ -22,6 +24,12 @@ const Manager = ({ usermenu }) => {
   const [ajuste, setAjuste] = useState("seguridad");
   const { tipo } = useAppSelector(state => state.users);
   const esEmpresa = tipo === "company_admin";
+  // Vacante elegida en "Ver postulaciones" para abrir esa seccion ya filtrada
+  const [vacanteFiltro, setVacanteFiltro] = useState("");
+  const irAPostulaciones = (idVacante = "") => {
+    setVacanteFiltro(idVacante);
+    setAjuste("postulaciones");
+  };
 
   const navigate = useNavigate();
   const { cerrarSesion } = useUserAccount();
@@ -102,6 +110,24 @@ const Manager = ({ usermenu }) => {
                 </li>
                 {esEmpresa && (
                   <li
+                    className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "vacantes" ? "bg-green-100 font-semibold" : ""}`}
+                    onClick={() => setAjuste("vacantes")}
+                  >
+                    <FaBriefcase className="mr-2 mt-1 text-lg" />
+                    Vacantes
+                  </li>
+                )}
+                {esEmpresa && (
+                  <li
+                    className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "postulaciones" ? "bg-green-100 font-semibold" : ""}`}
+                    onClick={() => irAPostulaciones()}
+                  >
+                    <FaFileAlt className="mr-2 mt-1 text-lg" />
+                    Postulaciones
+                  </li>
+                )}
+                {esEmpresa && (
+                  <li
                     className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "reclutadores" ? "bg-green-100 font-semibold" : ""}`}
                     onClick={() => setAjuste("reclutadores")}
                   >
@@ -149,6 +175,8 @@ const Manager = ({ usermenu }) => {
       {usermenu ? (
         <>
           {ajuste === "seguridad" && <ChangePassword />}
+          {ajuste === "vacantes" && esEmpresa && <CompanyJobs onVerPostulaciones={irAPostulaciones} />}
+          {ajuste === "postulaciones" && esEmpresa && <CompanyApplications key={vacanteFiltro} vacanteInicial={vacanteFiltro} />}
           {ajuste === "reclutadores" && esEmpresa && <CompanyRecruiters onCrear={() => setAjuste("crear-reclutador")} />}
           {ajuste === "crear-reclutador" && esEmpresa && <RecruiterForm onVerReclutadores={() => setAjuste("reclutadores")} />}
         </>

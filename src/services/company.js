@@ -11,7 +11,7 @@ const auth = (token) => ({ Authorization: `Bearer ${token}` });
 export const companyApi = createApi({
   reducerPath: "companyApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${API_KEY}` }),
-  tagTypes: ["MiEmpresa", "Empresas", "Reclutadores"],
+  tagTypes: ["MiEmpresa", "Empresas", "Reclutadores", "VacantesEmpresa", "PostulacionesEmpresa"],
   endpoints: (builder) => ({
     // Solo COMPANY_ADMIN: la empresa sale del JWT. La primera vez el back crea el perfil vacio
     getMyCompanyProfile: builder.query({
@@ -76,6 +76,27 @@ export const companyApi = createApi({
         headers: auth(token),
       }),
     }),
+    // --- Vacantes y postulaciones de toda la empresa (solo COMPANY_ADMIN) ---
+    // Se piden completas y se filtran en el front (asi salen los contadores por estado)
+    getCompanyJobs: builder.query({
+      query: ({ token }) => ({ url: "/company-admin/me/jobs", headers: auth(token) }),
+      providesTags: ["VacantesEmpresa"],
+    }),
+    // estado: PUBLICADA (reanudar), PAUSADA o CERRADA. Cerrar rechaza las postulaciones abiertas
+    changeCompanyJobStatus: builder.mutation({
+      query: ({ id, estado, token }) => ({
+        url: `/company-admin/me/jobs/${id}/status`,
+        method: "PATCH",
+        params: { estado },
+        headers: auth(token),
+      }),
+      invalidatesTags: (_res, error) => (error ? [] : ["VacantesEmpresa", "PostulacionesEmpresa"]),
+    }),
+    // Solo lectura: el estado de una postulacion lo cambia el reclutador
+    getCompanyApplications: builder.query({
+      query: ({ token }) => ({ url: "/company-admin/me/applications", headers: auth(token) }),
+      providesTags: ["PostulacionesEmpresa"],
+    }),
   }),
 });
 
@@ -88,4 +109,7 @@ export const {
   useCreateRecruiterMutation,
   useChangeRecruiterStatusMutation,
   useResetRecruiterPasswordMutation,
+  useGetCompanyJobsQuery,
+  useChangeCompanyJobStatusMutation,
+  useGetCompanyApplicationsQuery,
 } = companyApi;
