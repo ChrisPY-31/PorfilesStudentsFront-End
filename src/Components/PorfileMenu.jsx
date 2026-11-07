@@ -62,7 +62,8 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
 
     const handleMyProfile = () => {
         setTimeout(() => {
-            navigate(`/MyProfile/${userId}`);
+            // La cuenta de empresa no tiene perfil de persona: su perfil es la pagina de la empresa
+            navigate(tipo === "company_admin" ? "/MiEmpresa" : `/MyProfile/${userId}`);
         }, 100)
         setMyPorfile(true);
         setMenuProfile(false);
@@ -82,8 +83,12 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
         }, 100);
     }
 
+    // Admin = lo que diga el back (GET /manager 200), no "cualquier tipo desconocido":
+    // la cuenta de empresa (company_admin) tampoco es student/teacher/recruiter y no es admin
+    const esAdmin = !!data
     const esUsuario = tipo === "student" || tipo === "recruiter" || tipo === "teacher"
-    const ROLES = { student: "Estudiante", teacher: "Docente", recruiter: "Reclutador" }
+    const esEmpresa = tipo === "company_admin"
+    const ROLES = { student: "Estudiante", teacher: "Docente", recruiter: "Reclutador", company_admin: "Cuenta de empresa" }
 
     // Lleva a una pestaña de "Mi perfil" (2 proyectos, 3 recomendaciones)
     const irAPestana = (pestana) => {
@@ -98,24 +103,25 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                 <div className='flex items-center gap-3'>
                     <img
                         className='size-14 shrink-0 rounded-full object-cover'
-                        src={esUsuario
+                        src={!esAdmin
                             ? (user.imagen || 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true')
                             : LogoCU}
                         alt="foto de perfil"
                     />
                     <div className='min-w-0'>
                         <p className='font-semibold text-gray-900 truncate'>
-                            {esUsuario ? `${user.nombre} ${user.apellido}` : 'Centro Universitario Tianguistenco'}
+                            {!esAdmin ? `${user.nombre ?? ''} ${user.apellido ?? ''}` : 'Centro Universitario Tianguistenco'}
                         </p>
-                        {esUsuario && (
+                        {ROLES[tipo] && (
                             <span className='inline-block mt-0.5 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold'>
                                 {ROLES[tipo]}
                             </span>
                         )}
                         {user.carrera?.carrera && <p className='mt-1 text-xs text-gray-500 truncate'>{user.carrera.carrera}</p>}
+                        {esEmpresa && user.empresa?.nombreEmpresa && <p className='mt-1 text-xs text-gray-500 truncate'>{user.empresa.nombreEmpresa}</p>}
                     </div>
                 </div>
-                {esUsuario && (
+                {(esUsuario || esEmpresa) && (
                     <button
                         type='button'
                         onClick={handleMyProfile}
@@ -146,7 +152,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
 
             {/* Cuenta */}
             <div className='px-2 py-2 border-t border-gray-100'>
-                {!esUsuario && <Opcion icono={FiLock} onClick={handleAdmin}>Administrador</Opcion>}
+                {esAdmin && <Opcion icono={FiLock} onClick={handleAdmin}>Administrador</Opcion>}
                 <Opcion icono={FiSettings} onClick={handleInfoMenuUser}>Cuenta y seguridad</Opcion>
             </div>
 

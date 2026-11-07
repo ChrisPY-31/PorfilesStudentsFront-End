@@ -6,6 +6,7 @@ import { updatePersonApi } from "../services/updatePerson";
 import { recomendationStudent } from "../services/recomentationStudent";
 import { projectUserApi } from "../services/projectsUser";
 import { notificationsApi } from "../services/notifications";
+import { companyApi } from "../services/company";
 
 // Claves de la sesion guardadas en localStorage
 export const CLAVES_SESION = ["token", "username", "userLocked", "idPerson", "sesionInicio"];
@@ -38,6 +39,7 @@ const APIS = [
   recomendationStudent,
   projectUserApi,
   notificationsApi,
+  companyApi,
 ];
 
 // Borra todo lo que quedo en memoria de la sesion anterior (perfil, cache de peticiones).

@@ -19,6 +19,7 @@ import StudentRecruitmentForm from './Pages/StudentRecruitmentForm'
 import UserLockedMessage from './Components/UserLockedMessage'
 import Footer from './Components/Footer'
 import RutaAdmin from './Components/RutaAdmin'
+import CompanyProfile from './Pages/CompanyProfile'
 
 function App() {
   const location = useLocation();
@@ -74,6 +75,8 @@ function App() {
         <Route path='/Notificaciones' element={autenticate ? <Notifications /> : <Navigate to="/" />} />
         <Route path={`/Person/:id`} element={autenticate ? <PersonMenu /> : <Navigate to="/" />} />
         <Route path='/MyProfile/:id' element={autenticate ? <MyPorfile /> : <Navigate to="/" />} />
+        <Route path='/MiEmpresa' element={autenticate ? <CompanyProfile miEmpresa /> : <Navigate to="/" />} />
+        <Route path='/Empresa/:id' element={<CompanyProfile />} />
         <Route path='/Sign-In' element={<SignIn setAutenticate={setAutenticate} />} />
         <Route path='/Sign-Up' element={<SignUp setAutenticate={setAutenticate} />} />
         <Route path='/Manager' element={<RutaAdmin><Manager /></RutaAdmin>} />

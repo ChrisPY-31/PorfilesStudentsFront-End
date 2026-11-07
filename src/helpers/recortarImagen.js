@@ -21,19 +21,19 @@ const cargarImagen = (src) =>
   });
 
 // Recorta el area elegida en el Cropper (en pixeles de la imagen original),
-// la escala a un cuadrado de `tamano` px y la devuelve como JPEG comprimido
-export const recortarImagen = async (src, area, tamano = 512, calidad = 0.85) => {
+// la escala a `tamano` x `alto` px (cuadrado si no se da `alto`) y la devuelve como JPEG comprimido
+export const recortarImagen = async (src, area, tamano = 512, calidad = 0.85, alto = tamano) => {
   const imagen = await cargarImagen(src);
   const canvas = document.createElement("canvas");
   canvas.width = tamano;
-  canvas.height = tamano;
+  canvas.height = alto;
   const ctx = canvas.getContext("2d");
 
   // JPEG no tiene transparencia: un PNG transparente quedaria negro sin este fondo
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, tamano, tamano);
+  ctx.fillRect(0, 0, tamano, alto);
   ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(imagen, area.x, area.y, area.width, area.height, 0, 0, tamano, tamano);
+  ctx.drawImage(imagen, area.x, area.y, area.width, area.height, 0, 0, tamano, alto);
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", calidad));
   if (!blob) throw new Error("No se pudo procesar la imagen");
