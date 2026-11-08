@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { IoIosHome } from "react-icons/io";
 import { MdDashboard, MdLogout } from "react-icons/md";
@@ -21,9 +21,15 @@ const Manager = ({ usermenu }) => {
   const [autenticate, setAutenticate] = useState(false);
   const [managerMenu, setManagerMenu] = useState(2);
   // Ajustes de la cuenta (usermenu): "seguridad" para todos; "reclutadores" y "crear-reclutador" solo la cuenta de empresa
-  const [ajuste, setAjuste] = useState("seguridad");
   const { tipo } = useAppSelector(state => state.users);
   const esEmpresa = tipo === "company_admin";
+  // Se puede abrir una seccion directo con navigate(..., { state: { ajuste } }) (ej. accesos de la tarjeta de Inicio)
+  const location = useLocation();
+  const AJUSTES_EMPRESA = ["vacantes", "postulaciones", "reclutadores", "crear-reclutador"];
+  const ajusteInicial = location.state?.ajuste;
+  const [ajuste, setAjuste] = useState(
+    esEmpresa && AJUSTES_EMPRESA.includes(ajusteInicial) ? ajusteInicial : "seguridad"
+  );
   // Vacante elegida en "Ver postulaciones" para abrir esa seccion ya filtrada
   const [vacanteFiltro, setVacanteFiltro] = useState("");
   const irAPostulaciones = (idVacante = "") => {

@@ -112,7 +112,7 @@ const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, 
           )}
         </div>
       </div>
-      {menuFoto && <PhotoForm tipo={user?.tipo} onCancel={() => setMenuFoto(false)} />}
+      {menuFoto && <PhotoForm onCancel={() => setMenuFoto(false)} />}
     </section>
   )
 }

@@ -16,11 +16,11 @@ export const updatePersonApi = createApi({
       }),
     }),
     updateMyPhoto: builder.mutation({
-      query: ({ userId, formData, token, tipo }) => {
+      // El back identifica al dueno por el JWT (STUDENT, TEACHER o RECRUITER)
+      query: ({ formData, token }) => {
         return {
-          url: `/fileUsers/${userId}`,
+          url: `/person/me/image`,
           method: "PATCH",
-          params: { tipo },
           body: formData,
           headers: {
             Authorization: `Bearer ${token}`,

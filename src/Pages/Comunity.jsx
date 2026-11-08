@@ -6,6 +6,7 @@ import { useAppSelector } from "../Hooks/store";
 import { useEsAdmin } from "../Hooks/useEsAdmin";
 import CreatePost from "../Components/CreatePost";
 import StudentCard from "../Components/StudentCard";
+import CompanyHomeCard from "../Components/CompanyHomeCard";
 import { obtenerMensajeError } from "../helpers";
 import { IoLocationOutline, IoSchoolOutline, IoBookOutline } from "react-icons/io5";
 
@@ -14,7 +15,8 @@ const FOTO_DEFAULT = 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3
 const Comunity = () => {
 
   const [publicationMenu, setPublicationMenu] = useState(false);
-  const { user, userToken } = useAppSelector(state => state.users);
+  const { user, userToken, tipo } = useAppSelector(state => state.users);
+  const esEmpresa = tipo === "company_admin";
   const esAdmin = useEsAdmin();
   const { data, isLoading, error, refetch } = useGetPublicationsQuery({ token: userToken });
   const { data: teachers = [] } = useGetTeachersQuery();
@@ -30,8 +32,12 @@ const Comunity = () => {
     <div className="w-full max-w-[1400px] mx-auto mt-4 px-4">
       <div className="flex gap-5 items-start">
 
-        {/* Info del usuario (el admin no tiene perfil de persona) */}
-        {!esAdmin && <div className="hidden lg:block w-60 shrink-0 bg-white rounded-2xl shadow overflow-hidden">
+        {/* Info del usuario (el admin no tiene perfil de persona; la empresa muestra su perfil de empresa) */}
+        {esEmpresa ? (
+          <div className="hidden lg:block shrink-0">
+            <CompanyHomeCard />
+          </div>
+        ) : !esAdmin && <div className="hidden lg:block w-60 shrink-0 bg-white rounded-2xl shadow overflow-hidden">
           <div className="imagen__home h-16 bg-cover"></div>
           <div className="px-4 pb-4">
             <img

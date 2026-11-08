@@ -18,8 +18,8 @@ import { FORMATOS_IMAGEN, MAX_MB_IMAGEN, recortarImagen, validarImagen } from ".
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 3;
 
-const PhotoForm = ({ onCancel, tipo }) => {
-    const { userId, username, userToken } = useAppSelector(state => state.users);
+const PhotoForm = ({ onCancel }) => {
+    const { username, userToken } = useAppSelector(state => state.users);
     const { getUserByUsername } = useUserAccount();
     const [updateMyPhoto] = useUpdateMyPhotoMutation();
 
@@ -63,7 +63,7 @@ const PhotoForm = ({ onCancel, tipo }) => {
             const archivo = await recortarImagen(imagen, area);
             const formData = new FormData();
             formData.append("image", archivo);
-            await updateMyPhoto({ userId, formData, token: userToken, tipo }).unwrap();
+            await updateMyPhoto({ formData, token: userToken }).unwrap();
             toast.success("Foto actualizada con éxito");
             await getUserByUsername(username, userToken).catch(() => {});
             onCancel();
