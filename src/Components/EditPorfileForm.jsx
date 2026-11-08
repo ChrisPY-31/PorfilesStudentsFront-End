@@ -4,7 +4,7 @@ import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { IoCloseSharp } from "react-icons/io5";
 import { toast } from "sonner";
-import { useUpdateMyAccountMutation } from "../services/updatePerson";
+import { useUpdateMyAccountMutation, useUpdateMyRecruiterMutation } from "../services/updatePerson";
 import { useAppSelector } from "../Hooks/store";
 import { useUserAccount } from "../Hooks/useUserAccount";
 import { obtenerMensajeError } from "../helpers";
@@ -16,6 +16,7 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
     const [formErrors, setFormErrors] = useState({});
     const [tipoUsuario, setTipoUsuario] = useState(tipo);
     const [updateMyAccount, { isSuccess, error }] = useUpdateMyAccountMutation();
+    const [updateMyRecruiter] = useUpdateMyRecruiterMutation();
     const { getUserByUsername } = useUserAccount();
     const { userId, username, userToken } = useAppSelector(state => state.users)
     const { data: ubicaciones = [] } = useGetUbicationsQuery({ token: userToken });
@@ -52,6 +53,34 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
             setFormErrors({});
 
             const token = localStorage.getItem("token");
+
+            // El reclutador tiene su propio endpoint (PUT /recruiter/me) que reemplaza todo:
+            // se mandan todos los campos, ciudad se conserva porque no esta en el formulario
+            if (tipo === "recruiter") {
+                const vacioANull = (v) => (v ?? "").toString().trim() || null;
+                try {
+                    await updateMyRecruiter({
+                        token,
+                        datos: {
+                            nombre: values.nombre.trim(),
+                            apellido: values.apellidoPaterno.trim(),
+                            puesto: vacioANull(values.puesto),
+                            descripcion: vacioANull(values.descripcion),
+                            especialidad: vacioANull(values.especialidad),
+                            ciudad: user?.ciudad ?? null,
+                            idUbicacion: values.idUbicacion ? parseInt(values.idUbicacion) : null,
+                            fechaNacimiento: values.fechaNacimiento || null,
+                        },
+                    }).unwrap();
+                    toast.success("Perfil actualizado con exito");
+                    await getUserByUsername(username, userToken).catch(() => {});
+                    onClose();
+                } catch (errRecruiter) {
+                    toast.error(obtenerMensajeError(errRecruiter, "Error al actualizar"));
+                    setSubmitting(false);
+                }
+                return;
+            }
 
             // Campos comunes a student, teacher y recruiter
             const updatePerson = {
@@ -140,7 +169,7 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
             apellidoPaterno: user?.apellido ?? "",
             fechaNacimiento: user?.fechaNacimiento ?? "",
             especialidad: `${user.especialidad ? user.especialidad : ""}`,
-            linkCV: `${user?.curriculum ? user.curriculum : ''}`,
+            puesto: user?.posicion ?? "",
             idUbicacion: `${user?.ubicacion?.idUbicacion ?? user?.idUbicacion ?? ""}`,
             descripcion: `${user?.descripcion ? user.descripcion : ""}`,
         },
@@ -238,6 +267,8 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                                                         </div>
                                                     </div>
 
+                                                    {/* El reclutador no maneja CV */}
+                                                    {tipoUsuario !== "recruiter" && (
                                                     <div className="flex flex-col">
                                                         <div className="relative w-full h-12">
                                                             <Field
@@ -257,6 +288,7 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                                                             {formErrors.linkCV || " "}
                                                         </div>
                                                     </div>
+                                                    )}
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-3">
@@ -516,9 +548,24 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                                                 )}
 
                                                 {tipoUsuario === "recruiter" && (
-                                                    <div className="flex flex-col">
-                                                        <div className="w-full h-12 rounded-2xl px-4 flex items-center shadow-sm border-2 border-gray-200 bg-gray-50 text-gray-500">
-                                                            {user?.compania?.nombre ? `Empresa: ${user.compania.nombre}` : "Sin empresa asignada"}
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="flex flex-col">
+                                                            <div className="relative w-full h-12">
+                                                                <Field
+                                                                    type="text"
+                                                                    name="puesto"
+                                                                    placeholder=" "
+                                                                    maxLength={255}
+                                                                    className="peer w-full h-full rounded-2xl px-4 outline-none bg-white z-10 shadow-sm border-2 border-gray-300 focus:border-green-500 focus:ring-0"
+                                                                />
+                                                                <label className="absolute top-2 left-4 px-1 bg-white/95 text-slate-400 text-sm transition-all duration-200 z-0 pointer-events-none peer-focus:-translate-y-3 peer-focus:scale-90 peer-focus:left-3 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-green-600 peer-not-placeholder-shown:-translate-y-3 peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-semibold peer-not-placeholder-shown:text-slate-600">
+                                                                    Puesto
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        {/* La empresa la asigna la cuenta de empresa: solo lectura */}
+                                                        <div className="w-full h-12 rounded-2xl px-4 flex items-center shadow-sm border-2 border-gray-200 bg-gray-50 text-gray-500 text-sm truncate">
+                                                            {user?.empresaAsociada?.nombreEmpresa ? `Empresa: ${user.empresaAsociada.nombreEmpresa}` : "Sin empresa asignada"}
                                                         </div>
                                                     </div>
                                                 )}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { IoNotificationsOffOutline, IoCheckmarkDoneOutline } from 'react-icons/io5'
 import NotificationItem from '../Components/NotificationItem'
-import { useNotifications } from '../Hooks/useNotifications'
+import { Navigate } from 'react-router-dom'
+import { useNotifications, useTieneNotificaciones } from '../Hooks/useNotifications'
 import { obtenerMensajeError } from '../helpers'
 
 const DIA_MS = 24 * 60 * 60 * 1000
@@ -27,9 +28,13 @@ const agrupar = (lista) => {
 const Notifications = () => {
   const { notificaciones, noLeidas, isLoading, error, refetch, abrir, marcarTodas } = useNotifications()
   const [filtro, setFiltro] = useState('todas')
+  const tieneNotificaciones = useTieneNotificaciones()
 
   const visibles = filtro === 'noLeidas' ? noLeidas : notificaciones
   const grupos = agrupar(visibles)
+
+  // La cuenta de empresa no tiene notificaciones (ver useTieneNotificaciones)
+  if (!tieneNotificaciones) return <Navigate to='/Inicio' replace />
 
   return (
     <div className='w-full max-w-2xl mx-auto px-4 mt-8 pb-12'>

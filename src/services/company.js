@@ -11,7 +11,7 @@ const auth = (token) => ({ Authorization: `Bearer ${token}` });
 export const companyApi = createApi({
   reducerPath: "companyApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${API_KEY}` }),
-  tagTypes: ["MiEmpresa", "Empresas", "Reclutadores", "VacantesEmpresa", "PostulacionesEmpresa"],
+  tagTypes: ["MisDatosEmpresa", "MiEmpresa", "Empresas", "Reclutadores", "VacantesEmpresa", "PostulacionesEmpresa"],
   endpoints: (builder) => ({
     // Solo COMPANY_ADMIN: la empresa sale del JWT. La primera vez el back crea el perfil vacio
     getMyCompanyProfile: builder.query({
@@ -42,6 +42,22 @@ export const companyApi = createApi({
         headers: auth(token),
       }),
       invalidatesTags: (_res, error) => (error ? [] : ["MiEmpresa", "Empresas"]),
+    }),
+    // --- Datos de la persona encargada de la cuenta (solo COMPANY_ADMIN) ---
+    // CompanyAdminDto: PersonDto + { idCorporacion, puesto, username, email, cuentaActiva, empresa }
+    getMyCompanyAdmin: builder.query({
+      query: ({ token }) => ({ url: "/company-admin/me", headers: auth(token) }),
+      providesTags: ["MisDatosEmpresa"],
+    }),
+    // { nombre, apellido, puesto, descripcion }: reemplaza todo (puesto/descripcion null se borran)
+    updateMyCompanyAdmin: builder.mutation({
+      query: ({ datos, token }) => ({
+        url: "/company-admin/me",
+        method: "PUT",
+        body: datos,
+        headers: auth(token),
+      }),
+      invalidatesTags: (_res, error) => (error ? [] : ["MisDatosEmpresa"]),
     }),
     // --- Reclutadores de mi empresa (solo COMPANY_ADMIN) ---
     // RecruiterAccountDto: { id, idCorporacion, username, email, nombre, apellido, puesto, cuentaActiva }
@@ -105,6 +121,8 @@ export const {
   useGetCompanyProfileQuery,
   useUpdateMyCompanyProfileMutation,
   useUploadMyCompanyImageMutation,
+  useGetMyCompanyAdminQuery,
+  useUpdateMyCompanyAdminMutation,
   useGetMyRecruitersQuery,
   useCreateRecruiterMutation,
   useChangeRecruiterStatusMutation,

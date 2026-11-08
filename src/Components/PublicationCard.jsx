@@ -20,8 +20,13 @@ import { obtenerMensajeError, tiempoRelativo } from "../helpers";
 
 const FOTO_DEFAULT = 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true';
 
-const Avatar = ({ src, className = "size-10" }) => (
-    <img className={`${className} shrink-0 rounded-full object-cover`} src={src || FOTO_DEFAULT} alt="foto de perfil" />
+// Las empresas aparecen con su logo: cuadro redondeado y sin recortar (object-contain)
+const Avatar = ({ src, className = "size-10", empresa }) => (
+    <img
+        className={`${className} shrink-0 ${empresa ? "rounded-xl object-contain bg-white border border-gray-200" : "rounded-full object-cover"}`}
+        src={src || FOTO_DEFAULT}
+        alt={empresa ? "logo de la empresa" : "foto de perfil"}
+    />
 );
 
 const PublicationCard = ({ publicacion }) => {
@@ -133,7 +138,7 @@ const PublicationCard = ({ publicacion }) => {
             {/* Encabezado */}
             <div className="flex items-start justify-between gap-3 p-4 pb-0">
                 <div className="flex items-center gap-3 min-w-0">
-                    <Avatar src={persona?.imagen} className="size-12" />
+                    <Avatar src={persona?.imagen} className="size-12" empresa={persona?.tipo === "company_admin"} />
                     <div className="min-w-0">
                         <p className="font-semibold text-gray-900 truncate">{persona?.nombre} {persona?.apellido}</p>
                         <p className="text-xs text-gray-500 truncate">
@@ -281,7 +286,7 @@ const PublicationCard = ({ publicacion }) => {
                         const esMiComentario = c.id?.idPerson === userId;
                         return (
                             <div key={c.id?.idPerson} className="flex items-start gap-2">
-                                <Avatar src={c.persona?.imagen} className="size-8" />
+                                <Avatar src={c.persona?.imagen} className="size-8" empresa={c.persona?.tipo === "company_admin"} />
                                 <div className="flex-1 min-w-0">
                                     <div className={`px-3 py-2 rounded-2xl ${esMiComentario ? "bg-green-50" : "bg-gray-100"}`}>
                                         <p className="text-xs font-semibold text-gray-900">

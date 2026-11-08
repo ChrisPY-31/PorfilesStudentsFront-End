@@ -48,8 +48,8 @@ const ChangePassword = () => {
     };
 
     return (
-        <div className="w-full">
-            <div className="h-[90vh] bg-gradient-to-br bg-gray-100 flex items-center justify-center overflow-hidden">
+        <div className="w-full flex-1 flex flex-col">
+            <div className="flex-1 p-4 bg-gradient-to-br bg-gray-100 flex items-center justify-center">
                 <div className="w-full max-w-md mx-4">
                     <div className="bg-white py-8 px-6 shadow-2xl rounded-2xl border border-gray-100">
                         <div className="text-center mb-8">

@@ -111,7 +111,7 @@ const CompanyRecruiters = ({ onCrear }) => {
     };
 
     return (
-        <div className="flex-1 p-6 md:p-10 bg-gray-50 min-h-screen">
+        <div className="flex-1 p-6 md:p-10 bg-gray-50">
             <div className="max-w-5xl mx-auto">
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>

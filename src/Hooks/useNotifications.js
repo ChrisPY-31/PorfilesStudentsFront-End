@@ -8,12 +8,21 @@ import { obtenerMensajeError } from "../helpers";
 // por si la conexion falla (p. ej. el CORS del WebSocket solo acepta localhost:5173)
 const INTERVALO_RESPALDO_MS = 120000;
 
+// TEMPORAL: la cuenta de empresa no tiene notificaciones en el back (/notifications responde 500),
+// asi que no se pide nada, no se abre el WebSocket y no se muestra la campana
+const SIN_NOTIFICACIONES = ["company_admin"];
+export const useTieneNotificaciones = () => {
+  const tipo = useAppSelector(state => state.users.tipo);
+  return !SIN_NOTIFICACIONES.includes(tipo);
+};
+
 export const useNotifications = () => {
   const navigate = useNavigate();
   const { userId, userToken } = useAppSelector(state => state.users);
+  const tieneNotificaciones = useTieneNotificaciones();
   const args = { personId: userId, token: userToken };
   const { data: notificaciones = [], isLoading, error, refetch } = useGetNotificationsQuery(args, {
-    skip: !userId || !userToken,
+    skip: !userId || !userToken || !tieneNotificaciones,
     pollingInterval: INTERVALO_RESPALDO_MS,
   });
   const [marcar] = useMarkNotificationReadMutation();

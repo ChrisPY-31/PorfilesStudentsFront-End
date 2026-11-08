@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { IoIosHome } from "react-icons/io";
 import { MdDashboard, MdLogout } from "react-icons/md";
-import { FaUsers, FaUserPlus, FaUser, FaGraduationCap, FaLock, FaUserTie, FaBriefcase, FaFileAlt } from "react-icons/fa";
+import { FaUsers, FaUserPlus, FaUser, FaGraduationCap, FaLock, FaUserTie, FaBriefcase, FaFileAlt, FaIdCard, FaPlusCircle, FaComments } from "react-icons/fa";
 import ManagerDashboard from "../Components/ManagerDashboard";
 import ManagerCreateUser from "../Components/ManagerCreateUser";
 import ManagerUsers from "../Components/ManagerUsers";
@@ -16,25 +16,51 @@ import CompanyRecruiters from "../Components/CompanyRecruiters";
 import RecruiterForm from "../Components/RecruiterForm";
 import CompanyJobs from "../Components/CompanyJobs";
 import CompanyApplications from "../Components/CompanyApplications";
+import CompanyAdminForm from "../Components/CompanyAdminForm";
+import SeccionEnConstruccion from "../Components/SeccionEnConstruccion";
+import RecruiterJobs from "../Components/RecruiterJobs";
+import RecruiterJobForm from "../Components/RecruiterJobForm";
 
 const Manager = ({ usermenu }) => {
   const [autenticate, setAutenticate] = useState(false);
   const [managerMenu, setManagerMenu] = useState(2);
-  // Ajustes de la cuenta (usermenu): "seguridad" para todos; "reclutadores" y "crear-reclutador" solo la cuenta de empresa
+  // Ajustes de la cuenta (usermenu): "seguridad" para todos; el resto depende del rol
   const { tipo } = useAppSelector(state => state.users);
   const esEmpresa = tipo === "company_admin";
-  // Se puede abrir una seccion directo con navigate(..., { state: { ajuste } }) (ej. accesos de la tarjeta de Inicio)
+  const esReclutador = tipo === "recruiter";
+  // Se puede abrir una seccion directo con navigate(..., { state: { ajuste } }) (ej. tarjeta de Inicio, boton Empleos)
   const location = useLocation();
-  const AJUSTES_EMPRESA = ["vacantes", "postulaciones", "reclutadores", "crear-reclutador"];
-  const ajusteInicial = location.state?.ajuste;
-  const [ajuste, setAjuste] = useState(
-    esEmpresa && AJUSTES_EMPRESA.includes(ajusteInicial) ? ajusteInicial : "seguridad"
-  );
+  const AJUSTES_EMPRESA = ["mis-datos", "vacantes", "postulaciones", "reclutadores", "crear-reclutador"];
+  const AJUSTES_RECLUTADOR = ["mis-vacantes", "nueva-vacante", "postulantes", "mensajes"];
+  const ajustesDelRol = esEmpresa ? AJUSTES_EMPRESA : esReclutador ? AJUSTES_RECLUTADOR : [];
+  const ajustePedido = location.state?.ajuste;
+  const [ajuste, setAjuste] = useState(ajustesDelRol.includes(ajustePedido) ? ajustePedido : "seguridad");
+  // Si ya se esta en Ajustes y se vuelve a pedir una seccion (ej. clic en Empleos), se cambia a esa
+  useEffect(() => {
+    if (ajustesDelRol.includes(ajustePedido)) {
+      setAjuste(ajustePedido);
+      // Desde el menu de perfil "Publicar vacante" siempre abre una vacante nueva
+      if (ajustePedido === "nueva-vacante") setVacanteEnEdicion(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
   // Vacante elegida en "Ver postulaciones" para abrir esa seccion ya filtrada
   const [vacanteFiltro, setVacanteFiltro] = useState("");
   const irAPostulaciones = (idVacante = "") => {
     setVacanteFiltro(idVacante);
     setAjuste("postulaciones");
+  };
+
+  // Reclutador: vacante que se abre en el formulario ("Editar") y la que filtra "Postulantes"
+  const [vacanteEnEdicion, setVacanteEnEdicion] = useState(null);
+  const [vacantePostulantes, setVacantePostulantes] = useState("");
+  const irANuevaVacante = (vacante = null) => {
+    setVacanteEnEdicion(vacante);
+    setAjuste("nueva-vacante");
+  };
+  const irAPostulantes = (idVacante = "") => {
+    setVacantePostulantes(idVacante);
+    setAjuste("postulantes");
   };
 
   const navigate = useNavigate();
@@ -53,9 +79,11 @@ const Manager = ({ usermenu }) => {
   }
 
   return (
-    <div className="flex min-h-screen">
+    // Ocupa exactamente la pantalla: en Ajustes (usermenu) se resta la barra de navegacion (h-16 + 1px de borde).
+    // El menu lateral queda fijo y solo el contenido hace scroll
+    <div className={`flex overflow-hidden ${usermenu ? "h-[calc(100dvh-4rem-1px)]" : "h-dvh"}`}>
 
-      <div className="w-64 shadow-xl text-black p-5 flex flex-col justify-between fix border-gray-100 border-2">
+      <div className="w-64 shrink-0 overflow-y-auto shadow-xl text-black p-5 flex flex-col justify-between border-gray-100 border-2">
         <div>
           <h2 className="text-xl font-bold mb-4">{!usermenu ? "Administrador" : "Ajustes"}</h2>
           <ul className="space-y-3" >
@@ -116,6 +144,15 @@ const Manager = ({ usermenu }) => {
                 </li>
                 {esEmpresa && (
                   <li
+                    className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "mis-datos" ? "bg-green-100 font-semibold" : ""}`}
+                    onClick={() => setAjuste("mis-datos")}
+                  >
+                    <FaIdCard className="mr-2 mt-1 text-lg" />
+                    Mis datos
+                  </li>
+                )}
+                {esEmpresa && (
+                  <li
                     className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "vacantes" ? "bg-green-100 font-semibold" : ""}`}
                     onClick={() => setAjuste("vacantes")}
                   >
@@ -150,6 +187,42 @@ const Manager = ({ usermenu }) => {
                     Crear cuenta
                   </li>
                 )}
+                {esReclutador && (
+                  <li
+                    className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "mis-vacantes" ? "bg-green-100 font-semibold" : ""}`}
+                    onClick={() => setAjuste("mis-vacantes")}
+                  >
+                    <FaBriefcase className="mr-2 mt-1 text-lg" />
+                    Mis vacantes
+                  </li>
+                )}
+                {esReclutador && (
+                  <li
+                    className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "nueva-vacante" ? "bg-green-100 font-semibold" : ""}`}
+                    onClick={() => irANuevaVacante()}
+                  >
+                    <FaPlusCircle className="mr-2 mt-1 text-lg" />
+                    Publicar vacante
+                  </li>
+                )}
+                {esReclutador && (
+                  <li
+                    className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "postulantes" ? "bg-green-100 font-semibold" : ""}`}
+                    onClick={() => irAPostulantes()}
+                  >
+                    <FaUsers className="mr-2 mt-1 text-lg" />
+                    Postulantes
+                  </li>
+                )}
+                {esReclutador && (
+                  <li
+                    className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "mensajes" ? "bg-green-100 font-semibold" : ""}`}
+                    onClick={() => setAjuste("mensajes")}
+                  >
+                    <FaComments className="mr-2 mt-1 text-lg" />
+                    Mensajes
+                  </li>
+                )}
               </>
             )}
           </ul>
@@ -178,13 +251,38 @@ const Manager = ({ usermenu }) => {
         </div>
       </div>
 
+      <div className="flex-1 min-w-0 overflow-y-auto bg-gray-50 flex flex-col">
       {usermenu ? (
         <>
           {ajuste === "seguridad" && <ChangePassword />}
+          {ajuste === "mis-datos" && esEmpresa && <CompanyAdminForm />}
           {ajuste === "vacantes" && esEmpresa && <CompanyJobs onVerPostulaciones={irAPostulaciones} />}
           {ajuste === "postulaciones" && esEmpresa && <CompanyApplications key={vacanteFiltro} vacanteInicial={vacanteFiltro} />}
           {ajuste === "reclutadores" && esEmpresa && <CompanyRecruiters onCrear={() => setAjuste("crear-reclutador")} />}
           {ajuste === "crear-reclutador" && esEmpresa && <RecruiterForm onVerReclutadores={() => setAjuste("reclutadores")} />}
+          {/* Reclutador: secciones que se van llenando por fases */}
+          {ajuste === "mis-vacantes" && esReclutador && <RecruiterJobs
+            onCrear={() => irANuevaVacante()}
+            onEditar={(vacante) => irANuevaVacante(vacante)}
+            onVerPostulantes={irAPostulantes}
+          />}
+          {ajuste === "nueva-vacante" && esReclutador && <RecruiterJobForm
+            key={vacanteEnEdicion?.idVacante ?? "nueva"}
+            vacante={vacanteEnEdicion}
+            onTerminar={() => { setVacanteEnEdicion(null); setAjuste("mis-vacantes"); }}
+          />}
+            descripcion="Aquí crearás una vacante de empleo, servicio social, integrativa o práctica profesional, eligiendo las carreras que pueden postularse."
+          />}
+          {ajuste === "postulantes" && esReclutador && <SeccionEnConstruccion
+            titulo="Postulantes"
+            icono={<FaUsers />}
+            descripcion="Aquí revisarás a los estudiantes que se postularon a tus vacantes, su CV y su perfil, y avanzarás o rechazarás cada postulación."
+          />}
+          {ajuste === "mensajes" && esReclutador && <SeccionEnConstruccion
+            titulo="Mensajes"
+            icono={<FaComments />}
+            descripcion="Aquí tendrás tus conversaciones con los postulantes, en tiempo real."
+          />}
         </>
       ) : (
         <>
@@ -195,6 +293,7 @@ const Manager = ({ usermenu }) => {
           {managerMenu === 5 && <ManagerCareers />}
         </>
       )}
+      </div>
 
     </div>
   );

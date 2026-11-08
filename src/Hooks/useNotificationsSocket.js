@@ -4,6 +4,7 @@ import SockJS from "sockjs-client";
 import { useAppDispatch, useAppSelector } from "./store";
 import { notificationsApi } from "../services/notifications";
 import { WS_URL } from "../api/api";
+import { useTieneNotificaciones } from "./useNotifications";
 
 /**
  * Escucha las notificaciones en tiempo real (STOMP sobre SockJS).
@@ -13,12 +14,13 @@ import { WS_URL } from "../api/api";
 export const useNotificationsSocket = (onNueva) => {
   const dispatch = useAppDispatch();
   const { userId, userToken } = useAppSelector(state => state.users);
+  const tieneNotificaciones = useTieneNotificaciones();
   // Ref para no reconectar cada vez que cambia el callback
   const onNuevaRef = useRef(onNueva);
   onNuevaRef.current = onNueva;
 
   useEffect(() => {
-    if (!userId || !userToken) return;
+    if (!userId || !userToken || !tieneNotificaciones) return;
 
     const client = new Client({
       webSocketFactory: () => new SockJS(WS_URL),
@@ -51,5 +53,5 @@ export const useNotificationsSocket = (onNueva) => {
     return () => {
       client.deactivate();
     };
-  }, [userId, userToken, dispatch]);
+  }, [userId, userToken, tieneNotificaciones, dispatch]);
 };

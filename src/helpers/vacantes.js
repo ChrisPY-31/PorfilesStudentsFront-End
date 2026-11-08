@@ -49,3 +49,24 @@ export const formatearSalario = (min, max) => {
   if (max) return `Hasta ${pesos(max)}`;
   return null;
 };
+
+// Fecha de hoy en formato yyyy-MM-dd (hora local), para comparar con fechaCierre
+export const hoyISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+// Lo que el back exige para publicar o reanudar (PostJobServiceImpl.validateComplete / validateCanPublish):
+// descripcion, jornada, modalidad, tipo y una fecha de cierre que no haya pasado. Regresa lo que falta
+export const faltantesParaPublicar = (v) => {
+  const faltan = [];
+  if (!v.descripcion?.trim()) faltan.push("descripción");
+  if (!v.jornada) faltan.push("jornada");
+  if (!v.modalidad) faltan.push("modalidad");
+  if (!v.tipo) faltan.push("tipo");
+  if (v.fechaCierre && v.fechaCierre.slice(0, 10) < hoyISO()) faltan.push("una fecha de cierre que no haya pasado");
+  return faltan;
+};
+
+// Maximo de tecnologias por vacante (PostJobServiceImpl.MAX_TECHNOLOGIES)
+export const MAX_TECNOLOGIAS_VACANTE = 15;

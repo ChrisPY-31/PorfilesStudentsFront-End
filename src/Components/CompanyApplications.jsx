@@ -39,7 +39,7 @@ const CompanyApplications = ({ vacanteInicial = "" }) => {
     const limpiar = () => { setBusqueda(""); setEstado(""); setVacante(""); };
 
     return (
-        <div className="flex-1 p-6 md:p-10 bg-gray-50 min-h-screen">
+        <div className="flex-1 p-6 md:p-10 bg-gray-50">
             <div className="max-w-5xl mx-auto">
                 <h1 className="font-display text-2xl font-bold text-gray-900">Postulaciones</h1>
                 <p className="mt-1 text-sm text-gray-500">Los estudiantes que se han postulado a las vacantes de tu empresa.</p>

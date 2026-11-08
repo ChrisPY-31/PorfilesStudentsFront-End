@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { SlPencil } from 'react-icons/sl'
-import { IoCameraOutline, IoSchoolOutline, IoBookOutline, IoLocationOutline, IoGlobeOutline, IoRibbonOutline, IoBusinessOutline } from 'react-icons/io5'
+import { IoCameraOutline, IoSchoolOutline, IoBookOutline, IoLocationOutline, IoGlobeOutline, IoRibbonOutline, IoBusinessOutline, IoBriefcaseOutline, IoChevronForward } from 'react-icons/io5'
 import PhotoForm from './PhotoForm'
 import { etiquetaGradoAcademico } from '../helpers'
 
@@ -10,6 +11,10 @@ const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, 
   const esProfesor = user?.tipo === 'teacher'
   const gradoAcademico = esProfesor && user?.gradoAcademico ? etiquetaGradoAcademico(user.gradoAcademico) : null
   const departamento = esProfesor ? user?.departamento?.trim() : null
+  // Reclutador: puesto y la empresa a la que pertenece (enlace a su pagina publica)
+  const esReclutador = user?.tipo === 'recruiter'
+  const puesto = esReclutador ? user?.posicion?.trim() : null
+  const empresa = esReclutador ? user?.empresaAsociada : null
 
   let renderWeb = contactos?.filter(contacto => {
     return contacto.contactos.red === "WEB"
@@ -63,10 +68,30 @@ const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, 
             )}
           </div>
           {especialidad && <p className='mt-1 text-gray-700'>{especialidad}</p>}
+          {empresa?.idCorporacion && (
+            <Link
+              to={`/Empresa/${empresa.idCorporacion}`}
+              className='mt-3 inline-flex items-center gap-3 pl-1.5 pr-3 py-1.5 rounded-xl border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-colors'
+            >
+              <span className='size-9 shrink-0 rounded-lg bg-white border border-gray-200 overflow-hidden flex items-center justify-center text-gray-400'>
+                {empresa.logo
+                  ? <img src={empresa.logo} alt={`Logo de ${empresa.nombreEmpresa}`} className='size-full object-contain' />
+                  : <IoBusinessOutline className='size-5' />}
+              </span>
+              <span className='text-left leading-tight'>
+                <span className='block text-sm font-semibold text-gray-900'>{empresa.nombreEmpresa}</span>
+                {empresa.categoria && <span className='block text-xs text-gray-500'>{empresa.categoria}</span>}
+              </span>
+              <IoChevronForward className='size-4 text-gray-400' />
+            </Link>
+          )}
         </div>
 
         {/* Datos */}
         <div className='mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500'>
+          {puesto && (
+            <span className='flex items-center gap-1.5'><IoBriefcaseOutline className='size-4' /> {puesto}</span>
+          )}
           {departamento && (
             <span className='flex items-center gap-1.5'><IoBusinessOutline className='size-4' /> {departamento}</span>
           )}

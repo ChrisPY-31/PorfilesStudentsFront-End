@@ -3,6 +3,8 @@ import { IoCloseSharp, IoImageOutline, IoHappyOutline, IoTrashOutline } from 're
 import { toast } from 'sonner';
 import { useCreatePublicationMutation, useUploadPublicationImageMutation } from '../services/publication';
 import { useAppSelector } from '../Hooks/store';
+import { useGetMyCompanyProfileQuery } from '../services/company';
+import EmpresaAvatar from './EmpresaAvatar';
 import { obtenerMensajeError } from '../helpers';
 import { FORMATOS_IMAGEN, MAX_MB_IMAGEN, comprimirImagen, validarImagen } from '../helpers/recortarImagen';
 
@@ -14,6 +16,10 @@ const obtenerIdCreado = (respuesta) => respuesta?.id ?? respuesta?.object?.id;
 
 const CreatePost = ({ imagen, onClose }) => {
     const { user, userId, userToken } = useAppSelector(state => state.users);
+    // La cuenta de empresa publica como la empresa (asi sale en el feed): logo y nombre de la empresa
+    const esEmpresa = useAppSelector(state => state.users.tipo) === 'company_admin';
+    const { data: empresa } = useGetMyCompanyProfileQuery({ token: userToken }, { skip: !esEmpresa || !userToken });
+    const nombreAutor = esEmpresa ? (empresa?.nombreEmpresa ?? '') : `${user?.nombre ?? ''} ${user?.apellido ?? ''}`;
     const [createPublication] = useCreatePublicationMutation();
     const [uploadPublicationImage] = useUploadPublicationImageMutation();
 
@@ -117,9 +123,11 @@ const CreatePost = ({ imagen, onClose }) => {
                 {/* Encabezado */}
                 <div className="flex items-center justify-between gap-4 px-6 pt-5 pb-4 border-b border-gray-100">
                     <div className="flex items-center gap-3">
-                        <img className="size-11 rounded-full object-cover" src={imagen || FOTO_DEFAULT} alt="foto de perfil" />
+                        {esEmpresa
+                            ? <EmpresaAvatar className="size-11 rounded-xl" icono="size-6" />
+                            : <img className="size-11 rounded-full object-cover" src={imagen || FOTO_DEFAULT} alt="foto de perfil" />}
                         <div>
-                            <p className="font-semibold text-gray-900">{user?.nombre} {user?.apellido}</p>
+                            <p className="font-semibold text-gray-900">{nombreAutor}</p>
                             <p className="text-xs text-green-600 font-medium">Publicar en la comunidad</p>
                         </div>
                     </div>

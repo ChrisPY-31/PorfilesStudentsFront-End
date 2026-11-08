@@ -7,6 +7,7 @@ import { useEsAdmin } from "../Hooks/useEsAdmin";
 import CreatePost from "../Components/CreatePost";
 import StudentCard from "../Components/StudentCard";
 import CompanyHomeCard from "../Components/CompanyHomeCard";
+import EmpresaAvatar from "../Components/EmpresaAvatar";
 import { obtenerMensajeError } from "../helpers";
 import { IoLocationOutline, IoSchoolOutline, IoBookOutline } from "react-icons/io5";
 
@@ -78,11 +79,14 @@ const Comunity = () => {
 
           {/* Crear publicación (el back aun no deja publicar al admin: no tiene perfil de persona) */}
           {!esAdmin && <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow">
-            <img
+            {/* La empresa publica como la empresa: su logo en lugar de la foto */}
+            {esEmpresa ? (
+              <EmpresaAvatar className="size-12 rounded-xl" icono="size-6" />
+            ) : <img
               className="size-12 shrink-0 rounded-full object-cover"
               src={user?.imagen || FOTO_DEFAULT}
               alt="foto de perfil"
-            />
+            />}
             <button
               type="button"
               onClick={() => setPublicationMenu(true)}

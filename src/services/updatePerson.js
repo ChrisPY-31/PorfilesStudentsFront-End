@@ -15,6 +15,18 @@ export const updatePersonApi = createApi({
         },
       }),
     }),
+    // Reclutador: PUT /recruiter/me (el dueno sale del JWT). Reemplaza todos los campos:
+    // { nombre, apellido, puesto, descripcion, especialidad, ciudad, idUbicacion, fechaNacimiento }
+    updateMyRecruiter: builder.mutation({
+      query: ({ datos, token }) => ({
+        url: `/recruiter/me`,
+        method: "PUT",
+        body: datos,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
     updateMyPhoto: builder.mutation({
       // El back identifica al dueno por el JWT (STUDENT, TEACHER o RECRUITER)
       query: ({ formData, token }) => {
@@ -31,5 +43,5 @@ export const updatePersonApi = createApi({
   }),
 });
 
-export const { useUpdateMyAccountMutation, useUpdateMyPhotoMutation } =
+export const { useUpdateMyAccountMutation, useUpdateMyRecruiterMutation, useUpdateMyPhotoMutation } =
   updatePersonApi;

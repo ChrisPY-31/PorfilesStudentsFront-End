@@ -85,7 +85,7 @@ const RecruiterForm = ({ onVerReclutadores }) => {
     };
 
     return (
-        <div className="flex-1 p-6 md:p-10 bg-gray-50 min-h-screen">
+        <div className="flex-1 p-6 md:p-10 bg-gray-50">
             <div className="max-w-2xl mx-auto">
                 <h1 className="font-display text-2xl font-bold text-gray-900">Crear cuenta de reclutador</h1>
                 <p className="mt-1 text-sm text-gray-500">

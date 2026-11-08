@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FiFolder, FiUsers, FiLock, FiAward, FiBriefcase, FiSettings, FiLogOut } from "react-icons/fi";
+import { FiFolder, FiUsers, FiLock, FiAward, FiBriefcase, FiSettings, FiLogOut, FiPlusCircle, FiMessageSquare } from "react-icons/fi";
 import { toast } from 'sonner';
 import { useAppSelector } from '../Hooks/store';
 import { useGetloginAdminQuery } from '../services/autenticateUser';
 import { userAccountSlice } from '../store/UserAccount/userAccountSlice';
 import { useUserAccount } from '../Hooks/useUserAccount';
 import LogoCU from '../assets/LogoCUTianguistenco.jpg';
+import EmpresaAvatar from './EmpresaAvatar';
 import Manager from '../Pages/Manager';
 // Opcion del menu; `proximamente` la muestra deshabilitada
 const Opcion = ({ icono: Icono, children, onClick, proximamente, peligro }) => (
@@ -69,13 +70,6 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
         setMenuProfile(false);
     }
 
-    const handleRecruitment = () => {
-        setMenuProfile(false); // Cierra el menú al navegar
-        setTimeout(() => {
-            navigate('/StudentRecruitment/');
-        }, 100);
-    }
-
     const handleInfoMenuUser = () => {
         setMenuProfile(false); // Cierra el menú al navegar
         setTimeout(() => {
@@ -90,6 +84,12 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
     const esEmpresa = tipo === "company_admin"
     const ROLES = { student: "Estudiante", teacher: "Docente", recruiter: "Reclutador", company_admin: "Cuenta de empresa" }
 
+    // Abre una seccion de Cuenta y seguridad (Manager lee state.ajuste)
+    const irAAjuste = (ajuste) => {
+        setMenuProfile(false)
+        navigate("/sing-in-and-security", { state: { ajuste } })
+    }
+
     // Lleva a una pestaña de "Mi perfil" (2 proyectos, 3 recomendaciones)
     const irAPestana = (pestana) => {
         setMenuProfile(false)
@@ -101,13 +101,13 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
             {/* Encabezado */}
             <div className='p-4'>
                 <div className='flex items-center gap-3'>
-                    <img
+                    {esEmpresa ? <EmpresaAvatar className='size-14 rounded-xl' icono='size-7' /> : <img
                         className='size-14 shrink-0 rounded-full object-cover'
                         src={!esAdmin
                             ? (user.imagen || 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true')
                             : LogoCU}
                         alt="foto de perfil"
-                    />
+                    />}
                     <div className='min-w-0'>
                         <p className='font-semibold text-gray-900 truncate'>
                             {!esAdmin ? `${user.nombre ?? ''} ${user.apellido ?? ''}` : 'Centro Universitario Tianguistenco'}
@@ -143,9 +143,12 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                     {tipo === "teacher" &&
                         <Opcion icono={FiAward} onClick={() => irAPestana(3)}>Mis recomendaciones</Opcion>
                     }
+                    {/* Abren su seccion en Cuenta y seguridad */}
                     {tipo === "recruiter" && <>
-                        <Opcion icono={FiUsers} onClick={handleRecruitment}>Contratar estudiante</Opcion>
-                        <Opcion icono={FiBriefcase} proximamente>Publicar empleo</Opcion>
+                        <Opcion icono={FiBriefcase} onClick={() => irAAjuste("mis-vacantes")}>Mis vacantes</Opcion>
+                        <Opcion icono={FiPlusCircle} onClick={() => irAAjuste("nueva-vacante")}>Publicar vacante</Opcion>
+                        <Opcion icono={FiUsers} onClick={() => irAAjuste("postulantes")}>Postulantes</Opcion>
+                        <Opcion icono={FiMessageSquare} onClick={() => irAAjuste("mensajes")}>Mensajes</Opcion>
                     </>}
                 </div>
             )}
