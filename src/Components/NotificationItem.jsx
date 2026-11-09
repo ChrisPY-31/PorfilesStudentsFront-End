@@ -1,11 +1,13 @@
 import React from 'react'
-import { IoRibbonOutline, IoCodeSlashOutline, IoNotificationsOutline } from 'react-icons/io5'
+import { IoRibbonOutline, IoCodeSlashOutline, IoNotificationsOutline, IoPersonAddOutline, IoBriefcaseOutline } from 'react-icons/io5'
 import { tiempoRelativo } from '../helpers'
 
 // Icono y color por tipo; los tipos que no conocemos usan la campana
 const ESTILOS = {
   RECOMMENDATION: { icon: IoRibbonOutline, clase: 'bg-green-100 text-green-700', etiqueta: 'Recomendación' },
   PROJECT_MENTION: { icon: IoCodeSlashOutline, clase: 'bg-blue-100 text-blue-700', etiqueta: 'Mención en proyecto' },
+  JOB_APPLICATION_RECEIVED: { icon: IoPersonAddOutline, clase: 'bg-amber-100 text-amber-700', etiqueta: 'Nueva postulación' },
+  JOB_APPLICATION_STATUS: { icon: IoBriefcaseOutline, clase: 'bg-purple-100 text-purple-700', etiqueta: 'Tu postulación' },
 }
 const ESTILO_DEFAULT = { icon: IoNotificationsOutline, clase: 'bg-gray-100 text-gray-600', etiqueta: 'Aviso' }
 

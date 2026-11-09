@@ -7,6 +7,7 @@ import { useEsAdmin } from "../Hooks/useEsAdmin";
 import CreatePost from "../Components/CreatePost";
 import StudentCard from "../Components/StudentCard";
 import CompanyHomeCard from "../Components/CompanyHomeCard";
+import RecruiterHomeCard from "../Components/RecruiterHomeCard";
 import EmpresaAvatar from "../Components/EmpresaAvatar";
 import { obtenerMensajeError } from "../helpers";
 import { IoLocationOutline, IoSchoolOutline, IoBookOutline } from "react-icons/io5";
@@ -37,6 +38,10 @@ const Comunity = () => {
         {esEmpresa ? (
           <div className="hidden lg:block shrink-0">
             <CompanyHomeCard />
+          </div>
+        ) : tipo === "recruiter" ? (
+          <div className="hidden lg:block shrink-0">
+            <RecruiterHomeCard />
           </div>
         ) : !esAdmin && <div className="hidden lg:block w-60 shrink-0 bg-white rounded-2xl shadow overflow-hidden">
           <div className="imagen__home h-16 bg-cover"></div>

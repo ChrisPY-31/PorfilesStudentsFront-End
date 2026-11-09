@@ -46,6 +46,9 @@ export const useNotifications = () => {
     } else if (notificacion.type === "PROJECT_MENTION") {
       // referenceId = id del proyecto; es de otro estudiante, asi que se muestra en la pagina de proyectos
       navigate("/Projects", { state: { proyecto: notificacion.referenceId } });
+    } else if (notificacion.type === "JOB_APPLICATION_RECEIVED") {
+      // Reclutador: referenceId = id de la vacante; abre Postulantes en Cuenta y seguridad con esa vacante
+      navigate("/sing-in-and-security", { state: { ajuste: "postulantes", idVacante: notificacion.referenceId } });
     }
   };
 

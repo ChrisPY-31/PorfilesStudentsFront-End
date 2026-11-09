@@ -10,6 +10,7 @@ import { PersonMenu } from './Pages/PersonMenu'
 import AllProjects from './Pages/AllProjects'
 import Notifications from './Pages/Notifications'
 import Manager from './Pages/Manager'
+import Jobs from './Pages/Jobs'
 import { useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
 import { useUserAccount } from './Hooks/useUserAccount'
@@ -75,6 +76,7 @@ function App() {
         <Route path='/Notificaciones' element={autenticate ? <Notifications /> : <Navigate to="/" />} />
         <Route path={`/Person/:id`} element={autenticate ? <PersonMenu /> : <Navigate to="/" />} />
         <Route path='/MyProfile/:id' element={autenticate ? <MyPorfile /> : <Navigate to="/" />} />
+        <Route path='/Empleos' element={autenticate ? <Jobs /> : <Navigate to="/" />} />
         <Route path='/MiEmpresa' element={autenticate ? <CompanyProfile miEmpresa /> : <Navigate to="/" />} />
         <Route path='/Empresa/:id' element={<CompanyProfile />} />
         <Route path='/Sign-In' element={<SignIn setAutenticate={setAutenticate} />} />

@@ -1,5 +1,6 @@
 import React from "react";
-import { IoLocationOutline, IoTimeOutline, IoCashOutline, IoCalendarOutline, IoLaptopOutline } from "react-icons/io5";
+import { Link } from "react-router-dom";
+import { IoLocationOutline, IoTimeOutline, IoCashOutline, IoCalendarOutline, IoLaptopOutline, IoBusinessOutline } from "react-icons/io5";
 import { ESTADOS_VACANTE, TIPOS_VACANTE, MODALIDADES, JORNADAS, formatearSalario } from "../helpers/vacantes";
 import { formatearFechaCorta } from "../helpers";
 
@@ -18,22 +19,40 @@ const Detalle = ({ icono: Icono, children }) => (
 );
 
 // Tarjeta de vacante. `acciones` va abajo a la derecha (botones segun quien la ve);
-// `mostrarReclutador` para la vista de la empresa, donde hay varios reclutadores
-const JobCard = ({ vacante, acciones, mostrarReclutador = false }) => {
+// `mostrarReclutador` para la vista de la empresa, donde hay varios reclutadores;
+// `mostrarEmpresa` para la lista publica de empleos (logo y nombre con enlace a su pagina);
+// `ocultarEstado` donde todas estan publicadas
+const JobCard = ({ vacante, acciones, mostrarReclutador = false, mostrarEmpresa = false, ocultarEstado = false }) => {
     const salario = formatearSalario(vacante.salarioMin, vacante.salarioMax);
     const reclutador = vacante.reclutador;
 
     return (
         <article className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-sm transition-shadow">
             <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
+                {mostrarEmpresa && vacante.empresa && (
+                    <Link
+                        to={`/Empresa/${vacante.empresa.idCorporacion}`}
+                        aria-label={`Ver la empresa ${vacante.empresa.nombreEmpresa}`}
+                        className="size-12 shrink-0 rounded-xl border border-gray-200 bg-white overflow-hidden flex items-center justify-center text-gray-400"
+                    >
+                        {vacante.empresa.logo
+                            ? <img src={vacante.empresa.logo} alt="" className="size-full object-contain" />
+                            : <IoBusinessOutline className="size-6" />}
+                    </Link>
+                )}
+                <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                         {vacante.tipo && (
                             <span className="text-xs font-semibold uppercase tracking-wide text-green-700">{TIPOS_VACANTE[vacante.tipo] ?? vacante.tipo}</span>
                         )}
-                        <EstadoVacante estado={vacante.estado} />
+                        {!ocultarEstado && <EstadoVacante estado={vacante.estado} />}
                     </div>
                     <h3 className="mt-1 font-display text-lg font-bold text-gray-900">{vacante.titulo}</h3>
+                    {mostrarEmpresa && vacante.empresa && (
+                        <Link to={`/Empresa/${vacante.empresa.idCorporacion}`} className="text-sm font-medium text-gray-600 hover:text-green-700 hover:underline">
+                            {vacante.empresa.nombreEmpresa}
+                        </Link>
+                    )}
                 </div>
             </div>
 

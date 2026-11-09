@@ -30,6 +30,13 @@ const SECCIONES = [
     icon: IoFolderOpenOutline,
     iconActivo: IoFolderOpen,
   },
+  {
+    // Vacantes publicadas de las empresas con convenio (Pages/Jobs.jsx)
+    to: "/Empleos",
+    label: "Empleos",
+    icon: IoSchool,
+    iconActivo: IoSchool,
+  }
 ];
 import NotificationMenu from "./NotificationMenu";
 import { useNotifications, useTieneNotificaciones } from "../Hooks/useNotifications";
@@ -50,12 +57,25 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
   const { noLeidas, abrir } = useNotifications();
   const tieneNotificaciones = useTieneNotificaciones();
 
-  // Conexion en tiempo real: cada notificacion nueva entra a la campana y se avisa con un toast
-  useNotificationsSocket((notificacion) => {
-    toast(notificacion.message, {
-      action: { label: "Ver", onClick: () => abrir(notificacion) },
-    });
-  });
+  // Conexion en tiempo real: cada notificacion nueva entra a la campana y se avisa con un toast;
+  // los mensajes del chat que llegan con la conversacion cerrada tambien se avisan
+  useNotificationsSocket(
+    (notificacion) => {
+      toast(notificacion.message, {
+        action: { label: "Ver", onClick: () => abrir(notificacion) },
+      });
+    },
+    (mensaje, nombre) => {
+      const vista = mensaje.contenido.length > 80 ? `${mensaje.contenido.slice(0, 80)}…` : mensaje.contenido;
+      toast(nombre ? `Nuevo mensaje de ${nombre}` : "Nuevo mensaje", {
+        description: vista,
+        // Mensajes por ahora solo existe en Cuenta y seguridad del reclutador
+        action: tipo === "recruiter"
+          ? { label: "Ver", onClick: () => navigate("/sing-in-and-security", { state: { ajuste: "mensajes", idConversacion: mensaje.idConversacion } }) }
+          : undefined,
+      });
+    }
+  );
   const campanaRef = useRef(null);
   const perfilRef = useRef(null);
 
@@ -129,29 +149,7 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
                   </li>
                 ),
               )}
-              <li>
-                {/* El reclutador entra a "Mis vacantes" en Cuenta y seguridad; para los demas aun no hay seccion de empleos */}
-                {tipo === "recruiter" ? (
-                  <Link
-                    to="/sing-in-and-security"
-                    state={{ ajuste: "mis-vacantes" }}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-                  >
-                    <IoBriefcaseOutline className="size-5" />
-                    <span className="hidden md:inline">Empleos</span>
-                  </Link>
-                ) : <button
-                  type="button"
-                  onClick={() =>
-                    toast.message("Empleos estará disponible próximamente")
-                  }
-                  title="Empleos"
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-gray-400 hover:bg-gray-50"
-                >
-                  <IoBriefcaseOutline className="size-5" />
-                  <span className="hidden md:inline">Empleos</span>
-                </button>}
-              </li>
+             
             </ul>
           )}
         </div>

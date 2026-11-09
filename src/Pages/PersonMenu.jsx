@@ -7,6 +7,7 @@ import { useAppSelector } from '../Hooks/store';
 import { useGetUserByIdQuery } from '../services/UserSlice';
 import { IoRibbonOutline } from 'react-icons/io5';
 import PerfilTabs from '../Components/PerfilTabs';
+import BotonMensajeAlumno from '../Components/BotonMensajeAlumno';
 
 export const PersonMenu = () => {
 
@@ -21,6 +22,8 @@ export const PersonMenu = () => {
     // Un maestro viendo el perfil de un alumno puede recomendarlo desde cualquier pestaña
     const puedoRecomendar = yo?.tipo === 'teacher' && user?.tipo === 'student'
     const yaLoRecomende = user?.recomendaciones?.some(r => r.maestro?.id === userId)
+    // Un reclutador puede escribirle a cualquier alumno (BotonMensajeAlumno solo se muestra al reclutador)
+    const puedoEscribir = yo?.tipo === 'recruiter' && user?.tipo === 'student'
 
     useEffect(() => {
         if (data) {
@@ -38,7 +41,12 @@ export const PersonMenu = () => {
                     ...(user?.tipo === 'student' ? [{ id: 2, label: 'Proyectos' }] : []),
                     ...(user?.tipo !== 'recruiter' ? [{ id: 3, label: 'Recomendaciones' }] : []),
                 ]}
-                extra={puedoRecomendar && (
+                extra={puedoEscribir ? (
+                    <BotonMensajeAlumno
+                        alumno={{ id: user.id, nombre: user.nombre, apellido: user.apellido, imagen: user.imagen }}
+                        className='shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors'
+                    />
+                ) : puedoRecomendar && (
                     <button
                         type='button'
                         onClick={() => { setMenu(3); setRecomendarAhora(true) }}

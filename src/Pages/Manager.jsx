@@ -17,9 +17,10 @@ import RecruiterForm from "../Components/RecruiterForm";
 import CompanyJobs from "../Components/CompanyJobs";
 import CompanyApplications from "../Components/CompanyApplications";
 import CompanyAdminForm from "../Components/CompanyAdminForm";
-import SeccionEnConstruccion from "../Components/SeccionEnConstruccion";
 import RecruiterJobs from "../Components/RecruiterJobs";
 import RecruiterJobForm from "../Components/RecruiterJobForm";
+import RecruiterApplicants from "../Components/RecruiterApplicants";
+import ChatInbox from "../Components/ChatInbox";
 
 const Manager = ({ usermenu }) => {
   const [autenticate, setAutenticate] = useState(false);
@@ -41,6 +42,8 @@ const Manager = ({ usermenu }) => {
       setAjuste(ajustePedido);
       // Desde el menu de perfil "Publicar vacante" siempre abre una vacante nueva
       if (ajustePedido === "nueva-vacante") setVacanteEnEdicion(null);
+      if (ajustePedido === "mensajes") setConversacionAbierta(location.state?.idConversacion ?? null);
+      if (ajustePedido === "postulantes") setVacantePostulantes(location.state?.idVacante ? String(location.state.idVacante) : "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key]);
@@ -53,10 +56,21 @@ const Manager = ({ usermenu }) => {
 
   // Reclutador: vacante que se abre en el formulario ("Editar") y la que filtra "Postulantes"
   const [vacanteEnEdicion, setVacanteEnEdicion] = useState(null);
-  const [vacantePostulantes, setVacantePostulantes] = useState("");
+  // Puede llegar desde la notificacion de nueva postulacion (state.idVacante)
+  const [vacantePostulantes, setVacantePostulantes] = useState(
+    esReclutador && location.state?.ajuste === "postulantes" && location.state?.idVacante ? String(location.state.idVacante) : ""
+  );
   const irANuevaVacante = (vacante = null) => {
     setVacanteEnEdicion(vacante);
     setAjuste("nueva-vacante");
+  };
+  // Conversacion que se abre al entrar a Mensajes (desde Postulantes o la ventana "Enviar mensaje")
+  const [conversacionAbierta, setConversacionAbierta] = useState(
+    esReclutador && location.state?.ajuste === "mensajes" ? (location.state?.idConversacion ?? null) : null
+  );
+  const irAConversacion = (idConversacion) => {
+    setConversacionAbierta(idConversacion);
+    setAjuste("mensajes");
   };
   const irAPostulantes = (idVacante = "") => {
     setVacantePostulantes(idVacante);
@@ -217,7 +231,7 @@ const Manager = ({ usermenu }) => {
                 {esReclutador && (
                   <li
                     className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "mensajes" ? "bg-green-100 font-semibold" : ""}`}
-                    onClick={() => setAjuste("mensajes")}
+                    onClick={() => irAConversacion(null)}
                   >
                     <FaComments className="mr-2 mt-1 text-lg" />
                     Mensajes
@@ -271,18 +285,12 @@ const Manager = ({ usermenu }) => {
             vacante={vacanteEnEdicion}
             onTerminar={() => { setVacanteEnEdicion(null); setAjuste("mis-vacantes"); }}
           />}
-            descripcion="Aquí crearás una vacante de empleo, servicio social, integrativa o práctica profesional, eligiendo las carreras que pueden postularse."
+          {ajuste === "postulantes" && esReclutador && <RecruiterApplicants
+            key={vacantePostulantes}
+            vacanteInicial={vacantePostulantes}
+            onIrAVacantes={() => setAjuste("mis-vacantes")}
           />}
-          {ajuste === "postulantes" && esReclutador && <SeccionEnConstruccion
-            titulo="Postulantes"
-            icono={<FaUsers />}
-            descripcion="Aquí revisarás a los estudiantes que se postularon a tus vacantes, su CV y su perfil, y avanzarás o rechazarás cada postulación."
-          />}
-          {ajuste === "mensajes" && esReclutador && <SeccionEnConstruccion
-            titulo="Mensajes"
-            icono={<FaComments />}
-            descripcion="Aquí tendrás tus conversaciones con los postulantes, en tiempo real."
-          />}
+          {ajuste === "mensajes" && esReclutador && <ChatInbox key={conversacionAbierta ?? "bandeja"} conversacionInicial={conversacionAbierta} />}
         </>
       ) : (
         <>

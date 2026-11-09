@@ -9,7 +9,7 @@ const auth = (token) => ({ Authorization: `Bearer ${token}` });
 export const recruiterApi = createApi({
   reducerPath: "recruiterApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${API_KEY}` }),
-  tagTypes: ["MisVacantes"],
+  tagTypes: ["MisVacantes", "Postulantes"],
   endpoints: (builder) => ({
     // Se piden todas y se filtran en el front (asi salen los contadores por estado)
     getMyJobs: builder.query({
@@ -46,7 +46,25 @@ export const recruiterApi = createApi({
         params: { estado },
         headers: auth(token),
       }),
-      invalidatesTags: (_res, error) => (error ? [] : ["MisVacantes"]),
+      // Cerrar rechaza las postulaciones abiertas, por eso tambien se refrescan los postulantes
+      invalidatesTags: (_res, error, { id }) => (error ? [] : ["MisVacantes", { type: "Postulantes", id }]),
+    }),
+    // Postulantes de una vacante mia (JobApplicationDto: { idPostulacion, estado, mensaje, curriculum,
+    //   fechaPostulacion, actualizada, vacante, estudiante: { id, nombre, apellido, imagen, carrera, semestre } })
+    getJobApplicants: builder.query({
+      query: ({ idVacante, token }) => ({ url: `/recruiter/me/jobs/${idVacante}/applications`, headers: auth(token) }),
+      providesTags: (_res, _err, { idVacante }) => [{ type: "Postulantes", id: idVacante }],
+    }),
+    // estado: EN_REVISION, ENTREVISTA, ACEPTADA (solo hacia adelante, se puede saltar) o RECHAZADA.
+    // ACEPTADA, RECHAZADA y RETIRADA son finales. El back notifica al alumno
+    changeApplicationStatus: builder.mutation({
+      query: ({ idPostulacion, estado, token }) => ({
+        url: `/recruiter/me/applications/${idPostulacion}/status`,
+        method: "PATCH",
+        params: { estado },
+        headers: auth(token),
+      }),
+      invalidatesTags: (_res, error, { idVacante }) => (error ? [] : [{ type: "Postulantes", id: idVacante }]),
     }),
     // Solo borradores; una vacante publicada se cierra en su lugar
     deleteMyJob: builder.mutation({
@@ -66,4 +84,6 @@ export const {
   useUpdateMyJobMutation,
   useChangeMyJobStatusMutation,
   useDeleteMyJobMutation,
+  useGetJobApplicantsQuery,
+  useChangeApplicationStatusMutation,
 } = recruiterApi;

@@ -4,6 +4,7 @@ import { IoSchoolOutline, IoLocationOutline, IoFolderOpenOutline, IoRibbonOutlin
 import { useUserAccount } from '../Hooks/useUserAccount'
 import { useAppSelector } from '../Hooks/store'
 import { useGetUserByIdQuery } from '../services/UserSlice'
+import BotonMensajeAlumno from './BotonMensajeAlumno'
 
 const FOTO_DEFAULT = 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true'
 const MAX_TECNOLOGIAS = 6
@@ -98,13 +99,21 @@ const StudentResultCard = ({ estudiante }) => {
                 <span className='flex items-center gap-1'><IoRibbonOutline className='size-4' /> {totalRecomendaciones} {totalRecomendaciones === 1 ? 'recomendación' : 'recomendaciones'}</span>
               )}
             </div>
-            <button
-              type='button'
-              onClick={verPerfil}
-              className='shrink-0 px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors'
-            >
-              Ver perfil
-            </button>
+            <div className='shrink-0 flex items-center gap-2'>
+              {/* Solo el reclutador lo ve */}
+              <BotonMensajeAlumno
+                alumno={{ id, nombre, apellido, imagen }}
+                compacto
+                className='p-2 rounded-xl border-2 border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 transition-colors'
+              />
+              <button
+                type='button'
+                onClick={verPerfil}
+                className='px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors'
+              >
+                Ver perfil
+              </button>
+            </div>
           </div>
         </div>
       </div>
