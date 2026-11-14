@@ -5,6 +5,7 @@ import { useCreatePublicationMutation, useUploadPublicationImageMutation } from 
 import { useAppSelector } from '../Hooks/store';
 import { useGetMyCompanyProfileQuery } from '../services/company';
 import EmpresaAvatar from './EmpresaAvatar';
+import { useInstitucion } from '../Hooks/useInstitucion';
 import { obtenerMensajeError } from '../helpers';
 import { FORMATOS_IMAGEN, MAX_MB_IMAGEN, comprimirImagen, validarImagen } from '../helpers/recortarImagen';
 
@@ -17,9 +18,15 @@ const obtenerIdCreado = (respuesta) => respuesta?.id ?? respuesta?.object?.id;
 const CreatePost = ({ imagen, onClose }) => {
     const { user, userId, userToken } = useAppSelector(state => state.users);
     // La cuenta de empresa publica como la empresa (asi sale en el feed): logo y nombre de la empresa
-    const esEmpresa = useAppSelector(state => state.users.tipo) === 'company_admin';
+    // y el admin publica como la institucion (perfil compartido)
+    const tipo = useAppSelector(state => state.users.tipo);
+    const esEmpresa = tipo === 'company_admin';
+    const esAdmin = tipo === 'admin';
     const { data: empresa } = useGetMyCompanyProfileQuery({ token: userToken }, { skip: !esEmpresa || !userToken });
-    const nombreAutor = esEmpresa ? (empresa?.nombreEmpresa ?? '') : `${user?.nombre ?? ''} ${user?.apellido ?? ''}`;
+    const institucion = useInstitucion(esAdmin);
+    const nombreAutor = esEmpresa
+        ? (empresa?.nombreEmpresa ?? '')
+        : esAdmin ? institucion.nombre : `${user?.nombre ?? ''} ${user?.apellido ?? ''}`;
     const [createPublication] = useCreatePublicationMutation();
     const [uploadPublicationImage] = useUploadPublicationImageMutation();
 
@@ -125,7 +132,9 @@ const CreatePost = ({ imagen, onClose }) => {
                     <div className="flex items-center gap-3">
                         {esEmpresa
                             ? <EmpresaAvatar className="size-11 rounded-xl" icono="size-6" />
-                            : <img className="size-11 rounded-full object-cover" src={imagen || FOTO_DEFAULT} alt="foto de perfil" />}
+                            : esAdmin
+                                ? <img className="size-11 rounded-xl object-contain bg-white border border-gray-200" src={institucion.logo} alt="logo" />
+                                : <img className="size-11 rounded-full object-cover" src={imagen || FOTO_DEFAULT} alt="foto de perfil" />}
                         <div>
                             <p className="font-semibold text-gray-900">{nombreAutor}</p>
                             <p className="text-xs text-green-600 font-medium">Publicar en la comunidad</p>

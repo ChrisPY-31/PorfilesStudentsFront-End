@@ -3,11 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { IoIosHome } from "react-icons/io";
 import { MdDashboard, MdLogout } from "react-icons/md";
-import { FaUsers, FaUserPlus, FaUser, FaGraduationCap, FaLock, FaUserTie, FaBriefcase, FaFileAlt, FaIdCard, FaPlusCircle, FaComments } from "react-icons/fa";
+import { FaUsers, FaUserPlus, FaUser, FaGraduationCap, FaLock, FaUserTie, FaBriefcase, FaFileAlt, FaIdCard, FaPlusCircle, FaComments, FaHandshake } from "react-icons/fa";
 import ManagerDashboard from "../Components/ManagerDashboard";
-import ManagerCreateUser from "../Components/ManagerCreateUser";
+import ManagerCreateAccounts from "../Components/ManagerCreateAccounts";
 import ManagerUsers from "../Components/ManagerUsers";
 import ManagerCareers from "../Components/ManagerCareers";
+import ManagerPartnerships from "../Components/ManagerPartnerships";
 import { toast } from "sonner";
 import ChangePassword from "../Components/ChangePassword";
 import { useUserAccount } from "../Hooks/useUserAccount";
@@ -25,7 +26,6 @@ import StudentApplications from "../Components/StudentApplications";
 
 const Manager = ({ usermenu }) => {
   const [autenticate, setAutenticate] = useState(false);
-  const [managerMenu, setManagerMenu] = useState(2);
   // Ajustes de la cuenta (usermenu): "seguridad" para todos; el resto depende del rol
   const { tipo } = useAppSelector(state => state.users);
   const esEmpresa = tipo === "company_admin";
@@ -35,6 +35,9 @@ const Manager = ({ usermenu }) => {
   const tieneChat = esReclutador || esAlumno;
   // Se puede abrir una seccion directo con navigate(..., { state: { ajuste } }) (ej. tarjeta de Inicio, boton Empleos)
   const location = useLocation();
+  // Panel de administrador: navigate("/Manager", { state: { menu } }) abre esa seccion (ej. tarjeta de Inicio del admin)
+  const MENUS_ADMIN = [2, 3, 4, 5, 6];
+  const [managerMenu, setManagerMenu] = useState(MENUS_ADMIN.includes(location.state?.menu) ? location.state.menu : 2);
   const AJUSTES_EMPRESA = ["mis-datos", "vacantes", "postulaciones", "reclutadores", "crear-reclutador"];
   const AJUSTES_RECLUTADOR = ["mis-vacantes", "nueva-vacante", "postulantes", "mensajes"];
   const AJUSTES_ALUMNO = ["mis-postulaciones", "mensajes"];
@@ -143,6 +146,13 @@ const Manager = ({ usermenu }) => {
                 >
                   <FaGraduationCap className="mr-2 mt-1 text-xl" />
                   Carreras
+                </li>
+                <li
+                  className="cursor-pointer hover:bg-green-100 p-2 rounded flex "
+                  onClick={() => setManagerMenu(6)}
+                >
+                  <FaHandshake className="mr-2 mt-1 text-xl" />
+                  Convenios
                 </li>
               </>
             ) : (
@@ -312,9 +322,10 @@ const Manager = ({ usermenu }) => {
         <>
           {managerMenu === 1 && null}
           {managerMenu === 2 && <ManagerDashboard onVerUsuarios={() => setManagerMenu(4)} />}
-          {managerMenu === 3 && <ManagerCreateUser />}
+          {managerMenu === 3 && <ManagerCreateAccounts onVerConvenios={() => setManagerMenu(6)} />}
           {managerMenu === 4 && <ManagerUsers />}
           {managerMenu === 5 && <ManagerCareers />}
+          {managerMenu === 6 && <ManagerPartnerships />}
         </>
       )}
       </div>

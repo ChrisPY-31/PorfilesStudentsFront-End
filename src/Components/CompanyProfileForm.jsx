@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useAppSelector } from "../Hooks/store";
 import { useUpdateMyCompanyProfileMutation } from "../services/company";
 import { esUrlValida, obtenerMensajeError } from "../helpers";
+import { EMAIL_REGEX, inputClass } from "../helpers/formulario";
 
 // Limites de CompanyProfileRequest en el back
 const MAX = { descripcion: 3000, sitioWeb: 255, sector: 100, tamano: 50, ubicacion: 255, correoContacto: 255 };
@@ -17,15 +18,8 @@ const TAMANOS_EMPRESA = [
     "Más de 1,000 empleados",
 ];
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const inputClass = (conError) =>
-    `w-full px-4 py-2.5 text-sm border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${conError
-        ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-100"
-        : "border-gray-200 focus:border-green-500 focus:ring-green-100"
-    }`;
-
-const Campo = ({ label, error, opcional, children, ayuda }) => (
+export const Campo = ({ label, error, opcional, children, ayuda }) => (
     <div>
         <label className="block text-sm font-semibold text-gray-700 mb-1.5">
             {label} {opcional && <span className="font-normal text-gray-400">(opcional)</span>}

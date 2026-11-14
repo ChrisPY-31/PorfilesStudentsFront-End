@@ -1,14 +1,15 @@
 import { useGetPublicationsQuery } from "../services/publication";
 import { useState } from "react";
 import PublicationCard from "../Components/PublicationCard";
-import { useGetTeachersQuery } from "../services/UserSlice";
 import { useAppSelector } from "../Hooks/store";
 import { useEsAdmin } from "../Hooks/useEsAdmin";
 import CreatePost from "../Components/CreatePost";
-import StudentCard from "../Components/StudentCard";
+import PartnersSidebar from "../Components/PartnersSidebar";
 import CompanyHomeCard from "../Components/CompanyHomeCard";
 import RecruiterHomeCard from "../Components/RecruiterHomeCard";
+import InstitutionHomeCard from "../Components/InstitutionHomeCard";
 import EmpresaAvatar from "../Components/EmpresaAvatar";
+import { useInstitucion } from "../Hooks/useInstitucion";
 import { obtenerMensajeError } from "../helpers";
 import { IoLocationOutline, IoSchoolOutline, IoBookOutline } from "react-icons/io5";
 
@@ -20,8 +21,8 @@ const Comunity = () => {
   const { user, userToken, tipo } = useAppSelector(state => state.users);
   const esEmpresa = tipo === "company_admin";
   const esAdmin = useEsAdmin();
+  const institucion = useInstitucion(esAdmin);
   const { data, isLoading, error, refetch } = useGetPublicationsQuery({ token: userToken });
-  const { data: teachers = [] } = useGetTeachersQuery();
 
   // Ciudad y estado si existen ("Toluca, Estado de México"), o el que haya
   const ubicacionUsuario = [user?.ciudad, user?.ubicacion?.estado].filter(Boolean).join(", ")
@@ -34,8 +35,12 @@ const Comunity = () => {
     <div className="w-full max-w-[1400px] mx-auto mt-4 px-4">
       <div className="flex gap-5 items-start">
 
-        {/* Info del usuario (el admin no tiene perfil de persona; la empresa muestra su perfil de empresa) */}
-        {esEmpresa ? (
+        {/* Info del usuario (la empresa muestra su perfil de empresa y el admin el de la institucion) */}
+        {esAdmin ? (
+          <div className="hidden lg:block shrink-0">
+            <InstitutionHomeCard />
+          </div>
+        ) : esEmpresa ? (
           <div className="hidden lg:block shrink-0">
             <CompanyHomeCard />
           </div>
@@ -43,7 +48,7 @@ const Comunity = () => {
           <div className="hidden lg:block shrink-0">
             <RecruiterHomeCard />
           </div>
-        ) : !esAdmin && <div className="hidden lg:block w-60 shrink-0 bg-white rounded-2xl shadow overflow-hidden">
+        ) : <div className="hidden lg:block w-60 shrink-0 bg-white rounded-2xl shadow overflow-hidden">
           <div className="imagen__home h-16 bg-cover"></div>
           <div className="px-4 pb-4">
             <img
@@ -82,11 +87,13 @@ const Comunity = () => {
         <div className="flex-1 min-w-0 h-[85dvh] px-6 py-4 rounded-2xl shadow overflow-y-scroll">
           <div className="max-w-[640px] mx-auto">
 
-          {/* Crear publicación (el back aun no deja publicar al admin: no tiene perfil de persona) */}
-          {!esAdmin && <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow">
-            {/* La empresa publica como la empresa: su logo en lugar de la foto */}
+          {/* Crear publicación */}
+          <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow">
+            {/* La empresa publica como la empresa y el admin como la institucion: logo en lugar de la foto */}
             {esEmpresa ? (
               <EmpresaAvatar className="size-12 rounded-xl" icono="size-6" />
+            ) : esAdmin ? (
+              <img className="size-12 shrink-0 rounded-xl object-contain bg-white border border-gray-200" src={institucion.logo} alt="logo" />
             ) : <img
               className="size-12 shrink-0 rounded-full object-cover"
               src={user?.imagen || FOTO_DEFAULT}
@@ -99,7 +106,7 @@ const Comunity = () => {
             >
               ¿Sobre qué quieres hablar?
             </button>
-          </div>}
+          </div>
 
           {/* Listado de publicaciones */}
           {isLoading && [...Array(3)].map((_, i) => (
@@ -142,20 +149,9 @@ const Comunity = () => {
 
         </div>
 
-        {/* Sección maestros */}
-        <div className="hidden xl:block w-72 shrink-0 rounded-2xl border border-gray-300">
-          <div className="px-4">
-            <h3 className="text-center text-2xl font-semibold">Maestros</h3>
-            {teachers.map(teacher => (
-              <StudentCard
-                key={teacher.id}
-                id={teacher.id}
-                nombre={teacher.nombre}
-                apellido={teacher.apellido}
-                imagen={teacher.imagen}
-              />
-            ))}
-          </div>
+        {/* Empresas con convenio: llevan a su pagina */}
+        <div className="hidden xl:block shrink-0">
+          <PartnersSidebar />
         </div>
 
       </div>

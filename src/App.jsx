@@ -22,6 +22,7 @@ import UserLockedMessage from './Components/UserLockedMessage'
 import Footer from './Components/Footer'
 import RutaAdmin from './Components/RutaAdmin'
 import CompanyProfile from './Pages/CompanyProfile'
+import InstitutionProfile from './Pages/InstitutionProfile'
 
 function App() {
   const location = useLocation();
@@ -81,6 +82,7 @@ function App() {
         <Route path='/Empleos/:id' element={autenticate ? <JobDetail /> : <Navigate to="/" />} />
         <Route path='/MiEmpresa' element={autenticate ? <CompanyProfile miEmpresa /> : <Navigate to="/" />} />
         <Route path='/Empresa/:id' element={<CompanyProfile />} />
+        <Route path='/Institucion' element={<InstitutionProfile />} />
         <Route path='/Sign-In' element={<SignIn setAutenticate={setAutenticate} />} />
         <Route path='/Manager' element={<RutaAdmin><Manager /></RutaAdmin>} />
         <Route path="/StudentRecruitment/" element={<StudentRecruitmentForm />} />

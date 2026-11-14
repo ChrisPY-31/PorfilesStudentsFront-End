@@ -6,7 +6,7 @@ import { useAppSelector } from '../Hooks/store';
 import { useGetloginAdminQuery } from '../services/autenticateUser';
 import { userAccountSlice } from '../store/UserAccount/userAccountSlice';
 import { useUserAccount } from '../Hooks/useUserAccount';
-import LogoCU from '../assets/LogoCUTianguistenco.jpg';
+import { useInstitucion } from '../Hooks/useInstitucion';
 import EmpresaAvatar from './EmpresaAvatar';
 import Manager from '../Pages/Manager';
 // Opcion del menu; `proximamente` la muestra deshabilitada
@@ -80,6 +80,7 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
     // Admin = lo que diga el back (GET /manager 200), no "cualquier tipo desconocido":
     // la cuenta de empresa (company_admin) tampoco es student/teacher/recruiter y no es admin
     const esAdmin = !!data
+    const institucion = useInstitucion(esAdmin)
     const esUsuario = tipo === "student" || tipo === "recruiter" || tipo === "teacher"
     const esEmpresa = tipo === "company_admin"
     const ROLES = { student: "Estudiante", teacher: "Docente", recruiter: "Reclutador", company_admin: "Cuenta de empresa" }
@@ -105,12 +106,12 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                         className='size-14 shrink-0 rounded-full object-cover'
                         src={!esAdmin
                             ? (user.imagen || 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true')
-                            : LogoCU}
+                            : institucion.logo}
                         alt="foto de perfil"
                     />}
                     <div className='min-w-0'>
                         <p className='font-semibold text-gray-900 truncate'>
-                            {!esAdmin ? `${user.nombre ?? ''} ${user.apellido ?? ''}` : 'Centro Universitario Tianguistenco'}
+                            {!esAdmin ? `${user.nombre ?? ''} ${user.apellido ?? ''}` : institucion.nombre}
                         </p>
                         {ROLES[tipo] && (
                             <span className='inline-block mt-0.5 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold'>
@@ -128,6 +129,16 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                         className='mt-4 w-full py-2 rounded-xl border-2 border-green-600 text-sm font-semibold text-green-700 hover:bg-green-50 transition-colors'
                     >
                         Ver mi perfil
+                    </button>
+                )}
+                {/* El admin publica como la institucion: su "perfil" es la pagina de la institucion */}
+                {esAdmin && (
+                    <button
+                        type='button'
+                        onClick={() => { setMenuProfile(false); navigate('/Institucion') }}
+                        className='mt-4 w-full py-2 rounded-xl border-2 border-green-600 text-sm font-semibold text-green-700 hover:bg-green-50 transition-colors'
+                    >
+                        Ver perfil institucional
                     </button>
                 )}
             </div>

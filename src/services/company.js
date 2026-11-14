@@ -18,6 +18,12 @@ export const companyApi = createApi({
       query: ({ token }) => ({ url: "/company-admin/me/profile", headers: auth(token) }),
       providesTags: ["MiEmpresa"],
     }),
+    // Publico: solo convenios vigentes, ordenados por nombre. Un convenio sin perfil sale con nombre y categoria
+    // (logo, banner, etc. en null). Tag "Empresas" sin id para que editar cualquier empresa/convenio la refresque
+    getCompanies: builder.query({
+      query: () => ({ url: "/companies" }),
+      providesTags: ["Empresas"],
+    }),
     // Publico: un convenio desactivado o vencido responde 404
     getCompanyProfile: builder.query({
       query: (idCorporacion) => ({ url: `/companies/${idCorporacion}` }),
@@ -118,6 +124,7 @@ export const companyApi = createApi({
 
 export const {
   useGetMyCompanyProfileQuery,
+  useGetCompaniesQuery,
   useGetCompanyProfileQuery,
   useUpdateMyCompanyProfileMutation,
   useUploadMyCompanyImageMutation,

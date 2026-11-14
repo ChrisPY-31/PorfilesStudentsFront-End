@@ -46,7 +46,7 @@ import ProfileMenu from "./PorfileMenu";
 import { toast } from "sonner";
 import { useAppSelector } from "../Hooks/store";
 import { useEsAdmin } from "../Hooks/useEsAdmin";
-import LogoCU from "../assets/LogoCUTianguistenco.jpg";
+import { useInstitucion } from "../Hooks/useInstitucion";
 import EmpresaAvatar from "./EmpresaAvatar";
 import { useGetConversationsQuery } from "../services/chat";
 import { MI_REMITENTE } from "../helpers/chatActivo";
@@ -57,6 +57,7 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
   const { user, tipo, userToken } = useAppSelector((state) => state.users);
   const esEmpresa = tipo === "company_admin";
   const esAdmin = useEsAdmin();
+  const institucion = useInstitucion(esAdmin);
   const { noLeidas, abrir } = useNotifications();
   const tieneNotificaciones = useTieneNotificaciones();
   // Mensajes sin leer (alumno y reclutador): suma de noLeidos de la bandeja. El WebSocket la mantiene al dia;
@@ -236,12 +237,13 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
                   />
                 ) : <img
                   className={`size-8 rounded-full object-cover ring-2 ${menuProfile ? "ring-green-500" : "ring-transparent"}`}
-                  src={esAdmin ? LogoCU : `${user.imagen ? user.imagen : "https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true"}`}
+                  src={esAdmin ? institucion.logo : `${user.imagen ? user.imagen : "https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true"}`}
                   alt="foto de perfil"
                 />}
-                {user?.nombre && (
-                  <span className="hidden lg:inline text-sm font-semibold text-gray-800">
-                    {user.nombre}
+                {/* El admin se muestra con el nombre de la institucion (asi publica) */}
+                {(esAdmin ? institucion.nombre : user?.nombre) && (
+                  <span className="hidden lg:inline max-w-40 truncate text-sm font-semibold text-gray-800">
+                    {esAdmin ? institucion.nombre : user.nombre}
                   </span>
                 )}
                 <IoChevronDown

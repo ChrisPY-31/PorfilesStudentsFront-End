@@ -14,6 +14,8 @@ import { recruiterApi } from '../services/recruiter'
 import { jobsApi } from '../services/jobs'
 import { chatApi } from '../services/chat'
 import { studentApi } from '../services/student'
+import { institutionApi } from '../services/institution'
+import { partnershipsApi } from '../services/partnerships'
 import { reiniciarSesion } from './sesion'
 
 const appReducer = combineReducers({
@@ -31,7 +33,9 @@ const appReducer = combineReducers({
     [recruiterApi.reducerPath]: recruiterApi.reducer,
     [jobsApi.reducerPath]: jobsApi.reducer,
     [chatApi.reducerPath]: chatApi.reducer,
-    [studentApi.reducerPath]: studentApi.reducer
+    [studentApi.reducerPath]: studentApi.reducer,
+    [institutionApi.reducerPath]: institutionApi.reducer,
+    [partnershipsApi.reducerPath]: partnershipsApi.reducer
 })
 
 // Al cambiar de sesion todo regresa a su estado inicial (ver store/sesion.js)
@@ -53,6 +57,8 @@ export const store = configureStore({
       recruiterApi.middleware,
       jobsApi.middleware,
       chatApi.middleware,
-      studentApi.middleware
+      studentApi.middleware,
+      institutionApi.middleware,
+      partnershipsApi.middleware
     ),
 })

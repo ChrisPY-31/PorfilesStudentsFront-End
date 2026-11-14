@@ -8,9 +8,10 @@ import {
     IoTrashOutline,
     IoSend
 } from "react-icons/io5";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useAppSelector } from "../Hooks/store";
-import { useEsAdmin } from "../Hooks/useEsAdmin";
+import LogoCU from "../assets/LogoCUTianguistenco.jpg";
 import {
     useInteractionPublicationMutation,
     useUpdatePublicationMutation,
@@ -20,19 +21,22 @@ import { obtenerMensajeError, tiempoRelativo } from "../helpers";
 
 const FOTO_DEFAULT = 'https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true';
 
-// Las empresas aparecen con su logo: cuadro redondeado y sin recortar (object-contain)
-const Avatar = ({ src, className = "size-10", empresa }) => (
-    <img
-        className={`${className} shrink-0 ${empresa ? "rounded-xl object-contain bg-white border border-gray-200" : "rounded-full object-cover"}`}
-        src={src || FOTO_DEFAULT}
-        alt={empresa ? "logo de la empresa" : "foto de perfil"}
-    />
-);
+// Empresas e institucion (admin) aparecen con su logo: cuadro redondeado y sin recortar (object-contain).
+// Si la institucion aun no sube logo se usa el del CU.
+const Avatar = ({ persona, className = "size-10" }) => {
+    const esAdmin = persona?.tipo === "admin";
+    const conLogo = esAdmin || persona?.tipo === "company_admin";
+    return (
+        <img
+            className={`${className} shrink-0 ${conLogo ? "rounded-xl object-contain bg-white border border-gray-200" : "rounded-full object-cover"}`}
+            src={persona?.imagen || (esAdmin ? LogoCU : FOTO_DEFAULT)}
+            alt={conLogo ? "logo" : "foto de perfil"}
+        />
+    );
+};
 
 const PublicationCard = ({ publicacion }) => {
     const { userId, userToken } = useAppSelector(state => state.users);
-    // El back aun no deja al admin dar like ni comentar (no tiene perfil de persona)
-    const puedeInteractuar = !useEsAdmin();
     const [interactuar] = useInteractionPublicationMutation();
     const [updatePublication, { isLoading: guardandoEdicion }] = useUpdatePublicationMutation();
     const [deletePublication, { isLoading: eliminando }] = useDeletePublicationMutation();
@@ -131,6 +135,8 @@ const PublicationCard = ({ publicacion }) => {
     };
 
     const mostrarCaja = !miComentario || editandoComentario;
+    // Las publicaciones del admin son de la institucion: su nombre y logo llevan a su pagina
+    const autorEsInstitucion = persona?.tipo === "admin";
 
     return (
         <article className="bg-white mt-4 rounded-2xl shadow border border-gray-100">
@@ -138,9 +144,15 @@ const PublicationCard = ({ publicacion }) => {
             {/* Encabezado */}
             <div className="flex items-start justify-between gap-3 p-4 pb-0">
                 <div className="flex items-center gap-3 min-w-0">
-                    <Avatar src={persona?.imagen} className="size-12" empresa={persona?.tipo === "company_admin"} />
+                    {autorEsInstitucion
+                        ? <Link to="/Institucion" aria-label={`Ver la página de ${persona?.nombre ?? "la institución"}`} className="shrink-0">
+                            <Avatar persona={persona} className="size-12" />
+                        </Link>
+                        : <Avatar persona={persona} className="size-12" />}
                     <div className="min-w-0">
-                        <p className="font-semibold text-gray-900 truncate">{persona?.nombre} {persona?.apellido}</p>
+                        {autorEsInstitucion
+                            ? <Link to="/Institucion" className="block font-semibold text-gray-900 truncate hover:underline">{persona?.nombre}</Link>
+                            : <p className="font-semibold text-gray-900 truncate">{persona?.nombre} {persona?.apellido}</p>}
                         <p className="text-xs text-gray-500 truncate">
                             {[persona?.especialidad, tiempoRelativo(createdAt)].filter(Boolean).join(" · ")}
                         </p>
@@ -220,7 +232,7 @@ const PublicationCard = ({ publicacion }) => {
 
             {/* Contadores */}
             {(totalLikes > 0 || comentarios.length > 0) && (
-                <div className={`flex justify-between px-4 pt-3 text-xs text-gray-500 ${puedeInteractuar ? "" : "pb-3"}`}>
+                <div className="flex justify-between px-4 pt-3 text-xs text-gray-500">
                     <span>{totalLikes > 0 && `${totalLikes} me gusta`}</span>
                     {comentarios.length > 0 && (
                         <button type="button" onClick={() => setMostrarComentarios(v => !v)} className="hover:underline">
@@ -231,7 +243,7 @@ const PublicationCard = ({ publicacion }) => {
             )}
 
             {/* Acciones */}
-            {puedeInteractuar && <div className="grid grid-cols-2 gap-1 mx-4 mt-2 py-1 border-t border-gray-100">
+            <div className="grid grid-cols-2 gap-1 mx-4 mt-2 py-1 border-t border-gray-100">
                 <button
                     type="button"
                     onClick={() => guardarInteraccion({ meGusta: !meGusta })}
@@ -248,12 +260,12 @@ const PublicationCard = ({ publicacion }) => {
                     <IoChatbubbleOutline className="size-5" />
                     Comentar
                 </button>
-            </div>}
+            </div>
 
             {/* Comentarios */}
             {mostrarComentarios && (
                 <div className="px-4 pb-4 pt-2 space-y-3 border-t border-gray-100">
-                    {puedeInteractuar && mostrarCaja && (
+                    {mostrarCaja && (
                         <form onSubmit={handleEnviarComentario} className="flex items-start gap-2">
                             <input
                                 ref={comentarioRef}
@@ -286,7 +298,7 @@ const PublicationCard = ({ publicacion }) => {
                         const esMiComentario = c.id?.idPerson === userId;
                         return (
                             <div key={c.id?.idPerson} className="flex items-start gap-2">
-                                <Avatar src={c.persona?.imagen} className="size-8" empresa={c.persona?.tipo === "company_admin"} />
+                                <Avatar persona={c.persona} className="size-8" />
                                 <div className="flex-1 min-w-0">
                                     <div className={`px-3 py-2 rounded-2xl ${esMiComentario ? "bg-green-50" : "bg-gray-100"}`}>
                                         <p className="text-xs font-semibold text-gray-900">

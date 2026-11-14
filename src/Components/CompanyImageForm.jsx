@@ -16,7 +16,8 @@ const CONFIG = {
     banner: { titulo: "Cambiar portada", aspecto: 3, ancho: 1500, alto: 500, ayuda: "Arrastra la imagen para elegir qué parte se ve en la portada" },
 };
 
-const CompanyImageForm = ({ tipo, onClose }) => {
+// onSubir({ tipo, formData }) opcional: otra forma de subir (ej. la institucion); por defecto sube a la empresa propia
+const CompanyImageForm = ({ tipo, onClose, onSubir }) => {
     const config = CONFIG[tipo];
     const { userToken } = useAppSelector(state => state.users);
     const [uploadImage] = useUploadMyCompanyImageMutation();
@@ -60,7 +61,8 @@ const CompanyImageForm = ({ tipo, onClose }) => {
             const archivo = await recortarImagen(imagen, area, config.ancho, 0.85, config.alto);
             const formData = new FormData();
             formData.append("image", archivo);
-            await uploadImage({ tipo, formData, token: userToken }).unwrap();
+            if (onSubir) await onSubir({ tipo, formData });
+            else await uploadImage({ tipo, formData, token: userToken }).unwrap();
             toast.success(tipo === "logo" ? "Logo actualizado" : "Portada actualizada");
             onClose();
         } catch (err) {
