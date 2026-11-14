@@ -36,9 +36,11 @@ const ConversacionItem = ({ conversacion, activa, miRemitente, onClick }) => {
                     <p className={`flex-1 truncate text-sm ${sinLeer ? "text-gray-900 font-medium" : "text-gray-500"}`}>
                         {estado === "BLOQUEADA"
                             ? <span className="inline-flex items-center gap-1 text-gray-400"><FiLock className="size-3.5" /> Conversación bloqueada</span>
-                            : ultimoMensaje
-                                ? `${esMio ? "Tú: " : ""}${ultimoMensaje.contenido}`
-                                : "Sin mensajes"}
+                            : ultimoMensaje?.eliminado
+                                ? <span className="italic text-gray-400">{esMio ? "Eliminaste un mensaje" : "Mensaje eliminado"}</span>
+                                : ultimoMensaje
+                                    ? `${esMio ? "Tú: " : ""}${ultimoMensaje.contenido ?? ""}`
+                                    : "Sin mensajes"}
                     </p>
                     {sinLeer && (
                         <span className="shrink-0 min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-green-600 text-white text-[11px] font-bold">

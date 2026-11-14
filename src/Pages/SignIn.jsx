@@ -160,25 +160,7 @@ const SignIn = ({ setAutenticate }) => {
                   </button>
                 </div>
 
-                <div className="text-center pt-2">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">
-                        ¿Eres reclutador y no tienes cuenta?
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/Sign-Up")}
-                    className="font-medium text-green-600 hover:text-green-500 cursor-pointer no-underline hover:underline decoration-2 underline-offset-4 transition-all"
-                  >
-                    Registrate aqui
-                  </button>
-                </div>
+            
               </Form>
             )}
           </Formik>

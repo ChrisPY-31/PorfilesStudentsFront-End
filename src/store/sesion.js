@@ -10,6 +10,7 @@ import { companyApi } from "../services/company";
 import { recruiterApi } from "../services/recruiter";
 import { jobsApi } from "../services/jobs";
 import { chatApi } from "../services/chat";
+import { studentApi } from "../services/student";
 
 // Claves de la sesion guardadas en localStorage
 export const CLAVES_SESION = ["token", "username", "userLocked", "idPerson", "sesionInicio"];
@@ -46,6 +47,7 @@ const APIS = [
   recruiterApi,
   jobsApi,
   chatApi,
+  studentApi,
 ];
 
 // Borra todo lo que quedo en memoria de la sesion anterior (perfil, cache de peticiones).

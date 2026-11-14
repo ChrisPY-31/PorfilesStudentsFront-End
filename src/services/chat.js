@@ -5,10 +5,23 @@ import { API_KEY } from "../api/api";
 // ConversationDto: { idConversacion, estado: ACTIVA|BLOQUEADA, creada, ultimoMensajeEn, noLeidos,
 //   ultimoMensaje: MessageDto, vacante: { idVacante, titulo, estado, empresa },
 //   contraparte: { id, tipo: ALUMNO|RECLUTADOR, nombre, apellido, imagen, empresa } }
-// MessageDto: { idMensaje, idConversacion, idRemitente, remitente: ALUMNO|RECLUTADOR, contenido, enviado, leido }
+// MessageDto: { idMensaje, idConversacion, idRemitente, remitente: ALUMNO|RECLUTADOR, contenido (null si eliminado),
+//   enviado, leido, editado, eliminado, editable, editableHasta, evento: NUEVO|EDITADO|ELIMINADO (solo WebSocket y respuestas) }
 const auth = (token) => ({ Authorization: `Bearer ${token}` });
 
 export const MENSAJES_POR_PAGINA = 30;
+
+// Reemplaza un mensaje (editado o eliminado) en el chat y, si es el ultimo, en la bandeja
+export const reemplazarMensaje = (dispatch, mensaje, token) => {
+  dispatch(chatApi.util.updateQueryData("getMessages", { idConversacion: mensaje.idConversacion }, (draft) => {
+    const i = draft.mensajes.findIndex(m => m.idMensaje === mensaje.idMensaje);
+    if (i >= 0) draft.mensajes[i] = { ...draft.mensajes[i], ...mensaje };
+  }));
+  dispatch(chatApi.util.updateQueryData("getConversations", { token }, (lista) => {
+    const c = lista.find(x => x.idConversacion === mensaje.idConversacion);
+    if (c?.ultimoMensaje?.idMensaje === mensaje.idMensaje) c.ultimoMensaje = { ...c.ultimoMensaje, ...mensaje };
+  }));
+};
 
 export const chatApi = createApi({
   reducerPath: "chatApi",
@@ -66,6 +79,39 @@ export const chatApi = createApi({
         }
       },
     }),
+    // Solo el autor, durante los primeros 15 minutos (editable / editableHasta). Mismo texto: no cambia nada
+    editMessage: builder.mutation({
+      query: ({ idConversacion, idMensaje, contenido, token }) => ({
+        url: `/conversations/${idConversacion}/messages/${idMensaje}`,
+        method: "PUT",
+        body: { contenido },
+        headers: auth(token),
+      }),
+      async onQueryStarted({ token }, { dispatch, queryFulfilled }) {
+        try {
+          const { data: mensaje } = await queryFulfilled;
+          reemplazarMensaje(dispatch, mensaje, token);
+        } catch {
+          // El componente muestra el error
+        }
+      },
+    }),
+    // Solo el autor, sin limite de tiempo. Borrado logico: queda eliminado = true y contenido = null
+    deleteMessage: builder.mutation({
+      query: ({ idConversacion, idMensaje, token }) => ({
+        url: `/conversations/${idConversacion}/messages/${idMensaje}`,
+        method: "DELETE",
+        headers: auth(token),
+      }),
+      async onQueryStarted({ token }, { dispatch, queryFulfilled }) {
+        try {
+          const { data: mensaje } = await queryFulfilled;
+          reemplazarMensaje(dispatch, mensaje, token);
+        } catch {
+          // El componente muestra el error
+        }
+      },
+    }),
     // Solo RECRUITER: abre (o reutiliza) la conversacion con cualquier alumno, aunque no se haya postulado,
     // y le manda el mensaje. Hay una sola conversacion por alumno-reclutador; en los chats directos `vacante` es null.
     // { idEstudiante, mensaje (1 a 2000) } -> { mensaje, object: ConversationDto }
@@ -106,4 +152,6 @@ export const {
   useSendMessageMutation,
   useMarkConversationReadMutation,
   useStartConversationMutation,
+  useEditMessageMutation,
+  useDeleteMessageMutation,
 } = chatApi;

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 
 import Proyects from './Proyects';
 import Recommendations from '../Components/Recommendations';
@@ -13,8 +14,12 @@ export const PersonMenu = () => {
 
     const [menu, setMenu] = useState(1);
     const token = localStorage.getItem("token");
+    // El id sale de la direccion (/Person/:id); el de Redux queda solo como respaldo
+    // (antes solo se usaba ese y los enlaces directos mostraban el perfil anterior)
+    const { id: idDeRuta } = useParams()
     const { idStudent } = useAppSelector(state => state.students)
-    const { isLoading, data, refetch } = useGetUserByIdQuery({ id: idStudent, token })
+    const idPerfil = idDeRuta ?? idStudent
+    const { isLoading, data, refetch } = useGetUserByIdQuery({ id: idPerfil, token }, { skip: !idPerfil })
     const [user, setUser] = useState({});
     const { user: yo, userId } = useAppSelector(state => state.users)
     const [recomendarAhora, setRecomendarAhora] = useState(false)
@@ -30,6 +35,13 @@ export const PersonMenu = () => {
             setUser(data.object);
         }
     }, [data, isLoading])
+
+    // Al pasar de un perfil a otro: se regresa a "Perfil" y no se deja el anterior en pantalla
+    useEffect(() => {
+        setMenu(1)
+        setUser(data?.object && String(data.object.id) === String(idPerfil) ? data.object : {})
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [idPerfil])
 
     return (
         <div className='mt-8'>

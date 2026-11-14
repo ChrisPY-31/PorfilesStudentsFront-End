@@ -49,6 +49,9 @@ export const useNotifications = () => {
     } else if (notificacion.type === "JOB_APPLICATION_RECEIVED") {
       // Reclutador: referenceId = id de la vacante; abre Postulantes en Cuenta y seguridad con esa vacante
       navigate("/sing-in-and-security", { state: { ajuste: "postulantes", idVacante: notificacion.referenceId } });
+    } else if (notificacion.type === "JOB_APPLICATION_STATUS") {
+      // Alumno: cambio el estado de una de sus postulaciones (referenceId = id de la postulacion)
+      navigate("/sing-in-and-security", { state: { ajuste: "mis-postulaciones" } });
     }
   };
 

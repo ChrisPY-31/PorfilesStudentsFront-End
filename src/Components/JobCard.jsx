@@ -22,7 +22,8 @@ const Detalle = ({ icono: Icono, children }) => (
 // `mostrarReclutador` para la vista de la empresa, donde hay varios reclutadores;
 // `mostrarEmpresa` para la lista publica de empleos (logo y nombre con enlace a su pagina);
 // `ocultarEstado` donde todas estan publicadas
-const JobCard = ({ vacante, acciones, mostrarReclutador = false, mostrarEmpresa = false, ocultarEstado = false }) => {
+// `enlace`: ruta del detalle (el titulo se vuelve enlace)
+const JobCard = ({ vacante, acciones, mostrarReclutador = false, mostrarEmpresa = false, ocultarEstado = false, enlace }) => {
     const salario = formatearSalario(vacante.salarioMin, vacante.salarioMax);
     const reclutador = vacante.reclutador;
 
@@ -47,7 +48,9 @@ const JobCard = ({ vacante, acciones, mostrarReclutador = false, mostrarEmpresa 
                         )}
                         {!ocultarEstado && <EstadoVacante estado={vacante.estado} />}
                     </div>
-                    <h3 className="mt-1 font-display text-lg font-bold text-gray-900">{vacante.titulo}</h3>
+                    <h3 className="mt-1 font-display text-lg font-bold text-gray-900">
+                        {enlace ? <Link to={enlace} className="hover:text-green-700 hover:underline">{vacante.titulo}</Link> : vacante.titulo}
+                    </h3>
                     {mostrarEmpresa && vacante.empresa && (
                         <Link to={`/Empresa/${vacante.empresa.idCorporacion}`} className="text-sm font-medium text-gray-600 hover:text-green-700 hover:underline">
                             {vacante.empresa.nombreEmpresa}

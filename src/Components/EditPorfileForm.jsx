@@ -267,8 +267,8 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                                                         </div>
                                                     </div>
 
-                                                    {/* El reclutador no maneja CV */}
-                                                    {tipoUsuario !== "recruiter" && (
+                                                    {/* El CV del alumno se sube como PDF desde su perfil (PUT /student lo ignora); el reclutador no maneja CV */}
+                                                    {tipoUsuario !== "recruiter" && tipoUsuario !== "student" && (
                                                     <div className="flex flex-col">
                                                         <div className="relative w-full h-12">
                                                             <Field

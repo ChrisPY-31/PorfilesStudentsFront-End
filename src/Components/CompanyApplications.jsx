@@ -117,7 +117,7 @@ const CompanyApplications = ({ vacanteInicial = "" }) => {
                             Ninguna postulación coincide con los filtros.
                         </p>
                     ) : (
-                        visibles.map(p => <ApplicationCard key={p.idPostulacion} postulacion={p} mostrarVacante={!vacante} />)
+                        visibles.map(p => <ApplicationCard key={p.idPostulacion} postulacion={p} mostrarVacante={!vacante} mostrarCV={false} />)
                     )}
                 </div>
             </div>

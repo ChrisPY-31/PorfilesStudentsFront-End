@@ -27,6 +27,18 @@ export const updatePersonApi = createApi({
         },
       }),
     }),
+    // Solo STUDENT: PDF de hasta 10MB en el campo "file"; reemplaza el CV del perfil y regresa el perfil.
+    // Las postulaciones ya enviadas conservan el CV con el que se enviaron
+    uploadMyResume: builder.mutation({
+      query: ({ formData, token }) => ({
+        url: `/student/me/resume`,
+        method: "PATCH",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    }),
     updateMyPhoto: builder.mutation({
       // El back identifica al dueno por el JWT (STUDENT, TEACHER o RECRUITER)
       query: ({ formData, token }) => {
@@ -43,5 +55,5 @@ export const updatePersonApi = createApi({
   }),
 });
 
-export const { useUpdateMyAccountMutation, useUpdateMyRecruiterMutation, useUpdateMyPhotoMutation } =
+export const { useUpdateMyAccountMutation, useUpdateMyRecruiterMutation, useUpdateMyPhotoMutation, useUploadMyResumeMutation } =
   updatePersonApi;

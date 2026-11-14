@@ -3,7 +3,7 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { useAppDispatch, useAppSelector } from "./store";
 import { notificationsApi } from "../services/notifications";
-import { chatApi } from "../services/chat";
+import { chatApi, reemplazarMensaje } from "../services/chat";
 import { conversacionActiva, MI_REMITENTE } from "../helpers/chatActivo";
 import { WS_URL } from "../api/api";
 import { useTieneNotificaciones } from "./useNotifications";
@@ -32,6 +32,11 @@ export const useNotificationsSocket = (onNueva, onMensaje) => {
     if (!userId || !userToken || (!tieneNotificaciones && !tieneChat)) return;
 
     const recibirMensaje = (mensaje) => {
+      // Editado o eliminado: solo se reemplaza por idMensaje (sin aviso ni "no leidos")
+      if (mensaje.evento === "EDITADO" || mensaje.evento === "ELIMINADO") {
+        reemplazarMensaje(dispatch, mensaje, userToken);
+        return;
+      }
       const { idConversacion } = mensaje;
       const esMio = mensaje.remitente === miRemitente;
       const abierta = conversacionActiva() === idConversacion;

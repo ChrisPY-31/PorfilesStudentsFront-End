@@ -13,7 +13,8 @@ export const EstadoPostulacion = ({ estado }) => {
 
 // Postulacion vista por quien recibe: alumno, vacante, mensaje y CV.
 // `acciones` para el reclutador (cambiar estado, chat); la empresa solo consulta
-const ApplicationCard = ({ postulacion, acciones, mostrarVacante = true }) => {
+// `mostrarCV`: el CV solo lo ve el reclutador dueno de la vacante (la cuenta de empresa no)
+const ApplicationCard = ({ postulacion, acciones, mostrarVacante = true, mostrarCV = true }) => {
     const [verMensaje, setVerMensaje] = useState(false);
     const alumno = postulacion.estudiante ?? {};
     const mensaje = postulacion.mensaje?.trim();
@@ -39,7 +40,7 @@ const ApplicationCard = ({ postulacion, acciones, mostrarVacante = true }) => {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                    {postulacion.curriculum && (
+                    {mostrarCV && postulacion.curriculum && (
                         <a
                             href={postulacion.curriculum}
                             target="_blank"

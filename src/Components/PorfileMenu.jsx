@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FiFolder, FiUsers, FiLock, FiAward, FiBriefcase, FiSettings, FiLogOut, FiPlusCircle, FiMessageSquare } from "react-icons/fi";
+import { FiFolder, FiUsers, FiLock, FiAward, FiBriefcase, FiSettings, FiLogOut, FiPlusCircle, FiMessageSquare, FiFileText } from "react-icons/fi";
 import { toast } from 'sonner';
 import { useAppSelector } from '../Hooks/store';
 import { useGetloginAdminQuery } from '../services/autenticateUser';
@@ -138,6 +138,9 @@ const PorfileMenu = ({ setMenuProfile, setMyPorfile }) => {
                     {tipo === "student" && <>
                         <Opcion icono={FiFolder} onClick={() => irAPestana(2)}>Mis proyectos</Opcion>
                         <Opcion icono={FiAward} onClick={() => irAPestana(3)}>Mis recomendaciones</Opcion>
+                        {/* Abren su seccion en Cuenta y seguridad */}
+                        <Opcion icono={FiFileText} onClick={() => irAAjuste("mis-postulaciones")}>Mis postulaciones</Opcion>
+                        <Opcion icono={FiMessageSquare} onClick={() => irAAjuste("mensajes")}>Mensajes</Opcion>
                         <Opcion icono={FiUsers} proximamente>Colaboraciones</Opcion>
                     </>}
                     {tipo === "teacher" &&

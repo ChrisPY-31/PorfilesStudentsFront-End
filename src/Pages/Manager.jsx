@@ -21,6 +21,7 @@ import RecruiterJobs from "../Components/RecruiterJobs";
 import RecruiterJobForm from "../Components/RecruiterJobForm";
 import RecruiterApplicants from "../Components/RecruiterApplicants";
 import ChatInbox from "../Components/ChatInbox";
+import StudentApplications from "../Components/StudentApplications";
 
 const Manager = ({ usermenu }) => {
   const [autenticate, setAutenticate] = useState(false);
@@ -29,11 +30,15 @@ const Manager = ({ usermenu }) => {
   const { tipo } = useAppSelector(state => state.users);
   const esEmpresa = tipo === "company_admin";
   const esReclutador = tipo === "recruiter";
+  const esAlumno = tipo === "student";
+  // Alumno y reclutador comparten la seccion "mensajes" (el chat responde segun el JWT)
+  const tieneChat = esReclutador || esAlumno;
   // Se puede abrir una seccion directo con navigate(..., { state: { ajuste } }) (ej. tarjeta de Inicio, boton Empleos)
   const location = useLocation();
   const AJUSTES_EMPRESA = ["mis-datos", "vacantes", "postulaciones", "reclutadores", "crear-reclutador"];
   const AJUSTES_RECLUTADOR = ["mis-vacantes", "nueva-vacante", "postulantes", "mensajes"];
-  const ajustesDelRol = esEmpresa ? AJUSTES_EMPRESA : esReclutador ? AJUSTES_RECLUTADOR : [];
+  const AJUSTES_ALUMNO = ["mis-postulaciones", "mensajes"];
+  const ajustesDelRol = esEmpresa ? AJUSTES_EMPRESA : esReclutador ? AJUSTES_RECLUTADOR : esAlumno ? AJUSTES_ALUMNO : [];
   const ajustePedido = location.state?.ajuste;
   const [ajuste, setAjuste] = useState(ajustesDelRol.includes(ajustePedido) ? ajustePedido : "seguridad");
   // Si ya se esta en Ajustes y se vuelve a pedir una seccion (ej. clic en Empleos), se cambia a esa
@@ -66,7 +71,7 @@ const Manager = ({ usermenu }) => {
   };
   // Conversacion que se abre al entrar a Mensajes (desde Postulantes o la ventana "Enviar mensaje")
   const [conversacionAbierta, setConversacionAbierta] = useState(
-    esReclutador && location.state?.ajuste === "mensajes" ? (location.state?.idConversacion ?? null) : null
+    tieneChat && location.state?.ajuste === "mensajes" ? (location.state?.idConversacion ?? null) : null
   );
   const irAConversacion = (idConversacion) => {
     setConversacionAbierta(idConversacion);
@@ -228,7 +233,16 @@ const Manager = ({ usermenu }) => {
                     Postulantes
                   </li>
                 )}
-                {esReclutador && (
+                {esAlumno && (
+                  <li
+                    className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "mis-postulaciones" ? "bg-green-100 font-semibold" : ""}`}
+                    onClick={() => setAjuste("mis-postulaciones")}
+                  >
+                    <FaFileAlt className="mr-2 mt-1 text-lg" />
+                    Mis postulaciones
+                  </li>
+                )}
+                {tieneChat && (
                   <li
                     className={`cursor-pointer hover:bg-green-100 p-2 rounded flex ${ajuste === "mensajes" ? "bg-green-100 font-semibold" : ""}`}
                     onClick={() => irAConversacion(null)}
@@ -290,7 +304,9 @@ const Manager = ({ usermenu }) => {
             vacanteInicial={vacantePostulantes}
             onIrAVacantes={() => setAjuste("mis-vacantes")}
           />}
-          {ajuste === "mensajes" && esReclutador && <ChatInbox key={conversacionAbierta ?? "bandeja"} conversacionInicial={conversacionAbierta} />}
+          {ajuste === "mensajes" && tieneChat && <ChatInbox key={conversacionAbierta ?? "bandeja"} conversacionInicial={conversacionAbierta} />}
+          {/* Alumno: secciones que se van llenando por fases */}
+          {ajuste === "mis-postulaciones" && esAlumno && <StudentApplications />}
         </>
       ) : (
         <>

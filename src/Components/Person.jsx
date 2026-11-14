@@ -1,13 +1,17 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SlPencil } from 'react-icons/sl'
-import { IoCameraOutline, IoSchoolOutline, IoBookOutline, IoLocationOutline, IoGlobeOutline, IoRibbonOutline, IoBusinessOutline, IoBriefcaseOutline, IoChevronForward } from 'react-icons/io5'
+import { IoCameraOutline, IoSchoolOutline, IoBookOutline, IoLocationOutline, IoGlobeOutline, IoRibbonOutline, IoBusinessOutline, IoBriefcaseOutline, IoChevronForward, IoDocumentTextOutline, IoCloudUploadOutline } from 'react-icons/io5'
 import PhotoForm from './PhotoForm'
+import ResumeForm from './ResumeForm'
 import { etiquetaGradoAcademico } from '../helpers'
 
 const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, ubicacion, carrera, myAccount, setUpdateAccount, contactos, openMenuContact, user }) => {
 
   const [menuFoto, setMenuFoto] = useState(false)
+  const [menuCV, setMenuCV] = useState(false)
+  // Solo el alumno sube su CV (PATCH /student/me/resume)
+  const esAlumno = user?.tipo === 'student'
   const esProfesor = user?.tipo === 'teacher'
   const gradoAcademico = esProfesor && user?.gradoAcademico ? etiquetaGradoAcademico(user.gradoAcademico) : null
   const departamento = esProfesor ? user?.departamento?.trim() : null
@@ -126,18 +130,30 @@ const Person = ({ nombre, apellido, imagen, curriculum, especialidad, semestre, 
           >
             Información de contacto
           </button>
-          {curriculum && (
+          {/* El CV solo lo ve el alumno en su perfil; el reclutador lo ve en la postulacion a su vacante */}
+          {myAccount && curriculum && (
+            <a
+              href={curriculum}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='flex items-center gap-1.5 px-4 py-2 rounded-xl border-2 border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors'
+            >
+              <IoDocumentTextOutline className='size-4' /> Ver currículum
+            </a>
+          )}
+          {myAccount && esAlumno && (
             <button
               type='button'
-              disabled
-              className='px-4 py-2 rounded-xl border-2 border-gray-300 text-sm font-semibold text-gray-400 cursor-not-allowed'
+              onClick={() => setMenuCV(true)}
+              className='flex items-center gap-1.5 px-4 py-2 rounded-xl border-2 border-green-600 text-sm font-semibold text-green-700 hover:bg-green-50 transition-colors'
             >
-              Descargar currículum
+              <IoCloudUploadOutline className='size-4' /> {curriculum ? 'Actualizar CV' : 'Subir CV'}
             </button>
           )}
         </div>
       </div>
       {menuFoto && <PhotoForm onCancel={() => setMenuFoto(false)} />}
+      {menuCV && <ResumeForm actual={curriculum} onClose={() => setMenuCV(false)} />}
     </section>
   )
 }

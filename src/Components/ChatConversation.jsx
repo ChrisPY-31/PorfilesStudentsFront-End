@@ -1,10 +1,10 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FiArrowLeft, FiSend, FiLock, FiCheck } from "react-icons/fi";
+import { FiArrowLeft, FiSend, FiLock, FiCheck, FiChevronDown, FiEdit2, FiTrash2, FiSlash } from "react-icons/fi";
 import { IoAlertCircleOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useAppSelector } from "../Hooks/store";
-import { useGetMessagesQuery, useSendMessageMutation, useMarkConversationReadMutation } from "../services/chat";
+import { useGetMessagesQuery, useSendMessageMutation, useMarkConversationReadMutation, useEditMessageMutation, useDeleteMessageMutation } from "../services/chat";
 import { obtenerMensajeError } from "../helpers";
 import { abrirConversacionActiva, cerrarConversacionActiva } from "../helpers/chatActivo";
 
@@ -24,10 +24,133 @@ const etiquetaDia = (fecha) => {
     return d.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: d.getFullYear() === hoy.getFullYear() ? undefined : "numeric" });
 };
 
+// Se puede editar mientras el back lo diga y no haya pasado editableHasta (15 min desde que se envio)
+const sePuedeEditar = (m) => Boolean(m.editable) && !m.eliminado && (!m.editableHasta || new Date(m.editableHasta) > new Date());
+
+// Burbuja de un mensaje. En los propios aparece (al pasar el mouse) una flecha que abre la barra
+// con "Editar mensaje" y "Eliminar mensaje"; editar se hace dentro de la misma burbuja
+const Burbuja = ({ m, mio, mostrarLeido, permitirAcciones, onGuardarEdicion, onPedirEliminar }) => {
+    const [menu, setMenu] = useState(false);
+    const [editando, setEditando] = useState(false);
+    const [borrador, setBorrador] = useState("");
+    const [guardando, setGuardando] = useState(false);
+    const menuRef = useRef(null);
+
+    // Cierra la barra al dar clic fuera
+    useEffect(() => {
+        if (!menu) return;
+        const cerrar = (e) => { if (!menuRef.current?.contains(e.target)) setMenu(false); };
+        document.addEventListener("mousedown", cerrar);
+        return () => document.removeEventListener("mousedown", cerrar);
+    }, [menu]);
+
+    const editable = sePuedeEditar(m);
+    const conAcciones = mio && permitirAcciones && !m.eliminado;
+
+    const empezarEdicion = () => {
+        setMenu(false);
+        if (!sePuedeEditar(m)) {
+            toast.error("Solo puedes editar un mensaje durante los primeros 15 minutos");
+            return;
+        }
+        setBorrador(m.contenido ?? "");
+        setEditando(true);
+    };
+
+    const guardar = async () => {
+        const texto = borrador.trim();
+        if (!texto || guardando) return;
+        if (texto === (m.contenido ?? "").trim()) { setEditando(false); return; }
+        setGuardando(true);
+        const ok = await onGuardarEdicion(m, texto);
+        setGuardando(false);
+        if (ok) setEditando(false);
+    };
+
+    const colores = mio ? "bg-[#d9fdd3] rounded-br-md" : "bg-gray-100 rounded-bl-md";
+
+    if (editando) {
+        return (
+            <div className={`w-full max-w-[75%] px-3 py-2 rounded-2xl shadow-sm ${colores}`}>
+                <textarea
+                    value={borrador}
+                    onChange={(e) => setBorrador(e.target.value.slice(0, MAX_MENSAJE))}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); guardar(); }
+                        if (e.key === "Escape") setEditando(false);
+                    }}
+                    autoFocus
+                    rows={2}
+                    className="w-full px-3 py-2 text-sm bg-white border border-green-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-green-200 field-sizing-content"
+                />
+                <div className="mt-1.5 flex justify-end gap-2">
+                    <button type="button" onClick={() => setEditando(false)} disabled={guardando} className="px-3 py-1 rounded-lg text-xs font-semibold text-gray-600 hover:bg-white/60 disabled:opacity-50">
+                        Cancelar
+                    </button>
+                    <button type="button" onClick={guardar} disabled={guardando || !borrador.trim()} className="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50">
+                        {guardando ? "Guardando..." : "Guardar"}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={`group relative max-w-[75%] px-3.5 py-2 rounded-2xl text-sm text-gray-900 shadow-sm ${colores} ${conAcciones ? "pr-8" : ""}`}>
+            {m.eliminado ? (
+                <p className="flex items-center gap-1.5 italic text-gray-500">
+                    <FiSlash className="size-3.5" /> {mio ? "Eliminaste este mensaje" : "Este mensaje fue eliminado"}
+                </p>
+            ) : (
+                <p className="whitespace-pre-line break-words">{m.contenido}</p>
+            )}
+            <p className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${mio ? "text-green-800/70" : "text-gray-500"}`}>
+                {m.editado && !m.eliminado && <span className="italic">Editado ·</span>}
+                {hora(m.enviado)}
+                {mostrarLeido && <><FiCheck className="size-3" /> Leído</>}
+            </p>
+
+            {conAcciones && (
+                <div ref={menuRef} className="absolute top-1 right-1">
+                    <button
+                        type="button"
+                        onClick={() => setMenu(v => !v)}
+                        aria-label="Opciones del mensaje"
+                        aria-expanded={menu}
+                        className={`p-1 rounded-full text-green-900/60 hover:bg-black/5 transition-opacity ${menu ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"}`}
+                    >
+                        <FiChevronDown className="size-4" />
+                    </button>
+                    {menu && (
+                        <div className="absolute right-0 top-7 z-20 w-48 py-1 bg-white rounded-xl border border-gray-200 shadow-lg">
+                            <button
+                                type="button"
+                                onClick={empezarEdicion}
+                                disabled={!editable}
+                                title={!editable ? "Solo durante los primeros 15 minutos" : undefined}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:text-gray-300 disabled:hover:bg-white disabled:cursor-not-allowed"
+                            >
+                                <FiEdit2 className="size-4" /> Editar mensaje
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => { setMenu(false); onPedirEliminar(m); }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                            >
+                                <FiTrash2 className="size-4" /> Eliminar mensaje
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
 // Chat de una conversacion: mensajes (con "cargar anteriores"), enviar y marcar como leida.
 // `miRemitente` es ALUMNO o RECLUTADOR segun la sesion; `onVolver` solo en pantallas chicas
 const ChatConversation = ({ conversacion, miRemitente, onVolver }) => {
-    const { userToken } = useAppSelector(state => state.users);
+    const { userToken, userId } = useAppSelector(state => state.users);
     const { idConversacion, contraparte, vacante, estado, noLeidos } = conversacion;
     const bloqueada = estado === "BLOQUEADA";
 
@@ -39,7 +162,29 @@ const ChatConversation = ({ conversacion, miRemitente, onVolver }) => {
     );
     const [sendMessage, { isLoading: enviando }] = useSendMessageMutation();
     const [markRead] = useMarkConversationReadMutation();
+    const [editMessage] = useEditMessageMutation();
+    const [deleteMessage, { isLoading: eliminando }] = useDeleteMessageMutation();
     const [texto, setTexto] = useState("");
+    const [paraEliminar, setParaEliminar] = useState(null); // mensaje en confirmacion
+
+    const guardarEdicion = async (m, contenido) => {
+        try {
+            await editMessage({ idConversacion, idMensaje: m.idMensaje, contenido, token: userToken }).unwrap();
+            return true;
+        } catch (err) {
+            toast.error(obtenerMensajeError(err, "No se pudo editar el mensaje"));
+            return false;
+        }
+    };
+
+    const eliminar = async () => {
+        try {
+            await deleteMessage({ idConversacion, idMensaje: paraEliminar.idMensaje, token: userToken }).unwrap();
+            setParaEliminar(null);
+        } catch (err) {
+            toast.error(obtenerMensajeError(err, "No se pudo eliminar el mensaje"));
+        }
+    };
 
     const scrollRef = useRef(null);
     const alturaAntes = useRef(null); // para conservar la posicion al cargar mensajes anteriores
@@ -103,8 +248,10 @@ const ChatConversation = ({ conversacion, miRemitente, onVolver }) => {
     // Perfil: el alumno tiene pagina de persona; el reclutador muestra su empresa
     const subtitulo = contraparte?.tipo === "RECLUTADOR" ? contraparte?.empresa?.nombreEmpresa : vacante?.titulo;
 
+    // Mio = lo envie yo (mismo id de persona y mismo tipo de remitente)
+    const esMio = (m) => m.remitente === miRemitente && (userId == null || Number(m.idRemitente) === Number(userId));
     // Ultimo mensaje mio, para mostrar si ya lo leyeron
-    const ultimoMio = [...mensajes].reverse().find(m => m.remitente === miRemitente);
+    const ultimoMio = [...mensajes].reverse().find(esMio);
 
     return (
         <section className="flex-1 min-w-0 flex flex-col">
@@ -128,7 +275,7 @@ const ChatConversation = ({ conversacion, miRemitente, onVolver }) => {
             </header>
 
             {/* Mensajes */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50/60">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 bg-white">
                 {isLoading ? (
                     <div className="space-y-3">
                         {[40, 60, 35].map((w, i) => (
@@ -162,7 +309,7 @@ const ChatConversation = ({ conversacion, miRemitente, onVolver }) => {
                         )}
                         <ul className="space-y-1.5">
                             {mensajes.map((m, i) => {
-                                const mio = m.remitente === miRemitente;
+                                const mio = esMio(m);
                                 const anterior = mensajes[i - 1];
                                 const nuevoDia = !anterior || new Date(anterior.enviado).toDateString() !== new Date(m.enviado).toDateString();
                                 const mismoAutor = anterior && !nuevoDia && anterior.remitente === m.remitente;
@@ -174,16 +321,15 @@ const ChatConversation = ({ conversacion, miRemitente, onVolver }) => {
                                             </li>
                                         )}
                                         <li className={`flex ${mio ? "justify-end" : "justify-start"} ${mismoAutor ? "" : "pt-1.5"}`}>
-                                            <div className={`max-w-[75%] px-3.5 py-2 rounded-2xl text-sm shadow-sm ${mio
-                                                ? "bg-green-600 text-white rounded-br-md"
-                                                : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"}`}
-                                            >
-                                                <p className="whitespace-pre-line break-words">{m.contenido}</p>
-                                                <p className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${mio ? "text-green-100" : "text-gray-400"}`}>
-                                                    {hora(m.enviado)}
-                                                    {mio && m.idMensaje === ultimoMio?.idMensaje && m.leido && <><FiCheck className="size-3" /> Leído</>}
-                                                </p>
-                                            </div>
+                                            {/* Estilo WhatsApp: lo que envio a la derecha en verde, lo que recibo a la izquierda en gris */}
+                                            <Burbuja
+                                                m={m}
+                                                mio={mio}
+                                                mostrarLeido={mio && m.idMensaje === ultimoMio?.idMensaje && Boolean(m.leido)}
+                                                permitirAcciones={!bloqueada}
+                                                onGuardarEdicion={guardarEdicion}
+                                                onPedirEliminar={setParaEliminar}
+                                            />
                                         </li>
                                     </React.Fragment>
                                 );
@@ -223,6 +369,34 @@ const ChatConversation = ({ conversacion, miRemitente, onVolver }) => {
                         <span>Enter para enviar · Shift + Enter para salto de línea</span>
                         {texto.length > MAX_MENSAJE - 200 && <span>{texto.length}/{MAX_MENSAJE}</span>}
                     </p>
+                </div>
+            )}
+            {paraEliminar && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+                        <h3 className="text-lg font-bold text-gray-900">Eliminar mensaje</h3>
+                        <p className="mt-2 text-sm text-gray-600">
+                            El mensaje se eliminará para los dos. En su lugar se verá "Este mensaje fue eliminado".
+                        </p>
+                        <div className="mt-6 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setParaEliminar(null)}
+                                disabled={eliminando}
+                                className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold text-sm disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={eliminar}
+                                disabled={eliminando}
+                                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 shadow-md disabled:opacity-50"
+                            >
+                                {eliminando ? "Eliminando..." : "Eliminar"}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </section>

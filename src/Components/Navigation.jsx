@@ -4,6 +4,7 @@ import { Link, NavLink } from "react-router-dom";
 import {
   IoNotificationsOutline,
   IoNotifications,
+  IoChatbubblesOutline,
   IoSchool,
   IoChevronDown,
   IoBriefcaseOutline,
@@ -47,15 +48,25 @@ import { useAppSelector } from "../Hooks/store";
 import { useEsAdmin } from "../Hooks/useEsAdmin";
 import LogoCU from "../assets/LogoCUTianguistenco.jpg";
 import EmpresaAvatar from "./EmpresaAvatar";
+import { useGetConversationsQuery } from "../services/chat";
+import { MI_REMITENTE } from "../helpers/chatActivo";
 
 const Navigation = ({ autenticate, setMyPorfile }) => {
   const [menuNotification, setMenuNotification] = useState(false);
   const [menuProfile, setMenuProfile] = useState(false);
-  const { user, tipo } = useAppSelector((state) => state.users);
+  const { user, tipo, userToken } = useAppSelector((state) => state.users);
   const esEmpresa = tipo === "company_admin";
   const esAdmin = useEsAdmin();
   const { noLeidas, abrir } = useNotifications();
   const tieneNotificaciones = useTieneNotificaciones();
+  // Mensajes sin leer (alumno y reclutador): suma de noLeidos de la bandeja. El WebSocket la mantiene al dia;
+  // el polling es solo respaldo por si la conexion falla
+  const tieneChat = Boolean(MI_REMITENTE[tipo]);
+  const { data: conversaciones = [] } = useGetConversationsQuery(
+    { token: userToken },
+    { skip: !autenticate || !tieneChat || !userToken, pollingInterval: 120000 }
+  );
+  const mensajesSinLeer = conversaciones.reduce((total, c) => total + (c.noLeidos ?? 0), 0);
 
   // Conexion en tiempo real: cada notificacion nueva entra a la campana y se avisa con un toast;
   // los mensajes del chat que llegan con la conversacion cerrada tambien se avisan
@@ -66,13 +77,12 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
       });
     },
     (mensaje, nombre) => {
-      const vista = mensaje.contenido.length > 80 ? `${mensaje.contenido.slice(0, 80)}…` : mensaje.contenido;
+      const contenido = mensaje.contenido ?? "";
+      const vista = contenido.length > 80 ? `${contenido.slice(0, 80)}…` : contenido;
       toast(nombre ? `Nuevo mensaje de ${nombre}` : "Nuevo mensaje", {
         description: vista,
-        // Mensajes por ahora solo existe en Cuenta y seguridad del reclutador
-        action: tipo === "recruiter"
-          ? { label: "Ver", onClick: () => navigate("/sing-in-and-security", { state: { ajuste: "mensajes", idConversacion: mensaje.idConversacion } }) }
-          : undefined,
+        // Mensajes esta en Cuenta y seguridad (alumno y reclutador)
+        action: { label: "Ver", onClick: () => navigate("/sing-in-and-security", { state: { ajuste: "mensajes", idConversacion: mensaje.idConversacion } }) },
       });
     }
   );
@@ -157,6 +167,24 @@ const Navigation = ({ autenticate, setMyPorfile }) => {
         {/* Sin sesion la barra solo lleva el logo: "Iniciar sesion" esta en la portada y el registro en el inicio de sesion */}
         {autenticate ? (
           <div className="flex items-center gap-3 relative">
+            {/* Mensajes: abre la bandeja en Cuenta y seguridad */}
+            {tieneChat && (
+              <Link
+                to="/sing-in-and-security"
+                state={{ ajuste: "mensajes" }}
+                aria-label={mensajesSinLeer > 0 ? `Mensajes, ${mensajesSinLeer} sin leer` : "Mensajes"}
+                title="Mensajes"
+                className="relative p-2 rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <IoChatbubblesOutline className="size-6" />
+                {mensajesSinLeer > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-green-600 text-white text-[10px] font-bold ring-2 ring-white">
+                    {mensajesSinLeer > 99 ? "99+" : mensajesSinLeer}
+                  </span>
+                )}
+              </Link>
+            )}
+
             {tieneNotificaciones && <>
             <div ref={campanaRef}>
               <button

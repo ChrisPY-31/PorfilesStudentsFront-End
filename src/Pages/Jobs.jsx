@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { FiSearch, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { IoAlertCircleOutline, IoBriefcaseOutline } from "react-icons/io5";
 import { useAppSelector } from "../Hooks/store";
@@ -116,7 +117,23 @@ const Jobs = () => {
                         )}
                     </div>
                 ) : (
-                    vacantes.map(v => <JobCard key={v.idVacante} vacante={v} mostrarEmpresa ocultarEstado />)
+                    vacantes.map(v => (
+                        <JobCard
+                            key={v.idVacante}
+                            vacante={v}
+                            mostrarEmpresa
+                            ocultarEstado
+                            enlace={`/Empleos/${v.idVacante}`}
+                            acciones={
+                                <Link
+                                    to={`/Empleos/${v.idVacante}`}
+                                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-xs font-semibold text-white"
+                                >
+                                    Ver vacante
+                                </Link>
+                            }
+                        />
+                    ))
                 )}
             </div>
 
