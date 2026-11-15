@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   IoSearchOutline, IoAlertCircleOutline, IoBusinessOutline, IoCalendarOutline, IoTimeOutline, IoDocumentTextOutline,
@@ -7,19 +7,26 @@ import {
 import { toast } from 'sonner';
 import { SlPencil } from 'react-icons/sl';
 import PartnershipForm from './PartnershipForm';
+import PartnershipDetail from './PartnershipDetail';
+import CompanyAccountForm from './CompanyAccountForm';
 import { useAppSelector } from '../Hooks/store';
-import { useGetPartnershipsQuery, useChangePartnershipStatusMutation } from '../services/partnerships';
-import { useGetCompaniesQuery } from '../services/company';
+import {
+  useGetPartnershipsQuery, useGetPartnershipQuery, useGetPartnershipsSummaryQuery, useChangePartnershipStatusMutation
+} from '../services/partnerships';
+import { useDebounce } from '../Hooks/useDebounce';
+import { POR_PAGINA } from '../helpers/paginacion';
+import Paginacion from './Paginacion';
 import { obtenerMensajeError } from '../helpers';
 import {
   ESTADOS_CONVENIO, estadoConvenio, diasParaVencer, vencePronto, formatearFechaCorta, DIAS_AVISO_VENCIMIENTO
 } from '../helpers/convenios';
 import { hoyISO } from '../helpers/vacantes';
 
+// vigente: lo que se manda al back (undefined = todos)
 const PESTANAS = [
-  { valor: 'todos', etiqueta: 'Todos' },
-  { valor: 'vigentes', etiqueta: 'Vigentes' },
-  { valor: 'no-vigentes', etiqueta: 'No vigentes' },
+  { valor: 'todos', etiqueta: 'Todos', vigente: undefined },
+  { valor: 'vigentes', etiqueta: 'Vigentes', vigente: true },
+  { valor: 'no-vigentes', etiqueta: 'No vigentes', vigente: false },
 ];
 
 const Resumen = ({ etiqueta, valor, detalle, acento }) => (
@@ -123,42 +130,43 @@ const ConfirmarEstado = ({ convenio, onCerrar, onEditarFechas }) => {
 const textoVencimiento = (dias) =>
   dias === 0 ? 'Vence hoy' : dias === 1 ? 'Vence mañana' : `Vence en ${dias} días`;
 
-// Convenios con empresas (solo ADMIN): lista con estado, busqueda y pestañas por vigencia
+// Convenios con empresas (solo ADMIN): lista paginada en el back (20), busqueda y pestañas por vigencia
 const ManagerPartnerships = () => {
   const { userToken } = useAppSelector(state => state.users);
-  const { data, isLoading, isError, error, refetch } = useGetPartnershipsQuery({ token: userToken }, { skip: !userToken });
-  // Logos: solo vienen en el perfil publico (convenios vigentes)
-  const { data: empresas } = useGetCompaniesQuery();
+  const omitir = { skip: !userToken };
 
   const [busqueda, setBusqueda] = useState('');
   const [pestana, setPestana] = useState('todos');
+  const [pagina, setPagina] = useState(0);
+  const q = useDebounce(busqueda.trim());
+  const vigente = PESTANAS.find(p => p.valor === pestana)?.vigente;
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetPartnershipsQuery(
+    { token: userToken, vigente, q, page: pagina, size: POR_PAGINA }, omitir);
+  const resumenQ = useGetPartnershipsSummaryQuery({ token: userToken, dias: DIAS_AVISO_VENCIMIENTO }, omitir);
   const [enEdicion, setEnEdicion] = useState(null); // convenio que se esta editando
   const [cambiandoEstado, setCambiandoEstado] = useState(null); // convenio a activar/desactivar
+  // Se guarda el id: el detalle toma el convenio de la lista y asi se actualiza al editarlo o cambiar su estado
+  const [detalleId, setDetalleId] = useState(null);
+  const [cuentaPara, setCuentaPara] = useState(null); // convenio al que se le crea su cuenta de empresa
 
-  const convenios = useMemo(() => (Array.isArray(data) ? data : []), [data]);
-  const logos = useMemo(
-    () => new Map((Array.isArray(empresas) ? empresas : []).map(e => [e.idCorporacion, e.logo])),
-    [empresas]
-  );
+  const visibles = data?.content ?? [];
+  const totalPaginas = data?.totalPages ?? 0;
+  // El detalle se pide aparte: asi sigue abierto aunque el convenio cambie de pestaña o de pagina al editarlo
+  const { data: enDetalle } = useGetPartnershipQuery({ id: detalleId, token: userToken }, { skip: !userToken || detalleId == null });
 
-  const conteo = useMemo(() => {
-    const vigentes = convenios.filter(c => c.vigente).length;
-    return {
-      total: convenios.length,
-      vigentes,
-      noVigentes: convenios.length - vigentes,
-      vencenPronto: convenios.filter(vencePronto).length,
-    };
-  }, [convenios]);
+  // Si la pagina actual se vacia (p. ej. al desactivar el ultimo de "Vigentes") se regresa a la anterior
+  useEffect(() => {
+    if (data && pagina > 0 && pagina >= totalPaginas) setPagina(Math.max(0, totalPaginas - 1));
+  }, [data, pagina, totalPaginas]);
 
-  const visibles = useMemo(() => {
-    const texto = busqueda.trim().toLowerCase();
-    return convenios
-      .filter(c => pestana === 'todos' || (pestana === 'vigentes' ? c.vigente : !c.vigente))
-      .filter(c => !texto || [c.nombreEmpresa, c.categoria, c.tipoAcuerdo].some(v => v?.toLowerCase().includes(texto)))
-      .sort((a, b) => a.nombreEmpresa.localeCompare(b.nombreEmpresa, 'es'));
-  }, [convenios, busqueda, pestana]);
-
+  const resumen = resumenQ.data;
+  const conteo = {
+    total: resumen?.total ?? 0,
+    vigentes: resumen?.vigentes ?? 0,
+    noVigentes: resumen?.noVigentes ?? 0,
+    vencenPronto: resumen?.vencenPronto ?? 0,
+  };
+  const cargandoResumen = resumenQ.isLoading;
   const totalPestana = { todos: conteo.total, vigentes: conteo.vigentes, 'no-vigentes': conteo.noVigentes };
 
   return (
@@ -171,12 +179,12 @@ const ManagerPartnerships = () => {
 
         {/* Resumen */}
         <div className='grid grid-cols-2 md:grid-cols-4 gap-3'>
-          <Resumen etiqueta='Total' valor={isLoading ? '–' : conteo.total} />
-          <Resumen etiqueta='Vigentes' valor={isLoading ? '–' : conteo.vigentes} acento='text-green-700' />
-          <Resumen etiqueta='No vigentes' valor={isLoading ? '–' : conteo.noVigentes} detalle='Inactivos, vencidos o por iniciar' />
+          <Resumen etiqueta='Total' valor={cargandoResumen ? '–' : conteo.total} />
+          <Resumen etiqueta='Vigentes' valor={cargandoResumen ? '–' : conteo.vigentes} acento='text-green-700' />
+          <Resumen etiqueta='No vigentes' valor={cargandoResumen ? '–' : conteo.noVigentes} detalle='Inactivos, vencidos o por iniciar' />
           <Resumen
             etiqueta='Vencen pronto'
-            valor={isLoading ? '–' : conteo.vencenPronto}
+            valor={cargandoResumen ? '–' : conteo.vencenPronto}
             detalle={`En los próximos ${DIAS_AVISO_VENCIMIENTO} días`}
             acento={conteo.vencenPronto ? 'text-amber-600' : undefined}
           />
@@ -190,7 +198,7 @@ const ManagerPartnerships = () => {
               <input
                 type='search'
                 value={busqueda}
-                onChange={e => setBusqueda(e.target.value)}
+                onChange={e => { setBusqueda(e.target.value); setPagina(0); }}
                 placeholder='Buscar por empresa, categoría o tipo de acuerdo'
                 className='w-full h-10 pl-10 pr-3 rounded-xl border-2 border-gray-200 text-sm outline-none focus:border-green-500'
               />
@@ -200,13 +208,13 @@ const ManagerPartnerships = () => {
                 <button
                   key={p.valor}
                   type='button'
-                  onClick={() => setPestana(p.valor)}
+                  onClick={() => { setPestana(p.valor); setPagina(0); }}
                   className={`px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${pestana === p.valor
                     ? 'bg-green-600 border-green-600 text-white'
                     : 'bg-white border-gray-300 text-gray-700 hover:border-green-400'}`}
                 >
                   {p.etiqueta}
-                  {!isLoading && <span className={`ml-1.5 ${pestana === p.valor ? 'text-green-100' : 'text-gray-400'}`}>{totalPestana[p.valor]}</span>}
+                  {!cargandoResumen && <span className={`ml-1.5 ${pestana === p.valor ? 'text-green-100' : 'text-gray-400'}`}>{totalPestana[p.valor]}</span>}
                 </button>
               ))}
             </div>
@@ -232,15 +240,15 @@ const ManagerPartnerships = () => {
             </div>
           ) : visibles.length === 0 ? (
             <p className='p-10 text-center text-sm text-gray-500'>
-              {convenios.length === 0
+              {conteo.total === 0 && !busqueda.trim()
                 ? 'Todavía no hay convenios registrados.'
                 : busqueda.trim() ? 'Ningún convenio coincide con la búsqueda.' : 'No hay convenios en esta pestaña.'}
             </p>
           ) : (
-            <ul className='divide-y divide-gray-100'>
+            <ul className={`divide-y divide-gray-100 transition-opacity ${isFetching ? 'opacity-60' : ''}`}>
               {visibles.map(convenio => {
                 const estado = ESTADOS_CONVENIO[estadoConvenio(convenio)];
-                const logo = logos.get(convenio.idCorporacion);
+                const logo = convenio.logo;
                 const dias = diasParaVencer(convenio);
                 return (
                   <li key={convenio.idCorporacion} className='flex items-start gap-4 p-4'>
@@ -254,7 +262,13 @@ const ManagerPartnerships = () => {
 
                     <div className='flex-1 min-w-0'>
                       <div className='flex flex-wrap items-center gap-2'>
-                        <p className='font-semibold text-gray-900'>{convenio.nombreEmpresa}</p>
+                        <button
+                          type='button'
+                          onClick={() => setDetalleId(convenio.idCorporacion)}
+                          className='font-semibold text-gray-900 text-left hover:text-green-700 hover:underline'
+                        >
+                          {convenio.nombreEmpresa}
+                        </button>
                         <span className={`px-2.5 py-0.5 rounded-full border text-xs font-medium ${estado.color}`}>{estado.etiqueta}</span>
                         {vencePronto(convenio) && (
                           <span className='flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-xs font-medium text-amber-700'>
@@ -314,8 +328,51 @@ const ManagerPartnerships = () => {
               })}
             </ul>
           )}
+
+          <Paginacion
+            className='px-4 py-3 border-t border-gray-100 bg-gray-50'
+            pagina={pagina}
+            totalPaginas={totalPaginas}
+            total={data?.totalElements ?? 0}
+            porPagina={POR_PAGINA}
+            onCambiar={setPagina}
+            cargando={isFetching}
+          />
         </div>
       </div>
+
+      {/* El detalle va antes: editar y cambiar estado se abren encima */}
+      {enDetalle && (
+        <PartnershipDetail
+          convenio={enDetalle}
+          logo={enDetalle.logo}
+          onCerrar={() => setDetalleId(null)}
+          onEditar={setEnEdicion}
+          onCambiarEstado={setCambiandoEstado}
+          onCrearCuenta={setCuentaPara}
+        />
+      )}
+
+      {cuentaPara && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4'>
+          <div className='w-full max-w-xl max-h-[92vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden'>
+            <div className='flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100'>
+              <h2 className='text-2xl font-extrabold text-gray-900'>Crear cuenta de empresa</h2>
+              <button
+                type='button'
+                onClick={() => setCuentaPara(null)}
+                className='p-1 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors'
+                aria-label='Cerrar'
+              >
+                <IoCloseSharp className='size-6' />
+              </button>
+            </div>
+            <div className='flex-1 overflow-y-auto px-6 py-5'>
+              <CompanyAccountForm idCorporacion={cuentaPara.idCorporacion} fijo onCancelar={() => setCuentaPara(null)} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {cambiandoEstado && (
         <ConfirmarEstado

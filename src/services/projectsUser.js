@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_KEY } from "../api/api";
+import { POR_PAGINA, limpiarParams } from "../helpers/paginacion";
 
 export const projectUserApi = createApi({
   reducerPath: "projectUserApi",
@@ -62,13 +63,20 @@ export const projectUserApi = createApi({
         url: "/technology",
       }),
     }),
-    // Para elegir colaboradores; la respuesta es paginada ({ content: [...] })
-    getStudentsForMentions: builder.query({
-      query: () => ({
+    // GET /students paginado (Page de Spring, size 1..50), publico. Filtros opcionales del back: q (palabras en nombre
+    // o apellido, sin acentos), idCarrera, semestre, idUbicacion, tecnologias (debe tener todas), conProyectos,
+    // recomendados y orden (recientes | nombre | recomendaciones)
+    getStudents: builder.query({
+      query: ({ page = 0, size = POR_PAGINA, q, idCarrera, semestre, idUbicacion, tecnologias, conProyectos, recomendados, orden } = {}) => ({
         url: "/students",
-        params: { page: 0, size: 200 },
+        params: limpiarParams({
+          page, size, q: q?.trim(), idCarrera, semestre, idUbicacion,
+          tecnologias: tecnologias?.length ? tecnologias.join(",") : undefined,
+          conProyectos: conProyectos || undefined,
+          recomendados: recomendados || undefined,
+          orden: orden === "recientes" ? undefined : orden,
+        }),
       }),
-      transformResponse: (respuesta) => respuesta?.content ?? [],
     }),
   }),
 });
@@ -80,5 +88,5 @@ export const {
   useDeleteProjectStudentMutation,
   useUploadProjectImageMutation,
   useGetTechnologiesQuery,
-  useGetStudentsForMentionsQuery,
+  useGetStudentsQuery,
 } = projectUserApi;

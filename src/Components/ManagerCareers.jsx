@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { useAppSelector } from '../Hooks/store';
 import {
   useGetCareersQuery,
-  useGetEstudiantesResumenQuery,
+  useGetEstudiantesSummaryQuery,
   useCreateCareerMutation,
   useUpdateCareerMutation,
   useDeleteCareerMutation,
@@ -20,7 +20,7 @@ const ManagerCareers = () => {
   const { userToken } = useAppSelector(state => state.users);
   const omitir = { skip: !userToken };
   const { data: carreras = [], isLoading, isError, error, refetch } = useGetCareersQuery({ token: userToken }, omitir);
-  const estudiantesQ = useGetEstudiantesResumenQuery({ token: userToken }, omitir);
+  const estudiantesQ = useGetEstudiantesSummaryQuery({ token: userToken }, omitir);
   const [crearCarrera, { isLoading: creando }] = useCreateCareerMutation();
   const [actualizarCarrera, { isLoading: guardando }] = useUpdateCareerMutation();
   const [eliminarCarrera, { isLoading: eliminando }] = useDeleteCareerMutation();
@@ -32,16 +32,12 @@ const ManagerCareers = () => {
   const [errorEdicion, setErrorEdicion] = useState('');
   const [porEliminar, setPorEliminar] = useState(null);
 
-  // Alumnos por carrera. Si no se pudo contar a todos, no se permite eliminar (seria a ciegas)
-  const alumnosPorCarrera = useMemo(() => {
-    const conteo = new Map();
-    (estudiantesQ.data?.estudiantes ?? []).forEach(e => {
-      const id = e.carrera?.idCarrera;
-      if (id != null) conteo.set(id, (conteo.get(id) ?? 0) + 1);
-    });
-    return conteo;
-  }, [estudiantesQ.data]);
-  const conteoConfiable = estudiantesQ.isSuccess && estudiantesQ.data.total <= estudiantesQ.data.estudiantes.length;
+  // Alumnos por carrera (GET /students/summary). Si no se pudo contar, no se permite eliminar (seria a ciegas)
+  const alumnosPorCarrera = useMemo(
+    () => new Map((estudiantesQ.data?.porCarrera ?? []).map(c => [c.idCarrera, c.cantidad])),
+    [estudiantesQ.data]
+  );
+  const conteoConfiable = estudiantesQ.isSuccess;
 
   const visibles = useMemo(() => {
     const texto = busqueda.trim().toLowerCase();
@@ -198,7 +194,7 @@ const ManagerCareers = () => {
                       <div className='flex-1 min-w-0'>
                         <p className='text-sm font-medium text-gray-900 truncate'>{carrera.carrera}</p>
                         <p className='text-xs text-gray-500'>
-                          {estudiantesQ.isSuccess ? `${alumnos} ${alumnos === 1 ? 'alumno' : 'alumnos'}` : '—'}
+                          {conteoConfiable ? `${alumnos} ${alumnos === 1 ? 'alumno' : 'alumnos'}` : '—'}
                         </p>
                       </div>
                     )}

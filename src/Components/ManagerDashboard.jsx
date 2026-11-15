@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { IoPeopleOutline, IoSchoolOutline, IoLibraryOutline, IoBriefcaseOutline, IoLockClosedOutline, IoAlertCircleOutline, IoRefreshOutline, IoChevronForward } from 'react-icons/io5';
+import { IoPeopleOutline, IoSchoolOutline, IoLibraryOutline, IoBriefcaseOutline, IoBusinessOutline, IoLockClosedOutline, IoAlertCircleOutline, IoRefreshOutline, IoChevronForward } from 'react-icons/io5';
 import { useAppSelector } from '../Hooks/store';
-import { useGetCareersQuery, useGetEstudiantesResumenQuery, useGetUsersAdminQuery } from '../services/UserSlice';
+import { useGetEstudiantesSummaryQuery, useGetUsersSummaryQuery } from '../services/UserSlice';
+import { useGetPartnershipsSummaryQuery } from '../services/partnerships';
 import { obtenerMensajeError } from '../helpers';
 
 const formatoNumero = new Intl.NumberFormat('es-MX');
@@ -72,45 +73,36 @@ const BarrasPorCarrera = ({ filas, total }) => {
   );
 };
 
-const ManagerDashboard = ({ onVerUsuarios }) => {
+const ManagerDashboard = ({ onVerUsuarios, onVerConvenios }) => {
   const { userToken } = useAppSelector(state => state.users);
   const omitir = { skip: !userToken };
-  const cuentasQ = useGetUsersAdminQuery({ token: userToken }, omitir);
-  const estudiantesQ = useGetEstudiantesResumenQuery({ token: userToken }, omitir);
-  const carrerasQ = useGetCareersQuery({ token: userToken }, omitir);
+  // Conteos del back: GET /users/summary y GET /students/summary
+  const cuentasQ = useGetUsersSummaryQuery({ token: userToken }, omitir);
+  const estudiantesQ = useGetEstudiantesSummaryQuery({ token: userToken }, omitir);
+  const conveniosQ = useGetPartnershipsSummaryQuery({ token: userToken }, omitir);
   const [verTabla, setVerTabla] = useState(false);
 
-  const cuentas = useMemo(() => cuentasQ.data ?? [], [cuentasQ.data]);
-  const conteo = useMemo(() => {
-    const porRol = { STUDENT: 0, TEACHER: 0, RECRUITER: 0, ADMIN: 0 };
-    let bloqueadas = 0;
-    cuentas.forEach(c => {
-      c.roles?.forEach(r => { porRol[r] = (porRol[r] ?? 0) + 1; });
-      if (!c.accountNonLocked) bloqueadas++;
-    });
-    return { porRol, bloqueadas };
-  }, [cuentas]);
+  const totalCuentas = cuentasQ.data?.total ?? 0;
+  const porRol = cuentasQ.data?.porRol ?? {};
 
-  // Todas las carreras del catalogo (aunque tengan 0) + los alumnos sin carrera
+  // Todas las carreras del catalogo (el back incluye las que tienen 0) + los alumnos sin carrera
   const porCarrera = useMemo(() => {
-    const estudiantes = estudiantesQ.data?.estudiantes ?? [];
-    const mapa = new Map((carrerasQ.data ?? []).map(c => [c.carrera, 0]));
-    estudiantes.forEach(e => {
-      const nombre = e.carrera?.carrera ?? SIN_CARRERA;
-      mapa.set(nombre, (mapa.get(nombre) ?? 0) + 1);
-    });
-    return [...mapa.entries()]
-      .map(([nombre, cantidad]) => ({ nombre, cantidad }))
-      .filter(f => f.nombre !== SIN_CARRERA || f.cantidad > 0)
-      .sort((a, b) => (a.nombre === SIN_CARRERA) - (b.nombre === SIN_CARRERA) || b.cantidad - a.cantidad || a.nombre.localeCompare(b.nombre));
-  }, [estudiantesQ.data, carrerasQ.data]);
+    const resumen = estudiantesQ.data;
+    if (!resumen) return [];
+    const filas = (resumen.porCarrera ?? []).map(c => ({ nombre: c.carrera, cantidad: c.cantidad }));
+    if (resumen.sinCarrera > 0) filas.push({ nombre: SIN_CARRERA, cantidad: resumen.sinCarrera });
+    return filas.sort((a, b) => (a.nombre === SIN_CARRERA) - (b.nombre === SIN_CARRERA) || b.cantidad - a.cantidad || a.nombre.localeCompare(b.nombre));
+  }, [estudiantesQ.data]);
 
-  const totalEstudiantes = estudiantesQ.data?.estudiantes.length ?? 0;
-  const incompleto = (estudiantesQ.data?.total ?? 0) > totalEstudiantes;
-  const cargando = cuentasQ.isLoading || estudiantesQ.isLoading || carrerasQ.isLoading;
-  const conError = [cuentasQ, estudiantesQ, carrerasQ].find(q => q.isError);
-  const recargar = () => { cuentasQ.refetch(); estudiantesQ.refetch(); carrerasQ.refetch(); };
-  const valor = (n) => (cargando ? '—' : formatoNumero.format(n));
+  const conveniosTotal = conveniosQ.data?.total ?? 0;
+  const conveniosVigentes = conveniosQ.data?.vigentes ?? 0;
+
+  const totalEstudiantes = estudiantesQ.data?.total ?? 0;
+  const cargando = cuentasQ.isLoading || estudiantesQ.isLoading;
+  const conError = [cuentasQ, estudiantesQ].find(q => q.isError);
+  // Los convenios no bloquean el resto: si fallan, su tarjeta muestra el guion
+  const recargar = () => { cuentasQ.refetch(); estudiantesQ.refetch(); conveniosQ.refetch(); };
+  const valor = (n) => (cargando ? '—' : formatoNumero.format(n ?? 0));
 
   return (
     <div className='flex-1 p-6 md:p-8 bg-gray-50 min-w-0'>
@@ -138,18 +130,27 @@ const ManagerDashboard = ({ onVerUsuarios }) => {
         )}
 
         {/* Cifras */}
-        <div className='grid grid-cols-2 lg:grid-cols-5 gap-4'>
-          <Tarjeta icono={IoPeopleOutline} etiqueta='Cuentas' valor={valor(cuentas.length)} detalle={`${conteo.porRol.ADMIN} administradores`} />
-          <Tarjeta icono={IoSchoolOutline} etiqueta='Estudiantes' valor={valor(conteo.porRol.STUDENT)} acento='bg-green-50 text-green-700' />
-          <Tarjeta icono={IoLibraryOutline} etiqueta='Docentes' valor={valor(conteo.porRol.TEACHER)} acento='bg-blue-50 text-blue-700' />
-          <Tarjeta icono={IoBriefcaseOutline} etiqueta='Reclutadores' valor={valor(conteo.porRol.RECRUITER)} acento='bg-purple-50 text-purple-700' />
+        <div className='grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4'>
+          <Tarjeta icono={IoPeopleOutline} etiqueta='Cuentas' valor={valor(totalCuentas)}
+            detalle={onVerUsuarios ? <>Ver usuarios <IoChevronForward className='size-3' /></> : null} onClick={onVerUsuarios} />
+          <Tarjeta icono={IoSchoolOutline} etiqueta='Estudiantes' valor={valor(porRol.STUDENT)} acento='bg-green-50 text-green-700' />
+          <Tarjeta icono={IoLibraryOutline} etiqueta='Docentes' valor={valor(porRol.TEACHER)} acento='bg-blue-50 text-blue-700' />
+          <Tarjeta icono={IoBriefcaseOutline} etiqueta='Reclutadores' valor={valor(porRol.RECRUITER)} acento='bg-purple-50 text-purple-700' />
+          <Tarjeta
+            icono={IoBusinessOutline}
+            etiqueta='Cuentas de empresa'
+            valor={valor(porRol.COMPANY_ADMIN)}
+            acento='bg-amber-50 text-amber-700'
+            detalle={conveniosQ.isSuccess
+              ? <>{formatoNumero.format(conveniosVigentes)} de {formatoNumero.format(conveniosTotal)} convenios vigentes {onVerConvenios && <IoChevronForward className='size-3' />}</>
+              : null}
+            onClick={onVerConvenios}
+          />
           <Tarjeta
             icono={IoLockClosedOutline}
             etiqueta='Cuentas bloqueadas'
-            valor={valor(conteo.bloqueadas)}
-            acento={conteo.bloqueadas ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'}
-            detalle={<>Ver usuarios <IoChevronForward className='size-3' /></>}
-            onClick={onVerUsuarios}
+            valor={valor(cuentasQ.data?.bloqueadas)}
+            acento='bg-gray-100 text-gray-500'
           />
         </div>
 
@@ -192,11 +193,6 @@ const ManagerDashboard = ({ onVerUsuarios }) => {
             <BarrasPorCarrera filas={porCarrera} total={totalEstudiantes} />
           )}
 
-          {incompleto && (
-            <p className='mt-4 text-xs text-amber-700'>
-              Se muestran los primeros {formatoNumero.format(totalEstudiantes)} de {formatoNumero.format(estudiantesQ.data.total)} estudiantes.
-            </p>
-          )}
         </section>
       </div>
     </div>

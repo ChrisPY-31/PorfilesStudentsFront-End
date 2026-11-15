@@ -11,15 +11,35 @@ export const userSlice = createApi({
         url: "/teachers",
       }),
     }),
-    // Solo ADMIN: [{ id (de la cuenta), username, email, enabled, accountNonLocked, roles: ["STUDENT"] }]
+    // Solo ADMIN, paginado (Page de Spring): { content: [{ id (de la cuenta), username, email, enabled,
+    // accountNonLocked, roles: ["STUDENT"] }], totalElements, totalPages, number, ... }. page desde 0, size 1..50,
+    // ordenado por id. Filtros opcionales: q (username o correo), rol, estado (ACTIVA, BLOQUEADA o DESHABILITADA)
     getUsersAdmin: builder.query({
-      query: ({ token }) => ({
+      query: ({ token, page = 0, size = 20, q, rol, estado }) => ({
         url: "/users",
+        params: {
+          page,
+          size,
+          ...(q ? { q } : {}),
+          ...(rol ? { rol } : {}),
+          ...(estado ? { estado } : {}),
+        },
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }),
       providesTags: ["CuentasAdmin"],
+    }),
+    // Solo ADMIN: { total, porRol: { STUDENT, TEACHER, RECRUITER, COMPANY_ADMIN, ADMIN }, bloqueadas }
+    getUsersSummary: builder.query({
+      query: ({ token }) => ({ url: "/users/summary", headers: { Authorization: `Bearer ${token}` } }),
+      providesTags: ["CuentasAdmin"],
+    }),
+    // Solo ADMIN: { total, porCarrera: [{ idCarrera, carrera, cantidad }] (todas, aunque tengan 0), sinCarrera }
+    getEstudiantesSummary: builder.query({
+      query: ({ token }) => ({ url: "/students/summary", headers: { Authorization: `Bearer ${token}` } }),
+      // Cambia al crear/renombrar/eliminar carreras y al crear cuentas de alumno
+      providesTags: ["Carreras", "CuentasAdmin"],
     }),
     // Bloquear/desbloquear (toggle). El back pide el id de la PERSONA y /users solo trae
     // el de la cuenta, asi que primero se busca la persona por username.
@@ -36,22 +56,6 @@ export const userSlice = createApi({
       },
       // Solo recarga la lista si el cambio se aplico
       invalidatesTags: (_res, error) => (error ? [] : ["CuentasAdmin"]),
-    }),
-    // Dashboard: todos los estudiantes para contarlos por carrera (respuesta paginada de Spring)
-    getEstudiantesResumen: builder.query({
-      query: ({ token }) => ({
-        url: "/students",
-        params: { page: 0, size: 1000 },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }),
-      transformResponse: (respuesta) => ({
-        estudiantes: respuesta?.content ?? [],
-        total: respuesta?.totalElements ?? respuesta?.content?.length ?? 0,
-      }),
-      // Cada alumno trae el nombre de su carrera: recargar si se renombra una
-      providesTags: ["Carreras"],
     }),
     getUserById: builder.query({
       query: ({ id, token }) => ({
@@ -249,7 +253,8 @@ export const userSlice = createApi({
 export const {
   useGetTeachersQuery,
   useGetUsersAdminQuery,
-  useGetEstudiantesResumenQuery,
+  useGetUsersSummaryQuery,
+  useGetEstudiantesSummaryQuery,
   useGetUserByIdQuery,
   useGetCareersQuery,
   useCreateCareerMutation,

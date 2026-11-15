@@ -1,10 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiSearch, FiPause, FiPlay, FiXCircle, FiUsers } from "react-icons/fi";
 import { IoAlertCircleOutline, IoBriefcaseOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useAppSelector } from "../Hooks/store";
-import { useGetCompanyJobsQuery, useChangeCompanyJobStatusMutation, useGetMyRecruitersQuery } from "../services/company";
+import { useGetCompanyJobsQuery, useGetCompanyJobsSummaryQuery, useChangeCompanyJobStatusMutation, useGetMyRecruitersQuery } from "../services/company";
 import { ESTADOS_VACANTE, TIPOS_VACANTE } from "../helpers/vacantes";
+import { POR_PAGINA } from "../helpers/paginacion";
+import { useDebounce } from "../Hooks/useDebounce";
+import Paginacion from "./Paginacion";
 import { obtenerMensajeError } from "../helpers";
 import JobCard from "./JobCard";
 
@@ -34,32 +37,42 @@ const TEXTOS = {
 
 const CompanyJobs = ({ onVerPostulaciones }) => {
     const { userToken } = useAppSelector(state => state.users);
-    const { data: vacantes = [], isLoading, isError, error, refetch } = useGetCompanyJobsQuery({ token: userToken }, { skip: !userToken });
-    const { data: reclutadores = [] } = useGetMyRecruitersQuery({ token: userToken }, { skip: !userToken });
+    const omitir = { skip: !userToken };
+    const { data: reclutadores = [] } = useGetMyRecruitersQuery({ token: userToken }, omitir);
     const [changeStatus] = useChangeCompanyJobStatusMutation();
 
     const [busqueda, setBusqueda] = useState("");
     const [estado, setEstado] = useState("");
     const [tipo, setTipo] = useState("");
     const [reclutador, setReclutador] = useState("");
+    const [pagina, setPagina] = useState(0);
     const [pendiente, setPendiente] = useState(null); // { vacante, destino }
     const [procesando, setProcesando] = useState(false);
 
-    // Conteo por estado sobre todas las vacantes (sin filtrar)
-    const conteo = useMemo(() => vacantes.reduce((acc, v) => ({ ...acc, [v.estado]: (acc[v.estado] ?? 0) + 1 }), {}), [vacantes]);
+    const idReclutador = reclutador ? Number(reclutador) : undefined;
+    // El back pagina y filtra (estado, reclutador, texto y tipo); el texto se manda al dejar de escribir
+    const q = useDebounce(busqueda.trim());
+    const { data, isLoading, isError, error, refetch, isFetching } = useGetCompanyJobsQuery(
+        { token: userToken, page: pagina, size: POR_PAGINA, estado, idReclutador, q, tipo }, omitir);
+    const visibles = data?.content ?? [];
+    const totalFiltrado = data?.totalElements ?? 0;
+    const totalPaginas = data?.totalPages ?? 0;
 
-    const visibles = useMemo(() => {
-        const texto = busqueda.trim().toLowerCase();
-        return vacantes
-            .filter(v => !estado || v.estado === estado)
-            .filter(v => !tipo || v.tipo === tipo)
-            .filter(v => !reclutador || String(v.reclutador?.id) === reclutador)
-            .filter(v => !texto || [v.titulo, v.descripcion, v.ubicacion].some(c => c?.toLowerCase().includes(texto)))
-            .sort((a, b) => new Date(b.creada) - new Date(a.creada));
-    }, [vacantes, busqueda, estado, tipo, reclutador]);
+    // Numeros de las pestanas: todas las vacantes de la empresa (o del reclutador elegido)
+    const { data: resumen } = useGetCompanyJobsSummaryQuery({ token: userToken, idReclutador }, omitir);
+    const conteo = { total: resumen?.total ?? 0, porEstado: resumen?.porEstado ?? {} };
+    // Para distinguir "la empresa no tiene vacantes" de "el reclutador elegido no tiene"
+    const { data: resumenEmpresa, isSuccess: resumenEmpresaListo } = useGetCompanyJobsSummaryQuery({ token: userToken }, omitir);
+    const conteoEmpresa = { cargado: resumenEmpresaListo, total: resumenEmpresa?.total ?? 0 };
 
-    const hayFiltros = busqueda || estado || tipo || reclutador;
-    const limpiar = () => { setBusqueda(""); setEstado(""); setTipo(""); setReclutador(""); };
+    // Si la pagina actual se vacia (p. ej. tras cerrar la ultima vacante de la pagina) se regresa a la anterior
+    useEffect(() => {
+        if (data && pagina > 0 && pagina >= totalPaginas) setPagina(Math.max(0, totalPaginas - 1));
+    }, [data, pagina, totalPaginas]);
+
+    const hayFiltros = estado || reclutador || busqueda.trim() || tipo;
+    const cambiarEstado = (valor) => { setEstado(valor); setPagina(0); };
+    const limpiar = () => { setBusqueda(""); setEstado(""); setTipo(""); setReclutador(""); setPagina(0); };
 
     const confirmar = async () => {
         const { vacante, destino } = pendiente;
@@ -87,19 +100,19 @@ const CompanyJobs = ({ onVerPostulaciones }) => {
                 <div className="mt-6 flex flex-wrap gap-2">
                     <button
                         type="button"
-                        onClick={() => setEstado("")}
+                        onClick={() => cambiarEstado("")}
                         className={`px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${!estado ? "bg-green-600 border-green-600 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-green-400"}`}
                     >
-                        Todas <span className="opacity-75">({vacantes.length})</span>
+                        Todas <span className="opacity-75">({conteo.total})</span>
                     </button>
                     {Object.entries(ESTADOS_VACANTE).map(([valor, info]) => (
                         <button
                             key={valor}
                             type="button"
-                            onClick={() => setEstado(valor)}
+                            onClick={() => cambiarEstado(valor)}
                             className={`px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${estado === valor ? "bg-green-600 border-green-600 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-green-400"}`}
                         >
-                            {info.label} <span className="opacity-75">({conteo[valor] ?? 0})</span>
+                            {info.label} <span className="opacity-75">({conteo.porEstado[valor] ?? 0})</span>
                         </button>
                     ))}
                 </div>
@@ -110,16 +123,16 @@ const CompanyJobs = ({ onVerPostulaciones }) => {
                         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
                         <input
                             value={busqueda}
-                            onChange={(e) => setBusqueda(e.target.value)}
+                            onChange={(e) => { setBusqueda(e.target.value); setPagina(0); }}
                             placeholder="Buscar por título, descripción o ubicación"
                             className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
                         />
                     </div>
-                    <select value={tipo} onChange={(e) => setTipo(e.target.value)} className={selectClass} aria-label="Tipo">
+                    <select value={tipo} onChange={(e) => { setTipo(e.target.value); setPagina(0); }} className={selectClass} aria-label="Tipo">
                         <option value="">Todos los tipos</option>
                         {Object.entries(TIPOS_VACANTE).map(([valor, label]) => <option key={valor} value={valor}>{label}</option>)}
                     </select>
-                    <select value={reclutador} onChange={(e) => setReclutador(e.target.value)} className={selectClass} aria-label="Reclutador">
+                    <select value={reclutador} onChange={(e) => { setReclutador(e.target.value); setPagina(0); }} className={selectClass} aria-label="Reclutador">
                         <option value="">Todos los reclutadores</option>
                         {reclutadores.map(r => <option key={r.id} value={String(r.id)}>{r.nombre} {r.apellido}</option>)}
                     </select>
@@ -131,7 +144,7 @@ const CompanyJobs = ({ onVerPostulaciones }) => {
                 </div>
 
                 {/* Lista */}
-                <div className="mt-5 space-y-4">
+                <div className={`mt-5 space-y-4 transition-opacity ${isFetching ? "opacity-60" : ""}`}>
                     {isLoading ? (
                         [1, 2].map(i => <div key={i} className="h-44 bg-white rounded-2xl border border-gray-200 animate-pulse" />)
                     ) : isError ? (
@@ -140,7 +153,7 @@ const CompanyJobs = ({ onVerPostulaciones }) => {
                             <p className="mt-2 text-sm text-gray-600">{obtenerMensajeError(error, "No se pudieron cargar las vacantes")}</p>
                             <button type="button" onClick={refetch} className="mt-3 text-sm font-semibold text-green-700 hover:underline">Reintentar</button>
                         </div>
-                    ) : vacantes.length === 0 ? (
+                    ) : conteoEmpresa.cargado && conteoEmpresa.total === 0 ? (
                         <div className="p-10 text-center bg-white rounded-2xl border border-gray-200">
                             <div className="inline-flex p-3 rounded-full bg-green-50 text-green-600">
                                 <IoBriefcaseOutline className="size-7" />
@@ -150,7 +163,7 @@ const CompanyJobs = ({ onVerPostulaciones }) => {
                         </div>
                     ) : visibles.length === 0 ? (
                         <p className="p-10 text-center text-sm text-gray-500 bg-white rounded-2xl border border-gray-200">
-                            Ninguna vacante coincide con los filtros.
+                            {hayFiltros ? "Ninguna vacante coincide con los filtros." : "No hay vacantes en esta página."}
                         </p>
                     ) : (
                         visibles.map(v => (
@@ -188,6 +201,16 @@ const CompanyJobs = ({ onVerPostulaciones }) => {
                         ))
                     )}
                 </div>
+
+                <Paginacion
+                    className="mt-5"
+                    pagina={pagina}
+                    totalPaginas={totalPaginas}
+                    total={totalFiltrado}
+                    porPagina={POR_PAGINA}
+                    onCambiar={setPagina}
+                    cargando={isFetching}
+                />
             </div>
 
             {pendiente && (

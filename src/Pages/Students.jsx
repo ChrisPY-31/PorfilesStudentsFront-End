@@ -1,17 +1,17 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { IoPeopleOutline, IoInformationCircleOutline } from "react-icons/io5";
+import { IoPeopleOutline } from "react-icons/io5";
 import { useAppSelector } from "../Hooks/store";
 import { useGetCareersQuery, useGetUbicationsQuery } from "../services/UserSlice";
-import { useGetStudentsForMentionsQuery, useGetTechnologiesQuery } from "../services/projectsUser";
+import { useGetStudentsQuery, useGetTechnologiesQuery } from "../services/projectsUser";
+import { useDebounce } from "../Hooks/useDebounce";
+import { POR_PAGINA } from "../helpers/paginacion";
+import Paginacion from "../Components/Paginacion";
 import StudentFilters from "../Components/StudentFilters";
 import StudentResultCard from "../Components/StudentResultCard";
 import { obtenerMensajeError } from "../helpers";
 
-const POR_PAGINA = 12;
-
-// Sin mayusculas ni acentos: "Peña" y "pena" coinciden
-const normalizar = (texto = "") => texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+// GET /students pagina (20) y aplica todos los filtros y el orden en el back
 
 // Los filtros viven en la URL (?carrera=1&tec=55,58) para poder recargar o compartir la busqueda
 const leerFiltros = (params) => ({
@@ -38,45 +38,47 @@ const escribirFiltros = (f) => {
   return params;
 };
 
-// TEMPORAL: se filtra en el front con lo que trae GET /students. Cuando exista la busqueda
-// en el back, esto se reemplaza por la consulta con los mismos filtros.
-// Un filtro cuyo dato no viene en la respuesta no excluye a nadie.
-const aplicarFiltros = (estudiantes, f) => {
-  const q = normalizar(f.q.trim());
-  const lista = estudiantes.filter(s =>
-    (!q || normalizar(`${s.nombre} ${s.apellido}`).includes(q)) &&
-    (!f.carrera || s.carrera?.idCarrera === f.carrera) &&
-    (!f.semestre || s.semestre === undefined || s.semestre === f.semestre) &&
-    (!f.ubicacion || s.ubicacion === undefined || s.ubicacion?.idUbicacion === f.ubicacion) &&
-    (!f.tecnologias.length || s.tecnologias === undefined || f.tecnologias.every(id => s.tecnologias.some(t => (t.idTecnologia ?? t.id) === id))) &&
-    (!f.proyectos || s.totalProyectos === undefined || s.totalProyectos > 0) &&
-    (!f.recomendados || s.totalRecomendaciones === undefined || s.totalRecomendaciones > 0)
-  );
-  const orden = {
-    recientes: (a, b) => b.id - a.id,
-    nombre: (a, b) => `${a.nombre} ${a.apellido}`.localeCompare(`${b.nombre} ${b.apellido}`, "es"),
-    recomendaciones: (a, b) => (b.totalRecomendaciones ?? 0) - (a.totalRecomendaciones ?? 0),
-  }[f.orden];
-  return orden ? [...lista].sort(orden) : lista;
-};
-
 const Students = () => {
   const { userToken } = useAppSelector(state => state.users);
-  const { data: estudiantes = [], isLoading, error, refetch } = useGetStudentsForMentionsQuery();
   const { data: carreras = [] } = useGetCareersQuery({ token: userToken });
   const { data: ubicaciones = [] } = useGetUbicationsQuery({ token: userToken });
   const { data: tecnologias = [] } = useGetTechnologiesQuery();
 
   const [params, setParams] = useSearchParams();
   const filtros = leerFiltros(params);
-  const [visibles, setVisibles] = useState(POR_PAGINA);
+  const [pagina, setPagina] = useState(0);
 
   const cambiarFiltros = (parcial) => {
     setParams(escribirFiltros({ ...filtros, ...parcial }), { replace: true });
-    setVisibles(POR_PAGINA);
+    setPagina(0);
   };
 
-  const resultados = useMemo(() => aplicarFiltros(estudiantes, filtros), [estudiantes, params]); // eslint-disable-line react-hooks/exhaustive-deps
+  // El texto se manda al back cuando se deja de escribir
+  const q = useDebounce(filtros.q.trim());
+  const { data, isLoading, isFetching, error, refetch } = useGetStudentsQuery({
+    page: pagina,
+    size: POR_PAGINA,
+    q,
+    idCarrera: filtros.carrera,
+    semestre: filtros.semestre,
+    idUbicacion: filtros.ubicacion,
+    tecnologias: filtros.tecnologias,
+    conProyectos: filtros.proyectos,
+    recomendados: filtros.recomendados,
+    orden: filtros.orden,
+  });
+  const resultados = useMemo(() => data?.content ?? [], [data]);
+  const total = data?.totalElements ?? 0;
+  const totalPaginas = data?.totalPages ?? 0;
+
+  // Si cambia el total y la pagina ya no existe, se regresa a la ultima
+  useEffect(() => {
+    if (data && pagina > 0 && pagina >= totalPaginas) setPagina(Math.max(0, totalPaginas - 1));
+  }, [data, pagina, totalPaginas]);
+
+  const hayFiltros = Boolean(filtros.q.trim() || filtros.carrera || filtros.semestre || filtros.ubicacion
+    || filtros.tecnologias.length || filtros.proyectos || filtros.recomendados);
+  const cambiarPagina = (n) => { setPagina(n); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   return (
     // Alto minimo de la pantalla menos la barra (h-16) para que el footer no suba con pocos estudiantes
@@ -98,21 +100,17 @@ const Students = () => {
           tecnologias={tecnologias}
         />
 
-        <div className="mt-4 flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
-          <IoInformationCircleOutline className="size-4 shrink-0 mt-0.5" />
-          Vista previa: por ahora solo filtran nombre y carrera. Semestre, ubicación, tecnologías, proyectos y recomendados se activarán cuando el back tenga la búsqueda.
-        </div>
 
         </div>
 
         {/* Resultados */}
         {!isLoading && !error && (
           <p className="mt-6 text-sm text-gray-500">
-            <span className="font-semibold text-gray-900">{resultados.length}</span> {resultados.length === 1 ? "estudiante encontrado" : "estudiantes encontrados"}
+            <span className="font-semibold text-gray-900">{total}</span> {total === 1 ? "estudiante encontrado" : "estudiantes encontrados"}
           </p>
         )}
 
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={`mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity ${isFetching && !isLoading ? "opacity-60" : ""}`}>
           {isLoading && [...Array(4)].map((_, i) => (
             <div key={i} className="p-6 border border-gray-200 rounded-2xl animate-pulse">
               <div className="flex items-center gap-4">
@@ -127,7 +125,7 @@ const Students = () => {
             </div>
           ))}
 
-          {resultados.slice(0, visibles).map(estudiante => (
+          {resultados.map(estudiante => (
             <StudentResultCard key={estudiante.id} estudiante={estudiante} />
           ))}
         </div>
@@ -144,20 +142,22 @@ const Students = () => {
         {!isLoading && !error && resultados.length === 0 && (
           <div className="mt-2 flex flex-col items-center gap-2 py-16 border-2 border-dashed border-gray-200 rounded-2xl text-center">
             <IoPeopleOutline className="size-10 text-gray-300" />
-            <p className="text-gray-500">Ningún estudiante coincide con tu búsqueda.</p>
+            <p className="text-gray-500">
+              {hayFiltros ? "Ningún estudiante coincide con tu búsqueda." : "Todavía no hay estudiantes registrados."}
+            </p>
           </div>
         )}
 
-        {resultados.length > visibles && (
-          <div className="mt-8 flex justify-center">
-            <button
-              type="button"
-              onClick={() => setVisibles(v => v + POR_PAGINA)}
-              className="px-6 py-2.5 rounded-xl border-2 border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              Cargar más
-            </button>
-          </div>
+        {!error && (
+          <Paginacion
+            className="mt-8"
+            pagina={pagina}
+            totalPaginas={totalPaginas}
+            total={total}
+            porPagina={POR_PAGINA}
+            onCambiar={cambiarPagina}
+            cargando={isFetching}
+          />
         )}
       </div>
     </section>

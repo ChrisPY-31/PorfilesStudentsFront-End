@@ -2,16 +2,22 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { IoSearchOutline, IoCloseSharp } from 'react-icons/io5'
 import { useAppSelector } from '../Hooks/store'
-import { useGetAllProjectsQuery, useGetStudentsForMentionsQuery } from '../services/projectsUser'
+import { useGetAllProjectsQuery } from '../services/projectsUser'
+import { useGetUserByIdQuery } from '../services/UserSlice'
 import ProyectsCard from '../Components/ProyectsCard'
 import { obtenerMensajeError } from '../helpers'
+
+// ProjectDto solo trae idEstudiante: el autor se pide por id (GET /person/{id}, RTK lo cachea por alumno)
+// en vez de bajar la lista completa de estudiantes, que ahora es paginada
+const ProyectoConAutor = ({ proyecto, token }) => {
+  const { data } = useGetUserByIdQuery({ id: proyecto.idEstudiante, token }, { skip: !token || proyecto.idEstudiante == null })
+  return <ProyectsCard proyecto={proyecto} autor={data?.object} />
+}
 
 const AllProjects = () => {
   const { userToken } = useAppSelector(state => state.users)
   // Se vuelve a pedir en cada visita para ver los proyectos recien creados
   const { data: proyectos = [], isLoading, error, refetch } = useGetAllProjectsQuery({ token: userToken }, { refetchOnMountOrArgChange: true })
-  // ProjectDto solo trae idEstudiante: el autor se busca en la lista de estudiantes
-  const { data: estudiantes = [] } = useGetStudentsForMentionsQuery()
 
   const [busqueda, setBusqueda] = useState('')
   // Al llegar desde una notificacion de mencion se resalta ese proyecto
@@ -23,8 +29,6 @@ const AllProjects = () => {
     document.getElementById(`proyecto-${resaltado}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [resaltado, proyectos.length, location.key])
   const [tecnologia, setTecnologia] = useState(null)
-
-  const autores = useMemo(() => new Map(estudiantes.map(e => [e.id, e])), [estudiantes])
 
   // Solo las tecnologias que aparecen en algun proyecto, de la mas usada a la menos
   const tecnologiasUsadas = useMemo(() => {
@@ -40,12 +44,8 @@ const AllProjects = () => {
   const filtrados = [...proyectos]
     .sort((a, b) => (b.idProject ?? 0) - (a.idProject ?? 0))
     .filter(p => !tecnologia || p.tecnologias?.some(t => t.idTecnologia === tecnologia))
-    .filter(p => {
-      if (!texto) return true
-      const autor = autores.get(p.idEstudiante)
-      return [p.nombre, p.descripcion, autor && `${autor.nombre} ${autor.apellido}`, ...(p.tecnologias ?? []).map(t => t.nombre)]
-        .some(campo => campo?.toLowerCase().includes(texto))
-    })
+    .filter(p => !texto || [p.nombre, p.descripcion, ...(p.tecnologias ?? []).map(t => t.nombre)]
+      .some(campo => campo?.toLowerCase().includes(texto)))
 
   return (
     <div className='w-full max-w-4xl mx-auto px-4 mt-8 pb-12'>
@@ -60,7 +60,7 @@ const AllProjects = () => {
         <input
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          placeholder='Busca por nombre, tecnología o estudiante...'
+          placeholder='Busca por nombre, descripción o tecnología...'
           className='w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all'
         />
       </div>
@@ -126,7 +126,7 @@ const AllProjects = () => {
             id={`proyecto-${proyecto.idProject}`}
             className={proyecto.idProject === resaltado ? 'rounded-2xl ring-4 ring-green-400 ring-offset-2' : ''}
           >
-            <ProyectsCard proyecto={proyecto} autor={autores.get(proyecto.idEstudiante)} />
+            <ProyectoConAutor proyecto={proyecto} token={userToken} />
           </div>
         ))}
       </div>

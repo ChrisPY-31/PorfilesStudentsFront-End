@@ -57,20 +57,6 @@ const Footer = ({ autenticate }) => {
             </p>
           </div>
 
-          {/* Navegacion */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Navegación</h3>
-            <ul className="space-y-2.5">
-              {navegacion.map(({ to, label, icon: Icono }) => (
-                <li key={to}>
-                  <Link to={to} className={claseEnlace}>
-                    <Icono className="size-4" /> {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {/* Legal */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Legal</h3>

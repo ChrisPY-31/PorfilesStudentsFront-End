@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_KEY } from "../api/api";
+import { POR_PAGINA, limpiarParams } from "../helpers/paginacion";
 
 // Endpoints del reclutador (RECRUITER): el dueno sale del JWT.
 // Vacante (PostJobDto): { idVacante, titulo, descripcion, ubicacion, jornada, modalidad, tipo, salarioMin, salarioMax,
@@ -11,9 +12,29 @@ export const recruiterApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: `${API_KEY}` }),
   tagTypes: ["MisVacantes", "Postulantes"],
   endpoints: (builder) => ({
-    // Se piden todas y se filtran en el front (asi salen los contadores por estado)
+    // Paginado (Page de Spring), de la mas reciente a la mas antigua. Filtros opcionales: estado (incluye VENCIDA),
+    // q (titulo, descripcion o ubicacion) y tipo
     getMyJobs: builder.query({
-      query: ({ token }) => ({ url: "/recruiter/me/jobs", headers: auth(token) }),
+      query: ({ token, page = 0, size = POR_PAGINA, estado, q, tipo }) => ({
+        url: "/recruiter/me/jobs",
+        params: limpiarParams({ page, size, estado, q: q?.trim(), tipo }),
+        headers: auth(token),
+      }),
+      providesTags: ["MisVacantes"],
+    }),
+    // Numeros de las pestanas: { total, porEstado: { BORRADOR, PUBLICADA, PAUSADA, VENCIDA, CERRADA } }
+    getMyJobsSummary: builder.query({
+      query: ({ token }) => ({ url: "/recruiter/me/jobs/summary", headers: auth(token) }),
+      providesTags: ["MisVacantes"],
+    }),
+    // Selector de vacante: [{ idVacante, titulo, estado }] sin borradores ni paginar, de la mas reciente a la mas antigua
+    getMyJobOptions: builder.query({
+      query: ({ token }) => ({ url: "/recruiter/me/jobs/options", headers: auth(token) }),
+      providesTags: ["MisVacantes"],
+    }),
+    // Detalle de una vacante propia (404 si es de otro reclutador)
+    getMyJob: builder.query({
+      query: ({ id, token }) => ({ url: `/recruiter/me/jobs/${id}`, headers: auth(token) }),
       providesTags: ["MisVacantes"],
     }),
     // PostJobRequest: { titulo, descripcion, ubicacion, jornada, modalidad, tipo, salarioMin, salarioMax,
@@ -51,8 +72,18 @@ export const recruiterApi = createApi({
     }),
     // Postulantes de una vacante mia (JobApplicationDto: { idPostulacion, estado, mensaje, curriculum,
     //   fechaPostulacion, actualizada, vacante, estudiante: { id, nombre, apellido, imagen, carrera, semestre } })
+    // Paginado, de la mas reciente a la mas antigua. Filtros opcionales: estado y q (alumno, carrera o vacante)
     getJobApplicants: builder.query({
-      query: ({ idVacante, token }) => ({ url: `/recruiter/me/jobs/${idVacante}/applications`, headers: auth(token) }),
+      query: ({ idVacante, token, page = 0, size = POR_PAGINA, estado, q }) => ({
+        url: `/recruiter/me/jobs/${idVacante}/applications`,
+        params: limpiarParams({ page, size, estado, q: q?.trim() }),
+        headers: auth(token),
+      }),
+      providesTags: (_res, _err, { idVacante }) => [{ type: "Postulantes", id: idVacante }],
+    }),
+    // Numeros de las pestanas: { total, porEstado }
+    getJobApplicantsSummary: builder.query({
+      query: ({ idVacante, token }) => ({ url: `/recruiter/me/jobs/${idVacante}/applications/summary`, headers: auth(token) }),
       providesTags: (_res, _err, { idVacante }) => [{ type: "Postulantes", id: idVacante }],
     }),
     // estado: EN_REVISION, ENTREVISTA, ACEPTADA (solo hacia adelante, se puede saltar) o RECHAZADA.
@@ -80,10 +111,14 @@ export const recruiterApi = createApi({
 
 export const {
   useGetMyJobsQuery,
+  useGetMyJobQuery,
+  useGetMyJobsSummaryQuery,
+  useGetMyJobOptionsQuery,
   useCreateMyJobMutation,
   useUpdateMyJobMutation,
   useChangeMyJobStatusMutation,
   useDeleteMyJobMutation,
   useGetJobApplicantsQuery,
+  useGetJobApplicantsSummaryQuery,
   useChangeApplicationStatusMutation,
 } = recruiterApi;

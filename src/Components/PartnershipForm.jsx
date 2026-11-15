@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { IoAlertCircleOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useAppSelector } from "../Hooks/store";
 import {
-    useGetPartnershipsQuery,
+    useGetPartnershipsSummaryQuery,
     useCreatePartnershipMutation,
     useUpdatePartnershipMutation,
 } from "../services/partnerships";
@@ -30,24 +30,14 @@ const Campo = ({ label, htmlFor, error, opcional, ayuda, children }) => (
     </div>
 );
 
-// Valores unicos (sin importar mayusculas) de un campo, para sugerirlos al escribir
-const sugerencias = (convenios, campo) => {
-    const vistos = new Map();
-    convenios.forEach(c => {
-        const valor = c[campo]?.trim();
-        if (valor && !vistos.has(valor.toLowerCase())) vistos.set(valor.toLowerCase(), valor);
-    });
-    return [...vistos.values()].sort((a, b) => a.localeCompare(b, "es"));
-};
-
 // Formulario de convenio: crear (sin `convenio`) o editar (con `convenio`).
 // onGuardado(convenioGuardado) despues de guardar; onCancelar muestra el boton Cancelar.
-// Categoria y tipo de acuerdo son texto libre; se sugieren los que ya existen.
+// Categoria y tipo de acuerdo son texto libre; se sugieren los que ya existen (GET /partnerships/summary).
+// El nombre repetido lo valida el back (la lista de convenios es paginada)
 const PartnershipForm = ({ convenio, onGuardado, onCancelar }) => {
     const editando = !!convenio;
     const { userToken } = useAppSelector(state => state.users);
-    const { data } = useGetPartnershipsQuery({ token: userToken }, { skip: !userToken });
-    const convenios = useMemo(() => (Array.isArray(data) ? data : []), [data]);
+    const { data: resumen } = useGetPartnershipsSummaryQuery({ token: userToken }, { skip: !userToken });
     const [crear] = useCreatePartnershipMutation();
     const [actualizar] = useUpdatePartnershipMutation();
 
@@ -65,22 +55,19 @@ const PartnershipForm = ({ convenio, onGuardado, onCancelar }) => {
     const [errores, setErrores] = useState({});
     const [guardando, setGuardando] = useState(false);
 
-    const categorias = useMemo(() => sugerencias(convenios, "categoria"), [convenios]);
-    const tipos = useMemo(() => sugerencias(convenios, "tipoAcuerdo"), [convenios]);
+    const categorias = resumen?.categorias ?? [];
+    const tipos = resumen?.tiposAcuerdo ?? [];
 
     const cambiar = (campo, valor) => {
         setValores(v => ({ ...v, [campo]: valor }));
         setErrores(e => ({ ...e, [campo]: undefined }));
     };
 
-    // Mismas reglas que el back (nombre unico sin importar mayusculas, fechaFinal >= fechaInicio)
+    // Mismas reglas que el back (fechaFinal >= fechaInicio); el nombre repetido lo responde el back con 400
     const validar = () => {
         const nuevos = {};
         const nombre = normalizar(valores.nombreEmpresa);
         if (!nombre) nuevos.nombreEmpresa = "El nombre de la empresa es obligatorio";
-        else if (convenios.some(c => c.idCorporacion !== convenio?.idCorporacion && c.nombreEmpresa?.trim().toLowerCase() === nombre.toLowerCase())) {
-            nuevos.nombreEmpresa = "Ya existe un convenio con esa empresa";
-        }
         ["nombreEmpresa", "categoria", "tipoAcuerdo"].forEach(campo => {
             if (!nuevos[campo] && normalizar(valores[campo]).length > MAX) nuevos[campo] = `Máximo ${MAX} caracteres`;
         });
@@ -119,7 +106,10 @@ const PartnershipForm = ({ convenio, onGuardado, onCancelar }) => {
             }
             onGuardado?.(respuesta?.object ?? respuesta);
         } catch (err) {
-            toast.error(obtenerMensajeError(err, editando ? "No se pudo actualizar el convenio" : "No se pudo crear el convenio"));
+            const mensaje = obtenerMensajeError(err, editando ? "No se pudo actualizar el convenio" : "No se pudo crear el convenio");
+            // "Ya existe un convenio con la empresa: X" se muestra en el campo
+            if (/ya existe/i.test(mensaje)) setErrores(e2 => ({ ...e2, nombreEmpresa: "Ya existe un convenio con esa empresa" }));
+            toast.error(mensaje);
             setGuardando(false);
         }
     };

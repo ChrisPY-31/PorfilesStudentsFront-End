@@ -1,19 +1,54 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { IoBusinessOutline, IoChevronForward, IoAlertCircleOutline } from "react-icons/io5";
 import { useGetCompaniesQuery } from "../services/company";
 
-// Columna derecha de Inicio: empresas con convenio vigente (GET /companies, publico).
-// Cada una lleva a su pagina publica /Empresa/:idCorporacion
+const FilaEmpresa = ({ empresa }) => (
+  <li>
+    <Link
+      to={`/Empresa/${empresa.idCorporacion}`}
+      className="group flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-green-50 transition-colors"
+    >
+      <div className="size-10 shrink-0 rounded-xl border border-gray-200 bg-white overflow-hidden">
+        {empresa.logo
+          ? <img src={empresa.logo} alt={`Logo de ${empresa.nombreEmpresa}`} className="size-full object-contain" />
+          : <div className="size-full flex items-center justify-center bg-gray-100 text-gray-400">
+            <IoBusinessOutline className="size-5" />
+          </div>}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-gray-900 truncate">{empresa.nombreEmpresa}</p>
+        {(empresa.categoria || empresa.sector) && (
+          <p className="text-xs text-gray-500 truncate">{empresa.categoria || empresa.sector}</p>
+        )}
+      </div>
+      <IoChevronForward className="size-4 shrink-0 text-gray-300 group-hover:text-green-600" />
+    </Link>
+  </li>
+);
+
+// Paginas siguientes a la primera (cada una es su propia consulta de 20; RTK las cachea)
+const PaginaEmpresas = ({ page }) => {
+  const { data, isLoading } = useGetCompaniesQuery({ page });
+  if (isLoading) return <li className="px-2 py-2 text-xs text-gray-400">Cargando...</li>;
+  return (data?.content ?? []).map(empresa => <FilaEmpresa key={empresa.idCorporacion} empresa={empresa} />);
+};
+
+// Columna derecha de Inicio: empresas con convenio vigente (GET /companies, publico, 20 por pagina).
+// Cada una lleva a su pagina publica /Empresa/:idCorporacion; "Ver más" agrega la siguiente pagina
 const PartnersSidebar = () => {
-  const { data, isLoading, isError, refetch } = useGetCompaniesQuery();
-  const empresas = Array.isArray(data) ? data : [];
+  const { data, isLoading, isError, refetch } = useGetCompaniesQuery({ page: 0 });
+  const [paginas, setPaginas] = useState(1);
+  const empresas = data?.content ?? [];
+  const total = data?.totalElements ?? 0;
+  const hayMas = paginas < (data?.totalPages ?? 0);
 
   return (
     <aside className="w-72 bg-white rounded-2xl shadow overflow-hidden">
       <div className="flex items-baseline justify-between px-4 pt-4 pb-3 border-b border-gray-100">
         <h3 className="font-display text-lg font-bold text-gray-900">Convenios</h3>
         {!isLoading && !isError && empresas.length > 0 && (
-          <span className="text-xs text-gray-500">{empresas.length} {empresas.length === 1 ? "empresa" : "empresas"}</span>
+          <span className="text-xs text-gray-500">{total} {total === 1 ? "empresa" : "empresas"}</span>
         )}
       </div>
 
@@ -47,29 +82,19 @@ const PartnersSidebar = () => {
 
       {!isLoading && !isError && empresas.length > 0 && (
         <ul className="p-2 max-h-[calc(85dvh-4rem)] overflow-y-auto">
-          {empresas.map(empresa => (
-            <li key={empresa.idCorporacion}>
-              <Link
-                to={`/Empresa/${empresa.idCorporacion}`}
-                className="group flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-green-50 transition-colors"
+          {empresas.map(empresa => <FilaEmpresa key={empresa.idCorporacion} empresa={empresa} />)}
+          {Array.from({ length: paginas - 1 }, (_, i) => <PaginaEmpresas key={i + 1} page={i + 1} />)}
+          {hayMas && (
+            <li className="pt-1">
+              <button
+                type="button"
+                onClick={() => setPaginas(n => n + 1)}
+                className="w-full py-2 rounded-xl text-sm font-semibold text-green-700 hover:bg-green-50"
               >
-                <div className="size-10 shrink-0 rounded-xl border border-gray-200 bg-white overflow-hidden">
-                  {empresa.logo
-                    ? <img src={empresa.logo} alt={`Logo de ${empresa.nombreEmpresa}`} className="size-full object-contain" />
-                    : <div className="size-full flex items-center justify-center bg-gray-100 text-gray-400">
-                      <IoBusinessOutline className="size-5" />
-                    </div>}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{empresa.nombreEmpresa}</p>
-                  {(empresa.categoria || empresa.sector) && (
-                    <p className="text-xs text-gray-500 truncate">{empresa.categoria || empresa.sector}</p>
-                  )}
-                </div>
-                <IoChevronForward className="size-4 shrink-0 text-gray-300 group-hover:text-green-600" />
-              </Link>
+                Ver más
+              </button>
             </li>
-          ))}
+          )}
         </ul>
       )}
     </aside>

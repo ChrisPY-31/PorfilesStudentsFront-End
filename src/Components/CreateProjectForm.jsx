@@ -17,8 +17,9 @@ import {
   useUpdateProjectStudentMutation,
   useUploadProjectImageMutation,
   useGetTechnologiesQuery,
-  useGetStudentsForMentionsQuery
+  useGetStudentsQuery
 } from "../services/projectsUser";
+import { useDebounce } from "../Hooks/useDebounce";
 import { esUrlValida, obtenerMensajeError } from "../helpers";
 import { FORMATOS_IMAGEN, MAX_MB_IMAGEN, comprimirImagen, validarImagen } from "../helpers/recortarImagen";
 
@@ -55,7 +56,6 @@ const CreateProjectForm = ({ onClose, proyecto }) => {
   const [updateProject] = useUpdateProjectStudentMutation();
   const [uploadProjectImage] = useUploadProjectImageMutation();
   const { data: catalogo = [], isLoading: cargandoCatalogo } = useGetTechnologiesQuery();
-  const { data: estudiantes = [] } = useGetStudentsForMentionsQuery();
 
   const [valores, setValores] = useState({
     nombre: proyecto?.nombre ?? "",
@@ -70,6 +70,10 @@ const CreateProjectForm = ({ onClose, proyecto }) => {
   const [menciones, setMenciones] = useState(proyecto?.menciones ?? []);
   const [busquedaTec, setBusquedaTec] = useState("");
   const [busquedaColab, setBusquedaColab] = useState("");
+  // Colaboradores: se busca en el back (q en nombre o apellido, sin acentos) al dejar de escribir
+  const qColab = useDebounce(busquedaColab.trim());
+  const { data: paginaColab, isFetching: buscandoColab } = useGetStudentsQuery({ q: qColab }, { skip: !qColab });
+  const estudiantes = paginaColab?.content ?? [];
   const [archivo, setArchivo] = useState(null);
   const [quitarGuardada, setQuitarGuardada] = useState(false); // borrar la imagen que ya tenia el proyecto
   const [vistaPrevia, setVistaPrevia] = useState(null);
@@ -196,7 +200,6 @@ const CreateProjectForm = ({ onClose, proyecto }) => {
   const sugerenciasColab = textoColab
     ? estudiantes
       .filter(s => s.id !== userId && !menciones.some(m => m.id === s.id))
-      .filter(s => `${s.nombre} ${s.apellido}`.toLowerCase().includes(textoColab))
       .slice(0, 6)
     : [];
 
@@ -380,7 +383,11 @@ const CreateProjectForm = ({ onClose, proyecto }) => {
               />
               {textoColab && (
                 <div className="absolute left-0 right-0 mt-1 py-1 bg-white rounded-xl shadow-lg border border-gray-100 z-10">
-                  {sugerenciasColab.length === 0 && <p className="px-4 py-2 text-sm text-gray-400">Sin resultados</p>}
+                  {sugerenciasColab.length === 0 && (
+                    <p className="px-4 py-2 text-sm text-gray-400">
+                      {buscandoColab || qColab !== busquedaColab.trim() ? "Buscando..." : "Sin resultados"}
+                    </p>
+                  )}
                   {sugerenciasColab.map(s => (
                     <button
                       key={s.id}

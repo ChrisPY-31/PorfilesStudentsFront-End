@@ -3,7 +3,8 @@ import { IoCloseSharp, IoSearchOutline, IoAlertCircleOutline } from "react-icons
 import { toast } from "sonner";
 import { useAppSelector } from "../Hooks/store";
 import { useCreateRecomedationMutation, useUpdateRecomendationMutation } from "../services/recomentationStudent";
-import { useGetStudentsForMentionsQuery } from "../services/projectsUser";
+import { useGetStudentsQuery } from "../services/projectsUser";
+import { useDebounce } from "../Hooks/useDebounce";
 import { obtenerMensajeError } from "../helpers";
 
 const FOTO_DEFAULT = "https://imagenes.elpais.com/resizer/v2/M2LJPF3LOZMCBFIINF3ANPEXYA.jpg?auth=3742d8527ab2c7808cee6bcdc198547c39b5f3b7fb710f22073c14e4c311dca6&width=980&height=980&smart=true";
@@ -32,17 +33,20 @@ const CreateRecommendationForm = ({ estudiante: estudianteInicial = null, coment
     const { userToken } = useAppSelector(state => state.users);
     const [crear] = useCreateRecomedationMutation();
     const [actualizar] = useUpdateRecomendationMutation();
-    const { data: estudiantes = [], isLoading: cargandoEstudiantes } = useGetStudentsForMentionsQuery(undefined, { skip: !!estudianteInicial });
-
     const [estudiante, setEstudiante] = useState(estudianteInicial);
     const [busqueda, setBusqueda] = useState("");
+    // Se busca en el back (q en nombre o apellido, sin acentos) al dejar de escribir
+    const qBusqueda = useDebounce(busqueda.trim());
+    const { data: paginaEstudiantes, isFetching: cargandoEstudiantes } = useGetStudentsQuery(
+        { q: qBusqueda }, { skip: !!estudianteInicial || !qBusqueda });
+    const estudiantes = paginaEstudiantes?.content ?? [];
     const [comentario, setComentario] = useState(comentarioActual ?? "");
     const [error, setError] = useState("");
     const [guardando, setGuardando] = useState(false);
 
     const texto = busqueda.trim().toLowerCase();
     const sugerencias = texto
-        ? estudiantes.filter(s => `${s.nombre} ${s.apellido}`.toLowerCase().includes(texto)).slice(0, 6)
+        ? estudiantes.slice(0, 6)
         : [];
 
     const largo = comentario.trim().length;
@@ -106,13 +110,17 @@ const CreateRecommendationForm = ({ estudiante: estudianteInicial = null, coment
                                 <input
                                     value={busqueda}
                                     onChange={(e) => { setBusqueda(e.target.value); setError(""); }}
-                                    placeholder={cargandoEstudiantes ? "Cargando estudiantes..." : "Busca al estudiante por nombre..."}
+                                    placeholder="Busca al estudiante por nombre..."
                                     autoFocus
                                     className="w-full pl-9 pr-4 py-2.5 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
                                 />
                                 {texto && (
                                     <div className="absolute left-0 right-0 mt-1 py-1 bg-white rounded-xl shadow-lg border border-gray-100 z-10">
-                                        {sugerencias.length === 0 && <p className="px-4 py-2 text-sm text-gray-400">Sin resultados</p>}
+                                        {sugerencias.length === 0 && (
+                                            <p className="px-4 py-2 text-sm text-gray-400">
+                                                {cargandoEstudiantes || qBusqueda !== busqueda.trim() ? "Buscando..." : "Sin resultados"}
+                                            </p>
+                                        )}
                                         {sugerencias.map(s => {
                                             const yaLoRecomende = yaRecomendados.has(s.id);
                                             return (

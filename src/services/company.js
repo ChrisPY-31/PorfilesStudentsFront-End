@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_KEY } from "../api/api";
+import { POR_PAGINA, limpiarParams } from "../helpers/paginacion";
 
 // Perfil de empresa (CompanyProfileDto):
 // { idCorporacion, nombreEmpresa, categoria, descripcion, logo, banner, sitioWeb,
@@ -20,8 +21,9 @@ export const companyApi = createApi({
     }),
     // Publico: solo convenios vigentes, ordenados por nombre. Un convenio sin perfil sale con nombre y categoria
     // (logo, banner, etc. en null). Tag "Empresas" sin id para que editar cualquier empresa/convenio la refresque
+    // Publico, paginado (Page de Spring): convenios vigentes por nombre. q opcional (empresa o categoria)
     getCompanies: builder.query({
-      query: () => ({ url: "/companies" }),
+      query: ({ page = 0, size = POR_PAGINA, q } = {}) => ({ url: "/companies", params: limpiarParams({ page, size, q: q?.trim() }) }),
       providesTags: ["Empresas"],
     }),
     // Publico: un convenio desactivado o vencido responde 404
@@ -99,9 +101,23 @@ export const companyApi = createApi({
       }),
     }),
     // --- Vacantes y postulaciones de toda la empresa (solo COMPANY_ADMIN) ---
-    // Se piden completas y se filtran en el front (asi salen los contadores por estado)
+    // Paginado (Page de Spring), de la mas reciente a la mas antigua. Filtros opcionales: estado, idReclutador,
+    // q (titulo, descripcion o ubicacion) y tipo
     getCompanyJobs: builder.query({
-      query: ({ token }) => ({ url: "/company-admin/me/jobs", headers: auth(token) }),
+      query: ({ token, page = 0, size = POR_PAGINA, estado, idReclutador, q, tipo }) => ({
+        url: "/company-admin/me/jobs",
+        params: limpiarParams({ page, size, estado, idReclutador, q: q?.trim(), tipo }),
+        headers: auth(token),
+      }),
+      providesTags: ["VacantesEmpresa"],
+    }),
+    // Numeros de las pestanas (con idReclutador, solo las de ese reclutador)
+    getCompanyJobsSummary: builder.query({
+      query: ({ token, idReclutador }) => ({
+        url: "/company-admin/me/jobs/summary",
+        params: limpiarParams({ idReclutador }),
+        headers: auth(token),
+      }),
       providesTags: ["VacantesEmpresa"],
     }),
     // estado: PUBLICADA (reanudar), PAUSADA o CERRADA. Cerrar rechaza las postulaciones abiertas
@@ -115,9 +131,28 @@ export const companyApi = createApi({
       invalidatesTags: (_res, error) => (error ? [] : ["VacantesEmpresa", "PostulacionesEmpresa"]),
     }),
     // Solo lectura: el estado de una postulacion lo cambia el reclutador
+    // Paginado, de la mas reciente a la mas antigua. Filtros opcionales: idVacante, estado y q (alumno, carrera o vacante)
     getCompanyApplications: builder.query({
-      query: ({ token }) => ({ url: "/company-admin/me/applications", headers: auth(token) }),
+      query: ({ token, page = 0, size = POR_PAGINA, idVacante, estado, q }) => ({
+        url: "/company-admin/me/applications",
+        params: limpiarParams({ page, size, idVacante, estado, q: q?.trim() }),
+        headers: auth(token),
+      }),
       providesTags: ["PostulacionesEmpresa"],
+    }),
+    // Numeros de las pestanas: { total, porEstado } (con idVacante, solo los de esa vacante)
+    getCompanyApplicationsSummary: builder.query({
+      query: ({ token, idVacante }) => ({
+        url: "/company-admin/me/applications/summary",
+        params: limpiarParams({ idVacante }),
+        headers: auth(token),
+      }),
+      providesTags: ["PostulacionesEmpresa"],
+    }),
+    // Selector de vacante: [{ idVacante, titulo, estado }] sin borradores ni paginar
+    getCompanyJobOptions: builder.query({
+      query: ({ token }) => ({ url: "/company-admin/me/jobs/options", headers: auth(token) }),
+      providesTags: ["VacantesEmpresa"],
     }),
   }),
 });
@@ -135,6 +170,9 @@ export const {
   useChangeRecruiterStatusMutation,
   useResetRecruiterPasswordMutation,
   useGetCompanyJobsQuery,
+  useGetCompanyJobsSummaryQuery,
   useChangeCompanyJobStatusMutation,
   useGetCompanyApplicationsQuery,
+  useGetCompanyApplicationsSummaryQuery,
+  useGetCompanyJobOptionsQuery,
 } = companyApi;

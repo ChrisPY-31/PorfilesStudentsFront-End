@@ -321,7 +321,7 @@ const Manager = ({ usermenu }) => {
       ) : (
         <>
           {managerMenu === 1 && null}
-          {managerMenu === 2 && <ManagerDashboard onVerUsuarios={() => setManagerMenu(4)} />}
+          {managerMenu === 2 && <ManagerDashboard onVerUsuarios={() => setManagerMenu(4)} onVerConvenios={() => setManagerMenu(6)} />}
           {managerMenu === 3 && <ManagerCreateAccounts onVerConvenios={() => setManagerMenu(6)} />}
           {managerMenu === 4 && <ManagerUsers />}
           {managerMenu === 5 && <ManagerCareers />}

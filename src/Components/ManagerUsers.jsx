@@ -1,17 +1,22 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IoSearchOutline, IoKeyOutline, IoLockClosedOutline, IoLockOpenOutline, IoAlertCircleOutline, IoRefreshOutline } from 'react-icons/io5';
 import { toast } from 'sonner';
 import { useAppSelector } from '../Hooks/store';
 import { useGetUsersAdminQuery, useToggleBloqueoCuentaMutation } from '../services/UserSlice';
 import { obtenerMensajeError } from '../helpers';
 import ResetPasswordModal from './ResetPasswordModal';
+import Paginacion from './Paginacion';
+import { POR_PAGINA } from '../helpers/paginacion';
 
-const POR_PAGINA = 10;
+
+// GET /users filtra en el back por q (username o correo), rol y estado (ACTIVA, BLOQUEADA o DESHABILITADA)
+const FILTROS_EN_BACK = true;
 
 const ROLES = {
   STUDENT: { etiqueta: 'Estudiante', color: 'bg-green-50 text-green-700 border-green-200' },
   TEACHER: { etiqueta: 'Docente', color: 'bg-blue-50 text-blue-700 border-blue-200' },
   RECRUITER: { etiqueta: 'Reclutador', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  COMPANY_ADMIN: { etiqueta: 'Cuenta de empresa', color: 'bg-amber-50 text-amber-700 border-amber-200' },
   ADMIN: { etiqueta: 'Administrador', color: 'bg-gray-100 text-gray-700 border-gray-300' },
 };
 
@@ -20,13 +25,15 @@ const FILTROS_ROL = [
   { value: 'STUDENT', label: 'Estudiantes' },
   { value: 'TEACHER', label: 'Docentes' },
   { value: 'RECRUITER', label: 'Reclutadores' },
+  { value: 'COMPANY_ADMIN', label: 'Cuentas de empresa' },
   { value: 'ADMIN', label: 'Administradores' },
 ];
 
 const FILTROS_ESTADO = [
   { value: '', label: 'Todos los estados' },
-  { value: 'activa', label: 'Activas' },
-  { value: 'bloqueada', label: 'Bloqueadas' },
+  { value: 'ACTIVA', label: 'Activas' },
+  { value: 'BLOQUEADA', label: 'Bloqueadas' },
+  { value: 'DESHABILITADA', label: 'Deshabilitadas' },
 ];
 
 const estadoCuenta = (cuenta) => {
@@ -48,39 +55,41 @@ const BotonFila = ({ icono: Icono, etiqueta, onClick, disabled, peligro }) => (
   </button>
 );
 
-// Cuentas del sistema (solo ADMIN): buscar, filtrar, bloquear y restablecer contraseña
+// Cuentas del sistema (solo ADMIN), 20 por pagina desde el back: buscar, filtrar, bloquear y restablecer contraseña
 const ManagerUsers = () => {
   const { userToken, username: miUsername } = useAppSelector(state => state.users);
-  const { data: cuentas = [], isLoading, isError, error, refetch, isFetching } = useGetUsersAdminQuery({ token: userToken }, { skip: !userToken });
-  const [toggleBloqueo, { isLoading: bloqueando }] = useToggleBloqueoCuentaMutation();
-
   const [busqueda, setBusqueda] = useState('');
+  const [busquedaEnviada, setBusquedaEnviada] = useState(''); // se manda al back 400 ms despues de dejar de escribir
   const [rol, setRol] = useState('');
   const [estado, setEstado] = useState('');
-  const [pagina, setPagina] = useState(1);
+  const [pagina, setPagina] = useState(0); // desde 0, como el back
   const [cuentaReset, setCuentaReset] = useState(null);
   const [cuentaBloqueo, setCuentaBloqueo] = useState(null);
 
-  const conteoPorRol = useMemo(() => {
-    const conteo = {};
-    cuentas.forEach(c => c.roles?.forEach(r => { conteo[r] = (conteo[r] ?? 0) + 1; }));
-    return conteo;
-  }, [cuentas]);
+  useEffect(() => {
+    const t = setTimeout(() => setBusquedaEnviada(busqueda.trim()), 400);
+    return () => clearTimeout(t);
+  }, [busqueda]);
 
-  const filtradas = useMemo(() => {
-    const texto = busqueda.trim().toLowerCase();
-    return cuentas
-      .filter(c => !texto || c.username?.toLowerCase().includes(texto) || c.email?.toLowerCase().includes(texto))
-      .filter(c => !rol || c.roles?.includes(rol))
-      .filter(c => !estado || estadoCuenta(c).clave === estado)
-      .sort((a, b) => a.username.localeCompare(b.username));
-  }, [cuentas, busqueda, rol, estado]);
+  const filtros = FILTROS_EN_BACK ? { q: busquedaEnviada, rol, estado } : {};
+  const { data, isLoading, isError, error, refetch, isFetching } = useGetUsersAdminQuery(
+    { token: userToken, page: pagina, size: POR_PAGINA, ...filtros },
+    { skip: !userToken }
+  );
+  const [toggleBloqueo, { isLoading: bloqueando }] = useToggleBloqueoCuentaMutation();
 
-  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA));
-  const paginaActual = Math.min(pagina, totalPaginas);
-  const visibles = filtradas.slice((paginaActual - 1) * POR_PAGINA, paginaActual * POR_PAGINA);
+  const visibles = data?.content ?? [];
+  const total = data?.totalElements ?? 0;
+  const totalPaginas = Math.max(1, data?.totalPages ?? 1);
+  const paginaActual = data?.number ?? pagina;
 
-  const cambiarFiltro = (setter) => (valor) => { setter(valor); setPagina(1); };
+  // Si la pagina pedida ya no existe (ej. cambio el total), se regresa a la ultima
+  useEffect(() => {
+    if (data && pagina > 0 && pagina >= data.totalPages) setPagina(Math.max(0, data.totalPages - 1));
+  }, [data, pagina]);
+
+  const cambiarFiltro = (setter) => (valor) => { setter(valor); setPagina(0); };
+  const cambiarBusqueda = (valor) => { setBusqueda(valor); setPagina(0); };
 
   const confirmarBloqueo = async () => {
     try {
@@ -98,7 +107,7 @@ const ManagerUsers = () => {
         <div className='flex flex-wrap items-end justify-between gap-3 mb-6'>
           <div>
             <h2 className='font-display text-2xl font-bold text-gray-900'>Usuarios</h2>
-            <p className='text-sm text-gray-500'>{cuentas.length} cuentas registradas</p>
+            <p className='text-sm text-gray-500'>{isLoading ? 'Cargando...' : `${total} cuentas registradas`}</p>
           </div>
           <button
             type='button'
@@ -110,15 +119,15 @@ const ManagerUsers = () => {
           </button>
         </div>
 
-        {/* Filtros */}
-        <div className='bg-white rounded-2xl border border-gray-200 p-4 mb-4 space-y-3'>
+        {/* Filtros: los aplica el back sobre todas las cuentas (ver FILTROS_EN_BACK) */}
+        {FILTROS_EN_BACK && <div className='bg-white rounded-2xl border border-gray-200 p-4 mb-4 space-y-3'>
           <div className='flex flex-col sm:flex-row gap-3'>
             <div className='relative flex-1'>
               <IoSearchOutline className='absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400' />
               <input
                 type='search'
                 value={busqueda}
-                onChange={e => cambiarFiltro(setBusqueda)(e.target.value)}
+                onChange={e => cambiarBusqueda(e.target.value)}
                 placeholder='Buscar por usuario o correo'
                 className='w-full h-11 pl-10 pr-3 rounded-xl border-2 border-gray-200 text-sm outline-none focus:border-green-500'
               />
@@ -134,7 +143,6 @@ const ManagerUsers = () => {
           <div className='flex flex-wrap gap-2'>
             {FILTROS_ROL.map(f => {
               const activo = rol === f.value;
-              const total = f.value ? (conteoPorRol[f.value] ?? 0) : cuentas.length;
               return (
                 <button
                   key={f.value}
@@ -142,12 +150,12 @@ const ManagerUsers = () => {
                   onClick={() => cambiarFiltro(setRol)(f.value)}
                   className={`px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${activo ? 'bg-green-600 border-green-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'}`}
                 >
-                  {f.label} <span className={activo ? 'text-green-100' : 'text-gray-400'}>{total}</span>
+                  {f.label}
                 </button>
               );
             })}
           </div>
-        </div>
+        </div>}
 
         {/* Tabla */}
         <div className='bg-white rounded-2xl border border-gray-200 overflow-hidden'>
@@ -160,9 +168,11 @@ const ManagerUsers = () => {
               <button type='button' onClick={refetch} className='px-4 py-2 rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700'>Reintentar</button>
             </div>
           ) : visibles.length === 0 ? (
-            <p className='p-10 text-center text-sm text-gray-500'>No hay cuentas que coincidan con los filtros.</p>
+            <p className='p-10 text-center text-sm text-gray-500'>
+              {FILTROS_EN_BACK && (busquedaEnviada || rol || estado) ? 'No hay cuentas que coincidan con los filtros.' : 'No hay cuentas en esta página.'}
+            </p>
           ) : (
-            <div className='overflow-x-auto'>
+            <div className={`overflow-x-auto transition-opacity ${isFetching ? 'opacity-60' : ''}`}>
               <table className='w-full text-sm'>
                 <thead className='bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500'>
                   <tr>
@@ -228,24 +238,16 @@ const ManagerUsers = () => {
             </div>
           )}
 
-          {/* Paginacion */}
-          {filtradas.length > POR_PAGINA && (
-            <div className='flex items-center justify-between gap-3 px-5 py-3 border-t border-gray-100 bg-gray-50 text-sm'>
-              <p className='text-gray-500'>
-                {(paginaActual - 1) * POR_PAGINA + 1}–{Math.min(paginaActual * POR_PAGINA, filtradas.length)} de {filtradas.length}
-              </p>
-              <div className='flex gap-2'>
-                <button type='button' onClick={() => setPagina(paginaActual - 1)} disabled={paginaActual === 1}
-                  className='px-3 py-1.5 rounded-lg border border-gray-300 bg-white font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40'>
-                  Anterior
-                </button>
-                <button type='button' onClick={() => setPagina(paginaActual + 1)} disabled={paginaActual === totalPaginas}
-                  className='px-3 py-1.5 rounded-lg border border-gray-300 bg-white font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40'>
-                  Siguiente
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Paginacion (la hace el back) */}
+          <Paginacion
+            className='px-5 py-3 border-t border-gray-100 bg-gray-50'
+            pagina={paginaActual}
+            totalPaginas={totalPaginas}
+            total={total}
+            porPagina={POR_PAGINA}
+            onCambiar={setPagina}
+            cargando={isFetching}
+          />
         </div>
       </div>
 
