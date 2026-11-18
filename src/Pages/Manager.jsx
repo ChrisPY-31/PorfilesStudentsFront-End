@@ -25,7 +25,6 @@ import ChatInbox from "../Components/ChatInbox";
 import StudentApplications from "../Components/StudentApplications";
 
 const Manager = ({ usermenu }) => {
-  const [autenticate, setAutenticate] = useState(false);
   // Ajustes de la cuenta (usermenu): "seguridad" para todos; el resto depende del rol
   const { tipo } = useAppSelector(state => state.users);
   const esEmpresa = tipo === "company_admin";

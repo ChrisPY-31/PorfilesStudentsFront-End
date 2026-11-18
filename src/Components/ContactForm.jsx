@@ -17,14 +17,14 @@ import { toast } from "sonner";
 import { useUserAccount } from "../Hooks/useUserAccount";
 import { obtenerMensajeError } from "../helpers";
 
-const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact = [], contactosExistentes = [], onClose }) => {
+const ContactForm = ({ onCancel, initialContacts = [], updateContact = [], contactosExistentes = [], onClose }) => {
     const [formErrors, setFormErrors] = useState({});
     const [selectedType, setSelectedType] = useState("");
     const [contacts, setContacts] = useState(initialContacts);
     const [editingContact, setEditingContact] = useState(null);
     const { getUserByUsername } = useUserAccount();
     const { userId, username, userToken } = useAppSelector(state => state.users)
-    const [createSocialLink, { isSuccess, error }] = useCreateSocialLinkMutation()
+    const [createSocialLink] = useCreateSocialLinkMutation()
     const [deleteSocialLink] = useDeleteSocialLinkMutation()
     // Catalogo de redes del back: [{ idContacto, red }]
     const { data: tiposContacto = [] } = useGetContactTypesQuery({ token: userToken })
@@ -37,20 +37,6 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact =
         }
     }, [updateContact])
 
-    useEffect(() => {
-        if (isSuccess) {
-            toast.success("Contactos se agregaron correctamente ")
-            getUserByUsername(username, userToken);
-
-            setTimeout(() => {
-                onCancel()
-            }, [1000])
-        }
-
-        if (error) {
-            toast.error(obtenerMensajeError(error, "No se pudieron guardar los contactos"))
-        }
-    }, [isSuccess, error])
 
 
     // Solo la parte visual de cada red; las redes disponibles vienen del back (/contact)
@@ -149,7 +135,7 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact =
             setEditingContact(null);
             setSubmitting(false);
 
-        } catch (err) {
+        } catch {
             const errorMap = {};
             errorMap._general = "Ocurrió un error en la validación";
             setFormErrors(errorMap);
@@ -182,7 +168,14 @@ const ContactForm = ({ onSubmit, onCancel, initialContacts = [], updateContact =
             id: { idPerson: userId, idContact: contactos.idContacto },
             url,
         }));
-        await createSocialLink({ newSocialLink, token });
+        try {
+            await createSocialLink({ newSocialLink, token }).unwrap();
+            toast.success("Contactos se agregaron correctamente")
+            getUserByUsername(username, userToken).catch(() => {});
+            setTimeout(() => onCancel(), 1000)
+        } catch (err) {
+            toast.error(obtenerMensajeError(err, "No se pudieron guardar los contactos"))
+        }
     };
 
 

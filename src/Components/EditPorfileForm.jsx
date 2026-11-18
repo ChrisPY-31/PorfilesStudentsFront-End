@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import { useNavigate } from "react-router-dom";
 import { IoCloseSharp } from "react-icons/io5";
 import { toast } from "sonner";
 import { useUpdateMyAccountMutation, useUpdateMyRecruiterMutation } from "../services/updatePerson";
@@ -12,10 +11,9 @@ import { useGetUbicationsQuery } from "../services/UserSlice";
 
 
 const EditProfileForm = ({ user, onClose, tipo }) => {
-    const navigate = useNavigate();
     const [formErrors, setFormErrors] = useState({});
-    const [tipoUsuario, setTipoUsuario] = useState(tipo);
-    const [updateMyAccount, { isSuccess, error }] = useUpdateMyAccountMutation();
+    const [tipoUsuario] = useState(tipo);
+    const [updateMyAccount] = useUpdateMyAccountMutation();
     const [updateMyRecruiter] = useUpdateMyRecruiterMutation();
     const { getUserByUsername } = useUserAccount();
     const { userId, username, userToken } = useAppSelector(state => state.users)
@@ -31,18 +29,6 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
         recruiter: Yup.object().shape({}),
     };
 
-    useEffect(() => {
-        if (isSuccess) {
-            toast.success("Perfil actualizado con exito")
-            getUserByUsername(username, userToken);
-            setTimeout(() => {
-                onClose()
-            }, [1500])
-        }
-        if (error) {
-            toast.error(obtenerMensajeError(error, "Error al actualizar"))
-        }
-    }, [isSuccess, error])
 
 
     const handleSubmit = async (values, { setSubmitting }) => {
@@ -119,13 +105,16 @@ const EditProfileForm = ({ user, onClose, tipo }) => {
                 userId
             }).unwrap();
 
+            toast.success("Perfil actualizado con exito")
+            getUserByUsername(username, userToken).catch(() => {});
+            setTimeout(() => onClose(), 1500)
             setSubmitting(false);
 
         } catch (err) {
 
-            if (err?.data) {
-                // El toast del error del servidor lo muestra el useEffect
-                console.error("Error del servidor:", err.data);
+            if (err?.data || err?.status) {
+                // Error del servidor
+                toast.error(obtenerMensajeError(err, "Error al actualizar"))
             } else if (err && Array.isArray(err.inner)) {
                 // Error de validación
                 const errorMap = {};

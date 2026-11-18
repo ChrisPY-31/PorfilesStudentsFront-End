@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
@@ -14,31 +14,17 @@ import {
 import { useCreateUserMutation } from "../services/autenticateUser";
 import { toast } from "sonner";
 import { useUserAccount } from "../Hooks/useUserAccount";
+import { obtenerMensajeError } from "../helpers";
 
 const SignUp = ({ setAutenticate }) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [usuarioLengthError, setUsuarioLengthError] = useState(false);
-  const [createUser, { isSuccess, isError, error, data ,isLoading}] = useCreateUserMutation()
+  const [createUser] = useCreateUserMutation()
   const { iniciarSesion } = useUserAccount();
 
 
-  useEffect(() => {
-    if (isSuccess) {
-      iniciarSesion({ token: data.jwt, username: data?.username });
-      toast.success("Cuenta creada con exitoso");
-      setTimeout(() => {
-        navigate("/Inicio");
-        setAutenticate(data.jwt);
-      }, 1000);
-      return
-    } else if (isError) {
-      toast.message(error.data?.mensaje)
-      return
-    }
-    
-  }, [isSuccess, isError ])
   const registerSchema = Yup.object().shape({
     nombre: Yup.string()
       .required("El nombre es requerido")
@@ -117,10 +103,17 @@ const SignUp = ({ setAutenticate }) => {
           apellido: values.apellido
         }
 
-        createUser({ user, person })
-
-        setSubmitting(false);
-
+        createUser({ user, person }).unwrap()
+          .then((data) => {
+            iniciarSesion({ token: data.jwt, username: data?.username });
+            toast.success("Cuenta creada con éxito");
+            setTimeout(() => {
+              navigate("/Inicio");
+              setAutenticate(data.jwt);
+            }, 1000);
+          })
+          .catch((error) => toast.error(obtenerMensajeError(error, "No se pudo crear la cuenta")))
+          .finally(() => setSubmitting(false));
       })
       .catch((errors) => {
         const errorMap = {};

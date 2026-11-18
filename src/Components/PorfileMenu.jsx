@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiFolder, FiUsers, FiLock, FiAward, FiBriefcase, FiSettings, FiLogOut, FiPlusCircle, FiMessageSquare, FiFileText } from "react-icons/fi";
 import { toast } from 'sonner';
 import { useAppSelector } from '../Hooks/store';
 import { useGetloginAdminQuery } from '../services/autenticateUser';
-import { userAccountSlice } from '../store/UserAccount/userAccountSlice';
 import { useUserAccount } from '../Hooks/useUserAccount';
 import { useInstitucion } from '../Hooks/useInstitucion';
 import EmpresaAvatar from './EmpresaAvatar';

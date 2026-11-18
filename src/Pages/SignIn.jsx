@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
@@ -14,25 +14,8 @@ const SignIn = ({ setAutenticate }) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
-  const [loginUser, { isSuccess, error, data }] = useLoginUserMutation();
+  const [loginUser] = useLoginUserMutation();
   const { iniciarSesion } = useUserAccount();
-
-
-  useEffect(() => {
-    if (error) {
-      toast.error(obtenerMensajeError(error, "Error al iniciar sesión"));
-      return;
-    } else if (isSuccess) {
-      // Descarta el perfil y los caches de la sesion anterior
-      iniciarSesion({ token: data.jwt, username: data?.username, userLocked: data?.accoundLocked });
-      toast.success("Inicio de sesión exitoso");
-      setTimeout(() => {
-        navigate("/Inicio");
-        setAutenticate(data.jwt);
-      }, 1000);
-      return;
-    }
-  }, [isSuccess, error]);
 
 
   const loginSchema = Yup.object().shape({
@@ -43,12 +26,6 @@ const SignIn = ({ setAutenticate }) => {
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       await loginSchema.validate(values, { abortEarly: false });
-      setFormErrors({});
-      const username = values.usuario;
-      const password = values.password;
-      await loginUser({ username, password });
-      values.usuario = "";
-      values.password = "";
     } catch (errors) {
       const errorMap = {};
       errors.inner.forEach((error) => {
@@ -56,7 +33,25 @@ const SignIn = ({ setAutenticate }) => {
       });
       setFormErrors(errorMap);
       setSubmitting(false);
+      return;
     }
+    setFormErrors({});
+
+    try {
+      const data = await loginUser({ username: values.usuario, password: values.password }).unwrap();
+      values.usuario = "";
+      values.password = "";
+      // Descarta el perfil y los caches de la sesion anterior
+      iniciarSesion({ token: data.jwt, username: data?.username, userLocked: data?.accoundLocked });
+      toast.success("Inicio de sesión exitoso");
+      setTimeout(() => {
+        navigate("/Inicio");
+        setAutenticate(data.jwt);
+      }, 1000);
+    } catch (error) {
+      toast.error(obtenerMensajeError(error, "Error al iniciar sesión"));
+    }
+    setSubmitting(false);
   };
 
   return (

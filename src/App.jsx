@@ -32,7 +32,7 @@ function App() {
   const { tokenUser, getUserByUsername } = useUserAccount();
   // Cierra la sesion cuando vence el token (30 min en el back)
   useExpiracionSesion();
-  const [myPorfile, setMyPorfile] = useState(false)
+  const [, setMyPorfile] = useState(false)
   // const [userLocked, setUserLocked] = useState(localStorage.getItem("userLocked"));
   const userLockedValue = JSON.parse(localStorage.getItem("userLocked") ?? "true");
   useEffect(() => {
@@ -50,13 +50,9 @@ function App() {
     }
   }, [username, tokenUserId, location]);
 
+  // Con la cuenta bloqueada el aviso cubre la pantalla: se bloquea el scroll del fondo
   useEffect(() => {
-    console.log("entro aqui")
-    console.log(userLockedValue);
-    if (!userLockedValue) {
-      document.body.className = "overflow-hidden"
-    }
-    document.body.className = ""
+    document.body.className = userLockedValue ? "" : "overflow-hidden"
   }, [location, userLockedValue]);
 
 
@@ -89,7 +85,7 @@ function App() {
         <Route path="/sing-in-and-security" element={autenticate ? <Manager usermenu={true} /> : <Navigate to="/" />} />
       </Routes>
       </main>
-      {!esPanelAdmin && <Footer autenticate={autenticate} />}
+      {!esPanelAdmin && <Footer />}
       <Toaster position="top-right" autoClose={2000} hideProgressBar={false} />
     </div>
   )

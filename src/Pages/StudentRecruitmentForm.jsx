@@ -17,7 +17,6 @@ const StudentRecruitmentForm = () => {
   const [formErrors, setFormErrors] = useState({});
 
   const [students] = useState([]);
-  const [recruiters] = useState([]);
   const [companies] = useState([]);
 
   const recruitmentSchema = Yup.object().shape({
@@ -46,31 +45,12 @@ const StudentRecruitmentForm = () => {
   });
 
 const handleSubmit = (values, { setSubmitting }) => {
-  console.log(values);
   setSubmitting(true);
   
   recruitmentSchema
     .validate(values, { abortEarly: false })
     .then(() => {
-      console.log("VALIDACIÓN EXITOSA");
       setFormErrors({});
-      console.log("Datos de contratación:", values);
-
-      const recruitmentData = {
-        fechaContratacion: values.fechaContratacion,
-        posicion: values.posicion,
-        estudiante: {
-          id: values.estudiante.id,
-        },
-        reclutador: {
-          id: values.reclutador.id,
-        },
-        compania: {
-          id: values.compania.id,
-        },
-      };
-
-      console.log("Datos a enviar:", recruitmentData);
 
       setTimeout(() => {
         alert("Contratación registrada exitosamente");
@@ -79,7 +59,6 @@ const handleSubmit = (values, { setSubmitting }) => {
       }, 1000);
     })
     .catch((errors) => {
-      console.log("ERRORES DE VALIDACIÓN:", errors);
       const errorMap = {};
       errors.inner.forEach((error) => {
         errorMap[error.path] = error.message;
@@ -126,7 +105,7 @@ const handleSubmit = (values, { setSubmitting }) => {
             }}
             onSubmit={handleSubmit}
           >
-            {({ isSubmitting, values, setFieldValue, resetForm }) => (
+            {({ isSubmitting, resetForm }) => (
               <Form className="space-y-4">
                 <div>
                   <label

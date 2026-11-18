@@ -1,30 +1,13 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   IoSchool,
-  IoHomeOutline,
-  IoPeopleOutline,
-  IoFolderOpenOutline,
-  IoLogInOutline,
-  IoPersonAddOutline,
   IoMailOutline,
   IoShieldCheckmarkOutline,
   IoDocumentTextOutline,
   IoArrowUp
 } from 'react-icons/io5';
 
-// Los enlaces cambian si hay sesion o no
-const NAVEGACION_SESION = [
-  { to: '/Inicio', label: 'Inicio', icon: IoHomeOutline },
-  { to: '/Students', label: 'Estudiantes', icon: IoPeopleOutline },
-  { to: '/Projects', label: 'Proyectos', icon: IoFolderOpenOutline },
-];
-const NAVEGACION_PUBLICA = [
-  { to: '/', label: 'Inicio', icon: IoHomeOutline },
-  { to: '/Sign-In', label: 'Inicia sesión', icon: IoLogInOutline },
-  { to: '/Sign-Up', label: 'Regístrate', icon: IoPersonAddOutline },
-];
 // Aun no tienen pagina
 const LEGAL = [
   { label: 'Contacto', icon: IoMailOutline },
@@ -34,9 +17,7 @@ const LEGAL = [
 
 const claseEnlace = 'flex items-center gap-2 text-sm text-gray-600 hover:text-green-700 transition-colors';
 
-const Footer = ({ autenticate }) => {
-  const navegacion = autenticate ? NAVEGACION_SESION : NAVEGACION_PUBLICA;
-
+const Footer = () => {
   return (
     <footer className="mt-16 bg-white border-t border-gray-200">
       <div className="w-full max-w-7xl mx-auto px-4 py-10">

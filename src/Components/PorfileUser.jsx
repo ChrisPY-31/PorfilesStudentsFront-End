@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react'
-import { estudianteById } from '../Estudiantes'
+import React, { useState } from 'react'
 import Person from './Person';
 import { SlPencil } from 'react-icons/sl';
 import Contactos from './Contactos';
@@ -13,8 +12,6 @@ import LanguageForm from './LanguageForm';
 import { NIVELES_IDIOMA } from '../helpers';
 import ContactForm from './ContactForm';
 import Habilities from './Habilities';
-import { useAppSelector } from '../Hooks/store';
-import { useUserAccount } from '../Hooks/useUserAccount';
 import MenuContact from './MenuContact';
 
 // Recuadro con el mismo espaciado para todas las secciones del perfil
@@ -49,8 +46,6 @@ const PorfileUser = ({ user, myAccount, tipo }) => {
     const [menuRedesContacto, setMenuRedesContacto] = useState(false)
     const [updateContact, setUpdateContact] = useState([])
     const [menuContact, setMenuContact] = useState(false)
-
-    const { username, userToken } = useAppSelector(state => state.users)
 
     const { nombre,
         apellido,

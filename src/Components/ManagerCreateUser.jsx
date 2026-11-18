@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import { useNavigate } from "react-router-dom";
 import {
   IoEyeOutline,
   IoEyeOffOutline,
@@ -20,7 +19,6 @@ import { useGetCareersQuery } from "../services/UserSlice";
 import { obtenerMensajeError } from "../helpers";
 
 const ManagerCreateUser = () => {
-  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [showStudentFields, setShowStudentFields] = useState(false);
@@ -187,7 +185,7 @@ const ManagerCreateUser = () => {
               validateOnChange={false}
               validateOnBlur={false}
             >
-              {({ values, setFieldValue }) => (
+              {({ setFieldValue }) => (
                 <Form className="space-y-2">
                   <div className="grid grid-cols-2 gap-5 justify-center">
                     <div className="flex flex-col items-end">
